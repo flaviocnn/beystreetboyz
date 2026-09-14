@@ -90,6 +90,29 @@ button { font: inherit; }
 .key { display: grid; place-items: center; width: 23px; height: 23px; color: var(--ink); background: var(--paper); border-bottom: 3px solid var(--mid); font-size: 12px; }
 .key.wide { width: auto; padding-inline: 7px; font-size: 8px; }
 
+.audio-toggle {
+  position: absolute;
+  z-index: 6;
+  top: 83px;
+  right: 28px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  color: var(--ink);
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  box-shadow: 3px 3px 0 var(--ink);
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: .1em;
+  cursor: pointer;
+}
+
+.audio-toggle span { display: grid; place-items: center; width: 20px; height: 20px; color: var(--paper); background: var(--ink); font-size: 13px; }
+.audio-toggle:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--ink); }
+.audio-toggle:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
+
 .interaction-prompt {
   position: absolute;
   z-index: 5;
@@ -213,6 +236,9 @@ button { font: inherit; }
   .kicker { font-size: 7px; }
   .game-header h1 { font-size: 12px; }
   .instructions, .map-index { display: none; }
+  .audio-toggle { top: 15px; right: 15px; padding: 6px; box-shadow: 3px 3px 0 var(--ink); }
+  .audio-toggle span { width: 22px; height: 22px; }
+  .audio-toggle { font-size: 0; }
   .dpad {
     position: absolute;
     z-index: 6;

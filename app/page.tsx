@@ -49,8 +49,8 @@ const places: Place[] = [
     name: "Wistery Club",
     eyebrow: "COORDINATE SCONOSCIUTE",
     description:
-      "Un ingresso quasi invisibile, avvolto nelle tenebre. Le luci si accendono soltanto per chi trova la strada.",
-    detail: "Ingresso riservato · Dopo il tramonto · Musica nel buio",
+      "Patria dei Cobalt Flames, il Wistery è un luogo misterioso e proibito, avvolto nelle tenebre. Per ora non è possibile accedere.",
+    detail: "ACCESSO NEGATO · LUOGO PROIBITO · TORNA PRESTO",
     x: 1045,
     y: 735,
   },
@@ -162,25 +162,39 @@ function drawHouse(
 function drawIntesa(ctx: CanvasRenderingContext2D, x: number, y: number) {
   ctx.save();
   ctx.translate(x, y);
+  // Slender glass tower, external structural ribs and the rooftop greenhouse.
+  ctx.fillStyle = PALETTE.pale;
+  ctx.fillRect(-60, -115, 120, 194);
+  ctx.fillStyle = PALETTE.ink;
+  ctx.fillRect(-68, -121, 136, 8);
+  ctx.fillRect(-69, 75, 138, 10);
+  ctx.fillRect(-66, -113, 7, 188);
+  ctx.fillRect(59, -113, 7, 188);
   ctx.fillStyle = PALETTE.mid;
-  ctx.fillRect(-71, -111, 142, 191);
-  ctx.fillStyle = PALETTE.ink;
-  ctx.fillRect(-77, -117, 154, 12);
-  ctx.fillRect(-78, 74, 156, 10);
-  ctx.fillRect(-76, -107, 9, 181);
-  ctx.fillRect(67, -107, 9, 181);
-  ctx.fillStyle = PALETTE.paper;
-  for (let row = -97; row < 64; row += 19) {
-    ctx.fillRect(-59, row, 118, 9);
+  for (let row = -108; row < 71; row += 13) {
+    ctx.fillRect(-54, row, 108, 7);
     ctx.fillStyle = PALETTE.ink;
-    for (let col = -55; col < 55; col += 18) ctx.fillRect(col, row + 2, 10, 5);
-    ctx.fillStyle = PALETTE.paper;
+    ctx.fillRect(-50, row + 2, 31, 3);
+    ctx.fillRect(-14, row + 2, 28, 3);
+    ctx.fillRect(19, row + 2, 31, 3);
+    ctx.fillStyle = PALETTE.mid;
   }
+  // Visible exoskeleton and asymmetric service core.
   ctx.fillStyle = PALETTE.ink;
-  ctx.fillRect(-7, -147, 14, 30);
-  ctx.fillRect(-33, -128, 66, 10);
+  ctx.fillRect(-46, -113, 4, 188);
+  ctx.fillRect(42, -113, 4, 188);
+  ctx.fillRect(13, -113, 5, 188);
+  ctx.fillRect(-71, -70, 9, 83);
+  // Panoramic bioclimatic greenhouse and antenna.
+  ctx.fillRect(-7, -160, 14, 28);
+  ctx.fillRect(-45, -134, 90, 8);
+  ctx.strokeStyle = PALETTE.ink;
+  ctx.lineWidth = 5;
+  ctx.strokeRect(-43, -158, 86, 32);
   ctx.fillStyle = PALETTE.paper;
-  ctx.fillRect(-27, -125, 54, 4);
+  ctx.fillRect(-36, -151, 72, 17);
+  ctx.fillStyle = PALETTE.mid;
+  for (let gx = -31; gx <= 29; gx += 15) ctx.fillRect(gx, -149, 5, 13);
   pixelText(ctx, "INTESA", 0, 98, 12);
   ctx.restore();
 }
@@ -188,26 +202,35 @@ function drawIntesa(ctx: CanvasRenderingContext2D, x: number, y: number) {
 function drawSkatepark(ctx: CanvasRenderingContext2D, x: number, y: number) {
   ctx.save();
   ctx.translate(x, y);
+  // Concrete skate plaza below Parco Dora's monumental industrial canopy.
+  ctx.fillStyle = PALETTE.ink;
+  ctx.fillRect(-128, -101, 256, 10);
+  ctx.fillRect(-119, -91, 9, 46);
+  ctx.fillRect(-42, -91, 9, 46);
+  ctx.fillRect(33, -91, 9, 46);
+  ctx.fillRect(110, -91, 9, 46);
+  ctx.fillStyle = PALETTE.mid;
+  for (let bx = -112; bx < 112; bx += 28) ctx.fillRect(bx, -98, 17, 4);
   ctx.fillStyle = PALETTE.pale;
-  ctx.fillRect(-118, -76, 236, 156);
+  ctx.fillRect(-118, -51, 236, 131);
   ctx.strokeStyle = PALETTE.ink;
   ctx.lineWidth = 5;
-  ctx.strokeRect(-118, -76, 236, 156);
+  ctx.strokeRect(-118, -51, 236, 131);
   ctx.strokeStyle = PALETTE.mid;
   ctx.lineWidth = 2;
   for (let i = -100; i < 110; i += 20) {
     ctx.beginPath();
-    ctx.moveTo(i, -70);
+    ctx.moveTo(i, -48);
     ctx.lineTo(i + 100, 74);
     ctx.stroke();
   }
   ctx.strokeStyle = PALETTE.ink;
   ctx.lineWidth = 7;
   ctx.beginPath();
-  ctx.arc(-53, 8, 38, Math.PI, 0, true);
+  ctx.arc(-53, 9, 38, Math.PI, 0, true);
   ctx.stroke();
   ctx.beginPath();
-  ctx.arc(54, 8, 38, Math.PI, 0, true);
+  ctx.arc(54, 9, 38, Math.PI, 0, true);
   ctx.stroke();
   ctx.fillStyle = PALETTE.ink;
   ctx.fillRect(-10, -17, 20, 54);
@@ -292,14 +315,92 @@ function drawPlayer(ctx: CanvasRenderingContext2D, x: number, y: number, dir: Di
   ctx.restore();
 }
 
+function useGameAudio() {
+  const [enabled, setEnabled] = useState(true);
+  const enabledRef = useRef(true);
+  const contextRef = useRef<AudioContext | null>(null);
+
+  const tone = useCallback((frequency: number, duration: number, volume: number, type: OscillatorType = "square") => {
+    const context = contextRef.current;
+    if (!context || context.state !== "running" || !enabledRef.current) return;
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+    oscillator.type = type;
+    oscillator.frequency.setValueAtTime(frequency, context.currentTime);
+    gain.gain.setValueAtTime(volume, context.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + duration);
+    oscillator.connect(gain);
+    gain.connect(context.destination);
+    oscillator.start();
+    oscillator.stop(context.currentTime + duration);
+  }, []);
+
+  const activate = useCallback(async () => {
+    if (!enabledRef.current) return;
+    if (!contextRef.current) contextRef.current = new AudioContext();
+    if (contextRef.current.state === "suspended") await contextRef.current.resume();
+  }, []);
+
+  useEffect(() => {
+    const begin = () => void activate();
+    window.addEventListener("keydown", begin, { once: true });
+    window.addEventListener("pointerdown", begin, { once: true });
+    return () => {
+      window.removeEventListener("keydown", begin);
+      window.removeEventListener("pointerdown", begin);
+    };
+  }, [activate]);
+
+  useEffect(() => {
+    const melody = [523.25, 659.25, 783.99, 659.25, 587.33, 698.46, 880, 698.46, 523.25, 659.25, 783.99, 987.77, 880, 783.99, 659.25, 587.33];
+    const bass = [130.81, 130.81, 146.83, 146.83, 110, 110, 123.47, 123.47];
+    let beat = 0;
+    const timer = window.setInterval(() => {
+      if (!enabledRef.current || contextRef.current?.state !== "running") return;
+      tone(melody[beat % melody.length], .105, .018, "square");
+      if (beat % 2 === 0) tone(bass[Math.floor(beat / 2) % bass.length], .16, .025, "triangle");
+      beat += 1;
+    }, 185);
+    return () => window.clearInterval(timer);
+  }, [tone]);
+
+  const playClick = useCallback(() => {
+    void activate().then(() => {
+      tone(740, .055, .045);
+      window.setTimeout(() => tone(988, .07, .035), 45);
+    });
+  }, [activate, tone]);
+
+  const playStep = useCallback(() => {
+    tone(92, .035, .024, "square");
+  }, [tone]);
+
+  const toggle = useCallback(() => {
+    if (enabledRef.current) {
+      tone(330, .07, .04);
+      enabledRef.current = false;
+      setEnabled(false);
+      window.setTimeout(() => void contextRef.current?.suspend(), 85);
+    } else {
+      enabledRef.current = true;
+      setEnabled(true);
+      void activate().then(() => tone(659.25, .09, .04));
+    }
+  }, [activate, tone]);
+
+  return { enabled, toggle, playClick, playStep };
+}
+
 function GameMap({
   nearby,
   onNearbyChange,
   modalOpen,
+  onStep,
 }: {
   nearby: Place | null;
   onNearbyChange: (place: Place | null) => void;
   modalOpen: boolean;
+  onStep: () => void;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const playerRef = useRef({ ...START, dir: "down" as Direction });
@@ -333,6 +434,7 @@ function GameMap({
 
     let frame = 0;
     let last = performance.now();
+    let lastFootstep = 0;
     const render = (now: number) => {
       const dt = Math.min(32, now - last);
       last = now;
@@ -355,6 +457,10 @@ function GameMap({
       player.y = Math.max(35, Math.min(WORLD.height - 30, player.y + dy * speed));
       if (Math.abs(dx) > Math.abs(dy)) player.dir = dx < 0 ? "left" : "right";
       else if (dy) player.dir = dy < 0 ? "up" : "down";
+      if ((dx || dy) && now - lastFootstep > 245) {
+        onStep();
+        lastFootstep = now;
+      }
 
       let closest: Place | null = null;
       let closestDistance = Infinity;
@@ -399,7 +505,7 @@ function GameMap({
       cancelAnimationFrame(frame);
       observer.disconnect();
     };
-  }, [onNearbyChange]);
+  }, [onNearbyChange, onStep]);
 
   const setDirection = (direction: Direction, active: boolean) => {
     if (active) keysRef.current.add(direction);
@@ -464,25 +570,30 @@ function GameMap({
 export default function Home() {
   const [nearby, setNearby] = useState<Place | null>(null);
   const [selected, setSelected] = useState<Place | null>(null);
+  const { enabled: audioEnabled, toggle: toggleAudio, playClick, playStep } = useGameAudio();
   const openSelected = useCallback(() => {
-    if (nearby) setSelected(nearby);
-  }, [nearby]);
+    if (nearby) {
+      playClick();
+      setSelected(nearby);
+    }
+  }, [nearby, playClick]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Enter" && nearby && !selected) {
         event.preventDefault();
+        playClick();
         setSelected(nearby);
       }
       if (event.key === "Escape") setSelected(null);
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [nearby, selected]);
+  }, [nearby, playClick, selected]);
 
   return (
     <main className="game-shell">
-      <GameMap nearby={nearby} onNearbyChange={setNearby} modalOpen={Boolean(selected)} />
+      <GameMap nearby={nearby} onNearbyChange={setNearby} modalOpen={Boolean(selected)} onStep={playStep} />
 
       <header className="game-header">
         <div className="brand-mark" aria-hidden="true">T</div>
@@ -499,6 +610,11 @@ export default function Home() {
         <span className="key wide">ENTER</span>
         <span>ESPLORA</span>
       </aside>
+
+      <button className="audio-toggle" onClick={toggleAudio} aria-pressed={audioEnabled} aria-label={audioEnabled ? "Disattiva audio" : "Attiva audio"}>
+        <span aria-hidden="true">{audioEnabled ? "♫" : "×"}</span>
+        {audioEnabled ? "AUDIO ON" : "AUDIO OFF"}
+      </button>
 
       <div className={`interaction-prompt ${nearby ? "is-visible" : ""}`} aria-live="polite">
         {nearby && (
@@ -524,7 +640,7 @@ export default function Home() {
             aria-labelledby="modal-title"
             onMouseDown={(event) => event.stopPropagation()}
           >
-            <button className="close-button" onClick={() => setSelected(null)} autoFocus aria-label="Chiudi">×</button>
+            <button className="close-button" onClick={() => { playClick(); setSelected(null); }} autoFocus aria-label="Chiudi">×</button>
             <p className="modal-count">LOCATION / {String(places.findIndex((p) => p.id === selected.id) + 1).padStart(2, "0")}</p>
             <div className="modal-pixel-art" aria-hidden="true"><span /><span /><span /></div>
             <p className="modal-eyebrow">{selected.eyebrow}</p>
