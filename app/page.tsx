@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useGameAudio } from "./lib/game-audio";
+import { drawPixelPlayer, type Direction } from "./lib/pixel-player";
 
-type Direction = "up" | "down" | "left" | "right";
 type Place = {
   id: string;
   name: string;
@@ -369,109 +370,6 @@ function drawMarker(ctx: CanvasRenderingContext2D, place: Place, active: boolean
   ctx.restore();
 }
 
-function drawPlayer(ctx: CanvasRenderingContext2D, x: number, y: number, dir: Direction, walking: boolean, t: number) {
-  const step = walking && Math.floor(t / 130) % 2 ? 2 : 0;
-  ctx.save();
-  ctx.translate(Math.round(x), Math.round(y));
-  ctx.fillStyle = "rgba(32,35,34,.18)";
-  ctx.fillRect(-12, 15, 24, 7);
-  ctx.fillStyle = PALETTE.ink;
-  ctx.fillRect(-9, -15, 18, 5);
-  ctx.fillRect(-13, -10, 26, 16);
-  ctx.fillStyle = PALETTE.paper;
-  ctx.fillRect(-8, -7, 16, 10);
-  ctx.fillStyle = PALETTE.ink;
-  if (dir === "left") ctx.fillRect(-9, -4, 4, 4);
-  else if (dir === "right") ctx.fillRect(5, -4, 4, 4);
-  else {
-    ctx.fillRect(-7, -4, 4, 4);
-    ctx.fillRect(3, -4, 4, 4);
-  }
-  ctx.fillRect(-11, 6, 22, 13);
-  ctx.fillStyle = PALETTE.mid;
-  ctx.fillRect(-6, 8, 12, 7);
-  ctx.fillStyle = PALETTE.ink;
-  ctx.fillRect(-11 - step, 18, 8, 8);
-  ctx.fillRect(3 + step, 18, 8, 8);
-  ctx.restore();
-}
-
-function useGameAudio() {
-  const [enabled, setEnabled] = useState(true);
-  const enabledRef = useRef(true);
-  const contextRef = useRef<AudioContext | null>(null);
-
-  const tone = useCallback((frequency: number, duration: number, volume: number, type: OscillatorType = "square") => {
-    const context = contextRef.current;
-    if (!context || context.state !== "running" || !enabledRef.current) return;
-    const oscillator = context.createOscillator();
-    const gain = context.createGain();
-    oscillator.type = type;
-    oscillator.frequency.setValueAtTime(frequency, context.currentTime);
-    gain.gain.setValueAtTime(volume, context.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + duration);
-    oscillator.connect(gain);
-    gain.connect(context.destination);
-    oscillator.start();
-    oscillator.stop(context.currentTime + duration);
-  }, []);
-
-  const activate = useCallback(async () => {
-    if (!enabledRef.current) return;
-    if (!contextRef.current) contextRef.current = new AudioContext();
-    if (contextRef.current.state === "suspended") await contextRef.current.resume();
-  }, []);
-
-  useEffect(() => {
-    const begin = () => void activate();
-    window.addEventListener("keydown", begin, { once: true });
-    window.addEventListener("pointerdown", begin, { once: true });
-    return () => {
-      window.removeEventListener("keydown", begin);
-      window.removeEventListener("pointerdown", begin);
-    };
-  }, [activate]);
-
-  useEffect(() => {
-    const melody = [523.25, 659.25, 783.99, 659.25, 587.33, 698.46, 880, 698.46, 523.25, 659.25, 783.99, 987.77, 880, 783.99, 659.25, 587.33];
-    const bass = [130.81, 130.81, 146.83, 146.83, 110, 110, 123.47, 123.47];
-    let beat = 0;
-    const timer = window.setInterval(() => {
-      if (!enabledRef.current || contextRef.current?.state !== "running") return;
-      tone(melody[beat % melody.length], .105, .018, "square");
-      if (beat % 2 === 0) tone(bass[Math.floor(beat / 2) % bass.length], .16, .025, "triangle");
-      beat += 1;
-    }, 185);
-    return () => window.clearInterval(timer);
-  }, [tone]);
-
-  const playClick = useCallback(() => {
-    void activate().then(() => {
-      tone(740, .055, .045);
-      window.setTimeout(() => tone(988, .07, .035), 45);
-    });
-  }, [activate, tone]);
-
-  const playStep = useCallback(() => {
-    tone(92, .035, .024, "square");
-  }, [tone]);
-
-  const toggle = useCallback(() => {
-    if (enabledRef.current) {
-      tone(330, .07, .04);
-      enabledRef.current = false;
-      setEnabled(false);
-      window.setTimeout(() => void contextRef.current?.suspend(), 85);
-    } else {
-      enabledRef.current = true;
-      setEnabled(true);
-      void activate().then(() => tone(659.25, .09, .04));
-    }
-  }, [activate, tone]);
-
-  return { enabled, toggle, playClick, playStep };
-}
-
 function GameMap({
   nearby,
   onNearbyChange,
@@ -579,7 +477,7 @@ function GameMap({
       drawStaffPalace(ctx, places[3].x, places[3].y);
       drawGuild(ctx, places[4].x, places[4].y);
       for (const place of places) drawMarker(ctx, place, closest?.id === place.id, now);
-      drawPlayer(ctx, player.x, player.y, player.dir, Boolean(dx || dy), now);
+      drawPixelPlayer(ctx, player.x, player.y, player.dir, Boolean(dx || dy), now);
       ctx.restore();
       frame = requestAnimationFrame(render);
     };

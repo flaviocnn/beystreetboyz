@@ -286,13 +286,22 @@ button { font: inherit; }
 
 .guild-map-shell { height: 100svh; min-height: 610px; display: flex; flex-direction: column; background: #17231d; color: #f2f3e8; }
 .guild-map-header { display: flex; justify-content: space-between; gap: 20px; padding: 16px 26px; border-bottom: 1px solid #677f6a; font-size: 10px; font-weight: 900; letter-spacing: .1em; }
+.guild-header-actions { display: flex; align-items: center; gap: 20px; }
+.guild-audio-toggle { display: inline-flex; align-items: center; gap: 7px; padding: 7px 9px; color: #f2f3e8; background: transparent; border: 1px solid #a2b9a1; font-size: 9px; font-weight: 900; letter-spacing: .08em; cursor: pointer; }
+.guild-audio-toggle > span:first-child { font-size: 14px; line-height: 1; }
+.guild-audio-toggle:hover { color: #17231d; background: #f2f3e8; }
 .guild-map-title { display: flex; align-items: end; gap: 22px; padding: 18px 30px; }
 .guild-map-title p { margin: 0; color: #b3c4ad; font-size: 9px; font-weight: 900; }
 .guild-map-title h1 { margin: 0; font-family: var(--font-geist-sans), sans-serif; font-size: clamp(24px, 3vw, 42px); letter-spacing: -.05em; }
 .guild-map-title span { margin-left: auto; color: #c4d0c0; font-size: 10px; }
 .guild-stage { position: relative; flex: 1; min-height: 340px; margin: 0 30px 30px; border: 7px solid #879b83; box-shadow: 7px 7px 0 #0d1711; overflow: hidden; }
 .guild-canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
-.guild-board-button { position: absolute; right: 15px; bottom: 15px; padding: 12px 14px; color: #f2f3e8; background: #202824; border: 2px solid #f2f3e8; font-size: 10px; font-weight: 900; cursor: pointer; }
+.guild-interaction-prompt { position: absolute; z-index: 2; left: 50%; bottom: 22px; width: min(480px, calc(100% - 28px)); opacity: 0; pointer-events: none; transform: translate(-50%, 16px); transition: opacity .18s steps(3), transform .18s steps(3); }
+.guild-interaction-prompt.is-visible { opacity: 1; pointer-events: auto; transform: translate(-50%, 0); }
+.guild-interaction-prompt button { display: flex; align-items: center; gap: 12px; width: 100%; padding: 11px 13px; color: #f2f3e8; background: #202824; border: 3px solid #f2f3e8; outline: 3px solid #202824; text-align: left; cursor: pointer; }
+.guild-interaction-prompt button > span:nth-child(2) { display: grid; gap: 4px; font-size: 11px; font-weight: 900; }
+.guild-interaction-prompt small { color: #c3d1be; font-size: 8px; letter-spacing: .12em; }
+.guild-interaction-prompt kbd { margin-left: auto; padding: 6px 7px; color: #202824; background: #f2f3e8; font-size: 9px; white-space: nowrap; }
 .guild-map-message { display: grid; place-content: center; gap: 15px; flex: 1; padding: 24px; text-align: center; }
 .guild-map-message h1, .guild-map-message p { margin: 0; }
 .guild-dpad { display: none; }
@@ -350,10 +359,14 @@ button { font: inherit; }
   .member-actions { flex-basis: 100%; margin-left: 27px; }
   .guild-map-header { padding: 14px; font-size: 8px; }
   .guild-map-header > span { display: none; }
+  .guild-header-actions { gap: 10px; }
+  .guild-audio-toggle { width: 33px; height: 28px; justify-content: center; }
+  .guild-audio-label { display: none; }
   .guild-map-title { display: block; padding: 16px; }
   .guild-map-title span { display: block; margin-top: 5px; }
   .guild-stage { margin: 0 12px 12px; }
-  .guild-board-button { right: 8px; bottom: 8px; font-size: 8px; }
+  .guild-interaction-prompt { bottom: 98px; }
+  .guild-interaction-prompt kbd { display: none; }
   .guild-dpad { position: absolute; left: 10px; bottom: 10px; display: grid; grid-template: repeat(2, 40px) / repeat(3, 40px); }
   .guild-dpad button { color: #f3f2e9; background: #202824; border: 1px solid #f3f2e9; touch-action: none; font-size: 18px; }
   .guild-up { grid-area: 1 / 2; } .guild-left { grid-area: 2 / 1; } .guild-down { grid-area: 2 / 2; } .guild-right { grid-area: 2 / 3; }
