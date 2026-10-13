@@ -7,8 +7,9 @@ type Form = Pick<Member, "firstName" | "lastName" | "fiscalCode" | "documentNumb
 const emptyForm: Form = { firstName: "", lastName: "", fiscalCode: "", documentNumber: "", email: "" };
 
 async function jsonResponse(response: Response) {
-  const result = await response.json();
-  if (!response.ok) throw new Error(result.error || "Operazione non riuscita");
+  const result = await response.json().catch(() => null);
+  if (!response.ok) throw new Error(result?.error || "Il server non ha completato l'operazione. Riprova tra poco.");
+  if (!result) throw new Error("Il server ha inviato una risposta non valida. Riprova tra poco.");
   return result;
 }
 
