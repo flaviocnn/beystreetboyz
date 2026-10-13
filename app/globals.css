@@ -216,6 +216,9 @@ button { font: inherit; }
 .place-modal h2 { max-width: 520px; margin: 9px 0 14px; font-size: clamp(25px, 4vw, 43px); line-height: .98; letter-spacing: -.07em; }
 .modal-description { max-width: 535px; margin: 0; font-family: var(--font-geist-sans), sans-serif; font-size: 16px; line-height: 1.55; }
 .modal-detail { display: inline-block; margin: 20px 0 25px; padding: 8px 10px; border: 2px solid var(--ink); font-size: 9px; font-weight: 800; letter-spacing: .08em; }
+.modal-enter { display: flex; align-items: center; justify-content: space-between; width: 100%; margin: 0 0 24px; padding: 14px 17px; color: var(--paper); background: var(--ink); border: 2px solid var(--ink); font-size: 11px; font-weight: 900; letter-spacing: .08em; text-decoration: none; }
+.modal-enter:hover { color: var(--ink); background: var(--paper); }
+.modal-enter span { font-size: 18px; }
 .modal-footer { display: flex; justify-content: space-between; padding-top: 14px; border-top: 3px solid var(--ink); font-size: 8px; font-weight: 900; letter-spacing: .12em; }
 
 .modal-pixel-art { position: absolute; top: 70px; right: 36px; width: 94px; height: 66px; opacity: .12; }
@@ -228,6 +231,81 @@ button { font: inherit; }
 .place-wistery .modal-detail { border-color: var(--paper); }
 .place-wistery .modal-footer { border-color: var(--paper); }
 .place-wistery .modal-pixel-art span { background: var(--paper); }
+
+/* Conventional interiors reached from the two buildings. */
+.interior-shell { height: 100svh; min-height: 600px; overflow: auto; background: #f3f2e9; color: #202824; }
+.interior-topbar { min-height: 58px; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 0 clamp(20px, 4vw, 60px); border-bottom: 2px solid #202824; background: #e8e9dd; font-size: 10px; font-weight: 900; letter-spacing: .12em; }
+.interior-topbar a, .guild-map-header a { color: inherit; text-decoration: none; }
+.interior-topbar a:hover, .guild-map-header a:hover { text-decoration: underline; }
+.interior-container { max-width: 1440px; margin: 0 auto; padding: 54px clamp(20px, 4vw, 60px) 90px; }
+.section-kicker { margin: 0 0 13px; color: #55695d; font-size: 10px; font-weight: 900; letter-spacing: .2em; }
+.interior-container > h1 { margin: 0 0 44px; font-family: var(--font-geist-sans), sans-serif; font-size: clamp(48px, 7vw, 94px); font-weight: 800; line-height: .9; letter-spacing: -.075em; }
+.period { color: #819385; }
+.interior-muted { color: #617167; }
+.auth-card { width: min(480px, 100%); padding: 30px; background: #fffdf5; border: 2px solid #202824; box-shadow: 9px 9px 0 #b9c3b8; }
+.auth-card h2, .member-form-card h2 { margin: 0 0 10px; font-family: var(--font-geist-sans), sans-serif; font-size: 31px; letter-spacing: -.05em; }
+.auth-card p, .member-form-card > p:not(.section-kicker) { margin: 0 0 24px; color: #4e5b51; font-family: var(--font-geist-sans), sans-serif; font-size: 14px; line-height: 1.5; }
+.card-icon { display: grid; place-items: center; width: 45px; height: 45px; margin-bottom: 22px; color: #fffdf5; background: #202824; font-size: 28px; }
+.stack-form { display: grid; gap: 15px; }
+.stack-form label { display: grid; gap: 7px; font-size: 10px; font-weight: 900; letter-spacing: .11em; }
+.stack-form input { width: 100%; height: 44px; padding: 9px 12px; color: #202824; background: #fff; border: 2px solid #87978a; border-radius: 0; outline-offset: 2px; font-family: var(--font-geist-sans), sans-serif; font-size: 15px; }
+.stack-form input:focus { border-color: #202824; }
+.solid-button { display: flex; align-items: center; justify-content: space-between; min-height: 48px; width: 100%; margin-top: 4px; padding: 0 15px; color: #fffdf5; background: #202824; border: 2px solid #202824; font-size: 11px; font-weight: 900; letter-spacing: .08em; text-decoration: none; cursor: pointer; }
+.solid-button:hover { background: #3f5848; }
+.solid-button:disabled { opacity: .55; cursor: wait; }
+.solid-button span { font-size: 20px; }
+.text-button { padding: 6px 0; color: #202824; background: transparent; border: 0; font-size: 10px; font-weight: 900; letter-spacing: .08em; cursor: pointer; text-align: left; }
+.text-button:hover { text-decoration: underline; }
+.form-error { margin: 18px 0 0; padding: 10px 12px; color: #712c29; background: #f6dfd6; border-left: 4px solid #a1453c; font-size: 12px; }
+.staff-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 365px); gap: 42px; align-items: start; }
+.staff-heading { display: flex; justify-content: space-between; align-items: end; gap: 20px; margin-bottom: 18px; }
+.staff-heading h2 { margin: 0; font-family: var(--font-geist-sans), sans-serif; font-size: 28px; letter-spacing: -.04em; }
+.member-list { border-top: 3px solid #202824; }
+.empty-list { padding: 36px 12px; color: #5c6b60; font-family: var(--font-geist-sans), sans-serif; }
+.member-row { display: flex; align-items: center; gap: 15px; padding: 17px 10px; border-bottom: 1px solid #aeb9ad; }
+.member-number { align-self: flex-start; color: #7a8b7c; font-size: 11px; font-weight: 900; }
+.member-info { display: grid; gap: 5px; min-width: 0; }
+.member-info strong { font-family: var(--font-geist-sans), sans-serif; font-size: 18px; }
+.member-info small { font-size: 11px; overflow-wrap: anywhere; }
+.member-info span { color: #5e6b60; font-size: 9px; overflow-wrap: anywhere; }
+.member-actions { display: flex; gap: 10px; margin-left: auto; }
+.member-actions button { padding: 7px; color: #202824; background: transparent; border: 1px solid #819385; font-size: 9px; font-weight: 900; cursor: pointer; }
+.member-actions button:hover { background: #d9e2d5; }
+.member-actions button.danger { color: #8a4035; border-color: #a77c74; }
+.member-form-card { padding: 28px; background: #fffdf5; border: 2px solid #202824; box-shadow: 8px 8px 0 #b9c3b8; }
+.credential-card { position: relative; margin: 0 0 26px; padding: 21px 45px 20px 20px; background: #dae9d6; border: 2px solid #49654c; }
+.credential-card strong { font-family: var(--font-geist-sans), sans-serif; font-size: 17px; }
+.credential-card p { max-width: 570px; margin: 8px 0 16px; font-family: var(--font-geist-sans), sans-serif; font-size: 13px; line-height: 1.4; }
+.credential-card div { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.credential-card div span, .credential-card code { padding: 7px 9px; background: #fffdf5; border: 1px solid #749179; font-size: 12px; }
+.credential-close { position: absolute; top: 10px; right: 12px; color: #202824; border: 0; background: transparent; font-size: 24px; cursor: pointer; }
+.guild-shell { background: #dfe6db; }
+.guild-entrance { position: relative; }
+.guild-emblem { position: absolute; top: 72px; right: clamp(24px, 9vw, 135px); display: grid; place-items: center; width: clamp(90px, 14vw, 180px); aspect-ratio: 1; color: #dfe6db; background: #27372d; border: 8px double #b2c4ae; font-family: Georgia, serif; font-size: clamp(65px, 10vw, 120px); }
+.guild-entrance .auth-card .solid-button { margin: 22px 0 12px; }
+
+.guild-map-shell { height: 100svh; min-height: 610px; display: flex; flex-direction: column; background: #17231d; color: #f2f3e8; }
+.guild-map-header { display: flex; justify-content: space-between; gap: 20px; padding: 16px 26px; border-bottom: 1px solid #677f6a; font-size: 10px; font-weight: 900; letter-spacing: .1em; }
+.guild-map-title { display: flex; align-items: end; gap: 22px; padding: 18px 30px; }
+.guild-map-title p { margin: 0; color: #b3c4ad; font-size: 9px; font-weight: 900; }
+.guild-map-title h1 { margin: 0; font-family: var(--font-geist-sans), sans-serif; font-size: clamp(24px, 3vw, 42px); letter-spacing: -.05em; }
+.guild-map-title span { margin-left: auto; color: #c4d0c0; font-size: 10px; }
+.guild-stage { position: relative; flex: 1; min-height: 340px; margin: 0 30px 30px; border: 7px solid #879b83; box-shadow: 7px 7px 0 #0d1711; overflow: hidden; }
+.guild-canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+.guild-board-button { position: absolute; right: 15px; bottom: 15px; padding: 12px 14px; color: #f2f3e8; background: #202824; border: 2px solid #f2f3e8; font-size: 10px; font-weight: 900; cursor: pointer; }
+.guild-map-message { display: grid; place-content: center; gap: 15px; flex: 1; padding: 24px; text-align: center; }
+.guild-map-message h1, .guild-map-message p { margin: 0; }
+.guild-dpad { display: none; }
+.guild-overlay { position: fixed; z-index: 30; inset: 0; display: grid; place-items: center; padding: 20px; background: rgba(8, 17, 11, .78); }
+.ranking-card { position: relative; width: min(620px, 100%); max-height: 88vh; overflow: auto; padding: 30px; color: #202824; background: #f3f2e9; border: 4px solid #202824; box-shadow: 10px 10px 0 #889c84; }
+.ranking-card h2 { margin: 0 0 10px; font-family: var(--font-geist-sans), sans-serif; font-size: clamp(27px, 5vw, 43px); letter-spacing: -.05em; }
+.ranking-note { margin: 0 0 24px; color: #526157; font-family: var(--font-geist-sans), sans-serif; font-size: 14px; }
+.ranking-list { border-top: 3px solid #202824; }
+.ranking-row { display: flex; gap: 15px; align-items: center; padding: 13px 5px; border-bottom: 1px solid #a7b5a7; font-size: 12px; }
+.ranking-row > span { color: #7a8b7c; font-weight: 900; }
+.ranking-row strong { font-family: var(--font-geist-sans), sans-serif; font-size: 16px; }
+.ranking-row b { margin-left: auto; white-space: nowrap; }
+.ranking-row.is-you { background: #d9e9d4; }
 
 @media (max-width: 760px) {
   .game-shell { min-height: 500px; }
@@ -262,6 +340,23 @@ button { font: inherit; }
   .place-modal h2 { max-width: calc(100% - 30px); }
   .modal-description { font-size: 14px; }
   .modal-detail { line-height: 1.45; }
+  .staff-layout { grid-template-columns: 1fr; }
+  .member-form-card { grid-row: 1; }
+  .interior-topbar > span { display: none; }
+  .interior-container { padding-top: 35px; }
+  .interior-container > h1 { margin-bottom: 35px; }
+  .guild-emblem { opacity: .13; top: 40px; }
+  .member-row { align-items: flex-start; flex-wrap: wrap; }
+  .member-actions { flex-basis: 100%; margin-left: 27px; }
+  .guild-map-header { padding: 14px; font-size: 8px; }
+  .guild-map-header > span { display: none; }
+  .guild-map-title { display: block; padding: 16px; }
+  .guild-map-title span { display: block; margin-top: 5px; }
+  .guild-stage { margin: 0 12px 12px; }
+  .guild-board-button { right: 8px; bottom: 8px; font-size: 8px; }
+  .guild-dpad { position: absolute; left: 10px; bottom: 10px; display: grid; grid-template: repeat(2, 40px) / repeat(3, 40px); }
+  .guild-dpad button { color: #f3f2e9; background: #202824; border: 1px solid #f3f2e9; touch-action: none; font-size: 18px; }
+  .guild-up { grid-area: 1 / 2; } .guild-left { grid-area: 2 / 1; } .guild-down { grid-area: 2 / 2; } .guild-right { grid-area: 2 / 3; }
 }
 
 @media (prefers-reduced-motion: reduce) {

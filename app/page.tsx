@@ -54,6 +54,24 @@ const places: Place[] = [
     x: 1045,
     y: 735,
   },
+  {
+    id: "staff",
+    name: "Il Palazzo dello Staff",
+    eyebrow: "ACCESSO RISERVATO · TORINO QUEST",
+    description: "L'archivio dei membri della città. Il personale autorizzato può creare e gestire le iscrizioni.",
+    detail: "Serve la parola d'ordine per entrare",
+    x: 485,
+    y: 470,
+  },
+  {
+    id: "guild",
+    name: "La Gilda del Grifone",
+    eyebrow: "SALA DEI MEMBRI · TORINO QUEST",
+    description: "Varca la soglia con le credenziali consegnate dallo staff. All'interno ti aspetta la mappa della Gilda e la classifica.",
+    detail: "Accesso membri · Classifica della Gilda",
+    x: 975,
+    y: 465,
+  },
 ];
 
 function pixelText(
@@ -265,6 +283,69 @@ function drawWistery(ctx: CanvasRenderingContext2D, x: number, y: number) {
   ctx.lineWidth = 3;
   ctx.strokeRect(-73, -60, 146, 125);
   pixelText(ctx, "WISTERY", 0, 88, 12);
+  ctx.restore();
+}
+
+function drawStaffPalace(ctx: CanvasRenderingContext2D, x: number, y: number) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.fillStyle = PALETTE.ink;
+  ctx.fillRect(-88, -91, 176, 12);
+  ctx.fillRect(-77, -112, 154, 20);
+  ctx.fillRect(-64, -130, 128, 17);
+  ctx.fillStyle = PALETTE.mid;
+  ctx.fillRect(-78, -78, 156, 143);
+  ctx.fillStyle = PALETTE.paper;
+  ctx.fillRect(-68, -69, 136, 124);
+  ctx.strokeStyle = PALETTE.ink;
+  ctx.lineWidth = 5;
+  ctx.strokeRect(-78, -79, 156, 144);
+  for (const windowX of [-53, 30]) {
+    for (const windowY of [-55, -18]) {
+      ctx.fillStyle = PALETTE.ink;
+      ctx.fillRect(windowX, windowY, 24, 23);
+      ctx.fillStyle = PALETTE.mid;
+      ctx.fillRect(windowX + 4, windowY + 4, 16, 15);
+    }
+  }
+  ctx.fillStyle = PALETTE.ink;
+  ctx.fillRect(-15, 15, 30, 50);
+  ctx.fillRect(-96, 59, 192, 10);
+  ctx.fillStyle = PALETTE.paper;
+  ctx.fillRect(-8, 22, 5, 5);
+  pixelText(ctx, "STAFF", 0, 87, 12);
+  ctx.restore();
+}
+
+function drawGuild(ctx: CanvasRenderingContext2D, x: number, y: number) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.fillStyle = PALETTE.ink;
+  ctx.beginPath();
+  ctx.moveTo(-108, -72);
+  ctx.lineTo(0, -134);
+  ctx.lineTo(108, -72);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = PALETTE.mid;
+  ctx.fillRect(-94, -71, 188, 133);
+  ctx.fillStyle = PALETTE.paper;
+  ctx.fillRect(-83, -61, 166, 112);
+  ctx.strokeStyle = PALETTE.ink;
+  ctx.lineWidth = 5;
+  ctx.strokeRect(-94, -71, 188, 133);
+  ctx.fillStyle = PALETTE.ink;
+  ctx.fillRect(-23, 0, 46, 61);
+  ctx.fillRect(-72, -37, 30, 30);
+  ctx.fillRect(42, -37, 30, 30);
+  ctx.fillStyle = PALETTE.mid;
+  ctx.fillRect(-66, -31, 18, 18);
+  ctx.fillRect(48, -31, 18, 18);
+  ctx.fillStyle = PALETTE.ink;
+  ctx.fillRect(-13, -103, 26, 25);
+  ctx.fillStyle = PALETTE.paper;
+  pixelText(ctx, "G", 0, -90, 17, "center", PALETTE.paper);
+  pixelText(ctx, "GILDA DEL GRIFONE", 0, 87, 11);
   ctx.restore();
 }
 
@@ -495,6 +576,8 @@ function GameMap({
       drawIntesa(ctx, places[0].x, places[0].y);
       drawSkatepark(ctx, places[1].x, places[1].y);
       drawWistery(ctx, places[2].x, places[2].y);
+      drawStaffPalace(ctx, places[3].x, places[3].y);
+      drawGuild(ctx, places[4].x, places[4].y);
       for (const place of places) drawMarker(ctx, place, closest?.id === place.id, now);
       drawPlayer(ctx, player.x, player.y, player.dir, Boolean(dx || dy), now);
       ctx.restore();
@@ -627,7 +710,7 @@ export default function Home() {
       </div>
 
       <div className="map-index" aria-label="Luoghi presenti sulla mappa">
-        <span>03 LUOGHI</span>
+        <span>05 LUOGHI</span>
         <div>{places.map((place) => <i key={place.id} className={nearby?.id === place.id ? "active" : ""} />)}</div>
       </div>
 
@@ -647,6 +730,11 @@ export default function Home() {
             <h2 id="modal-title">{selected.name}</h2>
             <p className="modal-description">{selected.description}</p>
             <p className="modal-detail">{selected.detail}</p>
+            {(selected.id === "staff" || selected.id === "guild") && (
+              <a className="modal-enter" href={selected.id === "staff" ? "/staff" : "/gilda"} onClick={playClick}>
+                {selected.id === "staff" ? "ENTRA NEL PALAZZO" : "ENTRA NELLA GILDA"} <span>→</span>
+              </a>
+            )}
             <div className="modal-footer"><span>TORINO QUEST</span><span>ESC PER CHIUDERE</span></div>
           </section>
         </div>
