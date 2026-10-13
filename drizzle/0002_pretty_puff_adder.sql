@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX `members_fiscal_code_unique` ON `members` (`fiscal_code`);

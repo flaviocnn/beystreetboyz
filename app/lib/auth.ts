@@ -1,7 +1,7 @@
 import { env } from "cloudflare:workers";
 
 type Role = "staff" | "member";
-type Session = { role: Role; id: string; expires: number };
+type Session = { role: Role; id: string; expires: number; version: number };
 const encoder = new TextEncoder();
 
 function secret(name: "STAFF_PASSPHRASE" | "SESSION_SECRET") {
@@ -34,9 +34,9 @@ async function sign(data: string) {
   return bytesToHex(new Uint8Array(await crypto.subtle.sign("HMAC", key, encoder.encode(data))));
 }
 
-export async function sessionCookie(role: Role, id: string, request: Request) {
+export async function sessionCookie(role: Role, id: string, request: Request, version = 0) {
   const expires = Date.now() + (role === "staff" ? 8 * 60 * 60 * 1000 : 30 * 24 * 60 * 60 * 1000);
-  const payload = `${role}.${id}.${expires}`;
+  const payload = `${role}.${id}.${expires}.${version}`;
   const value = `${payload}.${await sign(payload)}`;
   const maxAge = Math.floor((expires - Date.now()) / 1000);
   const secure = new URL(request.url).protocol === "https:" ? "; Secure" : "";
@@ -52,12 +52,14 @@ export async function getSession(request: Request): Promise<Session | null> {
   const value = request.headers.get("cookie")?.split("; ").find((part) => part.startsWith("tq_session="))?.slice(11);
   if (!value) return null;
   const parts = value.split(".");
-  if (parts.length !== 4) return null;
-  const [role, id, expiryText, signature] = parts;
+  if (parts.length !== 4 && parts.length !== 5) return null;
+  const [role, id, expiryText] = parts;
+  const signature = parts[parts.length - 1];
+  const version = parts.length === 5 ? Number(parts[3]) : 0;
   const expires = Number(expiryText);
   if ((role !== "staff" && role !== "member") || !id || !Number.isFinite(expires) || expires < Date.now()) return null;
-  if (!equal(signature, await sign(`${role}.${id}.${expiryText}`))) return null;
-  return { role, id, expires };
+  if (!Number.isSafeInteger(version) || !equal(signature, await sign(parts.slice(0, -1).join(".")))) return null;
+  return { role, id, expires, version };
 }
 
 export function sameOrigin(request: Request) {

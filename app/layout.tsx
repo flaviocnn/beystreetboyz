@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -10,6 +10,8 @@ export const metadata: Metadata = {
   description: "Una mappa 8-bit interattiva per scoprire tre luoghi speciali di Torino.",
   icons: { icon: "/favicon.svg", shortcut: "/favicon.svg" },
 };
+
+export const viewport: Viewport = { width: "device-width", initialScale: 1, viewportFit: "cover", themeColor: "#202322" };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (

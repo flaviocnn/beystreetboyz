@@ -3,8 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useGameAudio } from "../../lib/game-audio";
 import { drawPixelPlayer, type Direction } from "../../lib/pixel-player";
+import { type PlayerMember as Member, readResponse } from "../../lib/client-api";
+import { useDialogFocus } from "../../lib/dialog-focus";
 
-type Member = { id: string; firstName: string; lastName: string; email: string };
 type RankingRow = { id: string; firstName: string; lastName: string; score: number };
 
 const WORLD = { width: 1450, height: 900 };
@@ -117,7 +118,8 @@ function drawGuildWorld(ctx: CanvasRenderingContext2D, near: boolean, now: numbe
   ctx.fillText("↑ BACHECA", START.x, 792);
 }
 
-function GuildRoom({ onBoard, onNear, onStep, paused }: {
+function GuildRoom({ onBoard, onNear, onStep, paused, member }: {
+  member: Member;
   onBoard: () => void;
   onNear: (near: boolean) => void;
   onStep: () => void;
@@ -141,7 +143,7 @@ function GuildRoom({ onBoard, onNear, onStep, paused }: {
     const resize = () => {
       const rect = canvas.getBoundingClientRect();
       canvas.width = Math.max(320, Math.floor(rect.width));
-      canvas.height = Math.max(340, Math.floor(rect.height));
+      canvas.height = Math.max(140, Math.floor(rect.height));
       ctx.imageSmoothingEnabled = false;
     };
     resize();
@@ -180,14 +182,14 @@ function GuildRoom({ onBoard, onNear, onStep, paused }: {
       ctx.save();
       ctx.translate(-Math.round(cameraX), -Math.round(cameraY));
       drawGuildWorld(ctx, near, now);
-      drawPixelPlayer(ctx, player.x, player.y, player.dir, Boolean(dx || dy), now);
+      drawPixelPlayer(ctx, player.x, player.y, player.dir, Boolean(dx || dy), now, member);
       ctx.restore();
       frame = requestAnimationFrame(render);
     };
     frame = requestAnimationFrame(render);
     const keydown = (event: KeyboardEvent) => {
       const direction = KEY_DIRECTIONS[event.key];
-      if (direction) {
+      if (direction && !pausedRef.current) {
         event.preventDefault();
         if (!pausedRef.current) keysRef.current.add(direction);
       }
@@ -204,14 +206,16 @@ function GuildRoom({ onBoard, onNear, onStep, paused }: {
     window.addEventListener("keydown", keydown);
     window.addEventListener("keyup", keyup);
     window.addEventListener("blur", blur);
+    document.addEventListener("visibilitychange", blur);
     return () => {
       cancelAnimationFrame(frame);
       observer.disconnect();
       window.removeEventListener("keydown", keydown);
       window.removeEventListener("keyup", keyup);
       window.removeEventListener("blur", blur);
+      document.removeEventListener("visibilitychange", blur);
     };
-  }, [onBoard, onNear, onStep]);
+  }, [onBoard, onNear, onStep, member]);
 
   return <>
     <canvas ref={canvasRef} className="guild-canvas" aria-label="Mappa interna della Gilda del Grifone. Avvicinati alla classifica con le frecce." />
@@ -220,7 +224,8 @@ function GuildRoom({ onBoard, onNear, onStep, paused }: {
         <button key={direction} className={`guild-${direction}`} aria-label={`Vai ${direction}`}
           onPointerDown={(event) => { event.currentTarget.setPointerCapture(event.pointerId); keysRef.current.add(direction); }}
           onPointerUp={() => keysRef.current.delete(direction)}
-          onPointerCancel={() => keysRef.current.delete(direction)}>
+          onPointerCancel={() => keysRef.current.delete(direction)}
+          onLostPointerCapture={() => keysRef.current.delete(direction)}>
           {direction === "up" ? "↑" : direction === "down" ? "↓" : direction === "left" ? "←" : "→"}
         </button>
       ))}
@@ -234,8 +239,9 @@ export default function GuildMapPage() {
   const [ranking, setRanking] = useState<RankingRow[]>([]);
   const [near, setNear] = useState(false);
   const [boardOpen, setBoardOpen] = useState(false);
+  useDialogFocus(boardOpen);
   const [error, setError] = useState("");
-  const { enabled: audioEnabled, toggle: toggleAudio, playClick, playStep } = useGameAudio();
+  const { enabled: audioEnabled, toggle: toggleAudio, playClick, playStep } = useGameAudio("guild");
   const openBoard = useCallback(() => { playClick(); setBoardOpen(true); }, [playClick]);
   const updateNear = useCallback((value: boolean) => setNear(value), []);
   const closeBoard = useCallback(() => { playClick(); setBoardOpen(false); }, [playClick]);
@@ -244,11 +250,12 @@ export default function GuildMapPage() {
     void (async () => {
       try {
         const sessionResponse = await fetch("/api/member/session", { cache: "no-store" });
-        const session = await sessionResponse.json();
+        const session = await readResponse(sessionResponse);
         if (!session.member) return;
+        if (session.member.mustChangePassword) { window.location.replace("/gilda"); return; }
         setMember(session.member);
         const rankingResponse = await fetch("/api/guild/ranking", { cache: "no-store" });
-        const result = await rankingResponse.json();
+        const result = await readResponse(rankingResponse);
         if (!rankingResponse.ok) throw new Error(result.error || "Classifica non disponibile");
         setRanking(result.ranking);
       } catch (cause) {
@@ -284,7 +291,7 @@ export default function GuildMapPage() {
         <span>FRECCE / WASD PER MUOVERTI · INVIO PER ESPLORARE</span>
       </div>
       <div className="guild-stage">
-        <GuildRoom onBoard={openBoard} onNear={updateNear} onStep={playStep} paused={boardOpen} />
+        <GuildRoom onBoard={openBoard} onNear={updateNear} onStep={playStep} paused={boardOpen} member={member} />
         <div className={`guild-interaction-prompt ${near && !boardOpen ? "is-visible" : ""}`} aria-live="polite">
           {near && !boardOpen && <button onClick={openBoard}><span className="prompt-icon">!</span><span><small>SEI VICINO ALLA</small>Classifica della Gilda</span><kbd>INVIO ↵</kbd></button>}
         </div>

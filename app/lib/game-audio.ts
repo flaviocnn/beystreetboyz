@@ -4,14 +4,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 const STORAGE_KEY = "torino-quest-audio";
 
-export function useGameAudio() {
+export function useGameAudio(theme: "city" | "guild" | "wistery" = "city") {
   const [enabled, setEnabled] = useState(true);
   const enabledRef = useRef(true);
   const contextRef = useRef<AudioContext | null>(null);
 
   const tone = useCallback((frequency: number, duration: number, volume: number, type: OscillatorType = "square") => {
     const context = contextRef.current;
-    if (!context || context.state !== "running" || !enabledRef.current) return;
+    if (!context || context.state !== "running" || !enabledRef.current || document.hidden) return;
     const oscillator = context.createOscillator();
     const gain = context.createGain();
     oscillator.type = type;
@@ -47,17 +47,17 @@ export function useGameAudio() {
   }, [activate]);
 
   useEffect(() => {
-    const melody = [523.25, 659.25, 783.99, 659.25, 587.33, 698.46, 880, 698.46, 523.25, 659.25, 783.99, 987.77, 880, 783.99, 659.25, 587.33];
-    const bass = [130.81, 130.81, 146.83, 146.83, 110, 110, 123.47, 123.47];
+    const melody = theme === "guild" ? [392, 493.88, 587.33, 783.99, 659.25, 587.33, 493.88, 440, 392, 493.88, 587.33, 659.25, 587.33, 493.88, 440, 392] : theme === "wistery" ? [329.63, 392, 493.88, 0, 440, 392, 369.99, 0, 329.63, 493.88, 659.25, 587.33, 493.88, 440, 369.99, 0] : [523.25, 659.25, 783.99, 659.25, 587.33, 698.46, 880, 698.46, 523.25, 659.25, 783.99, 987.77, 880, 783.99, 659.25, 587.33];
+    const bass = theme === "guild" ? [98, 98, 130.81, 130.81, 110, 110, 146.83, 146.83] : theme === "wistery" ? [82.41, 82.41, 98, 98, 110, 110, 92.5, 92.5] : [130.81, 130.81, 146.83, 146.83, 110, 110, 123.47, 123.47];
     let beat = 0;
     const timer = window.setInterval(() => {
       if (!enabledRef.current || contextRef.current?.state !== "running") return;
-      tone(melody[beat % melody.length], .105, .018);
+      if (melody[beat % melody.length]) tone(melody[beat % melody.length], .105, .018);
       if (beat % 2 === 0) tone(bass[Math.floor(beat / 2) % bass.length], .16, .025, "triangle");
       beat += 1;
-    }, 185);
+    }, theme === "guild" ? 220 : theme === "wistery" ? 245 : 185);
     return () => window.clearInterval(timer);
-  }, [tone]);
+  }, [tone, theme]);
 
   const playClick = useCallback(() => {
     void activate().then(() => {
@@ -76,7 +76,7 @@ export function useGameAudio() {
       enabledRef.current = false;
       setEnabled(false);
       window.localStorage.setItem(STORAGE_KEY, "off");
-      window.setTimeout(() => void contextRef.current?.suspend(), 85);
+      window.setTimeout(() => { if (!enabledRef.current) void contextRef.current?.suspend(); }, 85);
     } else {
       enabledRef.current = true;
       setEnabled(true);

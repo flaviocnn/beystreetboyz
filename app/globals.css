@@ -375,3 +375,133 @@ button { font: inherit; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
+
+/* Shared form and touch foundations. */
+html { -webkit-text-size-adjust: 100%; }
+button, a, input, select { -webkit-tap-highlight-color: transparent; }
+button, a { touch-action: manipulation; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid #658bec; outline-offset: 4px; }
+button:disabled { cursor: wait; opacity: .55; }
+.interior-shell { height: 100dvh; min-height: 0; overscroll-behavior-y: contain; }
+.game-shell, .guild-map-shell { height: 100dvh; min-height: 0; }
+.interior-topbar { padding-top: env(safe-area-inset-top); }
+.interior-container { padding-bottom: max(50px, env(safe-area-inset-bottom)); }
+.interior-container, .staff-main, .avatar-options { min-width: 0; }
+.stack-form input, .stack-form select, .member-search input { min-width: 0; width: 100%; min-height: 48px; padding: 10px 12px; border: 2px solid #87978a; border-radius: 0; color: #202824; background: white; font: 16px var(--font-geist-sans), sans-serif; }
+.stack-form select { appearance: auto; }
+.outline-button { display: flex; align-items: center; justify-content: center; min-height: 48px; margin: 12px 0; padding: 12px; border: 2px solid currentColor; color: inherit; text-decoration: none; font-size: 11px; font-weight: 800; text-align: center; }
+.text-button, .member-actions button, .close-button, .credential-close, .guild-audio-toggle { min-height: 44px; }
+.close-button, .credential-close { min-width: 44px; }
+.member-form-card { scroll-margin-top: 20px; }
+.member-search { display: grid; gap: 8px; margin: 20px 0; font-size: 10px; font-weight: bold; }
+.membership-fields { display: grid; gap: 15px; min-width: 0; margin: 5px 0; padding: 18px 12px; border: 1px solid #a4b29f; }
+.membership-fields legend { font-size: 11px; font-weight: 800; padding: 0 8px; }
+.stack-form .checkbox-label { display: flex; align-items: center; min-height: 44px; gap: 12px; }
+.stack-form .checkbox-label input { width: 24px; height: 24px; min-height: 24px; flex: 0 0 24px; accent-color: #3f5848; }
+.field-hint { font: 13px/1.5 var(--font-geist-sans), sans-serif; color: #4e5b51; margin: 0; }
+.member-info span { font-size: 11px; line-height: 1.5; }
+.member-info .member-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.member-badges b { padding: 4px 6px; background: #dbe2d7; font-size: 9px; color: #304337; }
+.member-badges .paid { background: #d2e9cc; color: #25582f; }
+.member-badges .unpaid { background: #f3e5c6; color: #69491c; }
+.mobile-add-member { display: none; }
+.credential-card code, .credential-card span { overflow-wrap: anywhere; max-width: 100%; }
+.modal-backdrop, .guild-overlay { overflow-y: auto; overscroll-behavior: contain; }
+.place-modal, .ranking-card { max-height: calc(100dvh - 40px); overflow-y: auto; overscroll-behavior: contain; }
+.ranking-card h2 { padding-right: 40px; }
+.guild-stage { min-height: 0; }
+.place-wistery .modal-enter { border-color: #9cb5ee; background: #304a85; }
+.wistery-shell { background: #121521; color: #ebedff; }
+.wistery-shell .interior-topbar { background: #1d2235; border-color: #53628f; }
+.wistery-shell .section-kicker { color: #9baee3; }
+.wistery-shell .period { color: #82a4fb; }
+.wistery-shell .auth-card { color: #202824; }
+.avatar-workshop { display: grid; grid-template-columns: minmax(240px, .75fr) minmax(0, 1.4fr); gap: 32px; align-items: start; }
+.avatar-preview-panel { text-align: center; padding: 30px 20px; border: 2px solid #60749f; background: #20273c; position: sticky; top: 24px; box-shadow: 8px 8px 0 #080c16; }
+.avatar-stage { display: grid; place-items: center; background: radial-gradient(ellipse, #718abc 0%, #394a6c 45%, #20273c 70%); }
+.avatar-stage canvas { width: min(100%, 320px); height: auto; image-rendering: pixelated; }
+.avatar-preview-panel h2 { margin: 0; font-size: 24px; }
+.avatar-preview-panel p { color: #aebbdf; font-size: 12px; }
+.avatar-directions { display: flex; justify-content: center; gap: 8px; }
+.avatar-directions button { width: 44px; height: 44px; color: #d8e2fc; background: #161e34; border: 1px solid #7286b6; }
+.avatar-directions button[aria-pressed="true"] { background: #49639b; }
+.avatar-options h2 { font-size: 15px; margin: 0 0 20px; }
+.avatar-options h2:not(:first-child) { margin-top: 30px; }
+.avatar-style-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 9px; }
+.avatar-style-grid button { display: grid; justify-items: center; align-content: start; padding: 8px 3px 12px; color: #c6d1ee; border: 2px solid #495979; background: #262f48; cursor: pointer; min-width: 0; }
+.avatar-style-grid button[aria-pressed="true"] { border-color: #adcbff; background: #364e78; box-shadow: 0 0 0 2px #adcbff; color: white; }
+.avatar-style-grid canvas { width: 100%; max-width: 96px; height: auto; image-rendering: pixelated; }
+.avatar-style-grid span { font-size: 9px; overflow-wrap: anywhere; }
+.avatar-colors { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.avatar-colors button { display: grid; gap: 8px; justify-items: center; padding: 8px; background: transparent; color: #d1dafa; border: 1px solid transparent; cursor: pointer; }
+.avatar-colors button[aria-pressed="true"] { border-color: #c1d1ff; }
+.avatar-colors span { display: grid; place-items: center; width: 44px; height: 44px; color: #101521; background: var(--swatch); border: 3px solid #151b2a; box-shadow: 2px 2px 0 #6b7da8; font-size: 25px; }
+.avatar-colors small { font-size: 10px; }
+.avatar-save-note { font: 15px/1.6 var(--font-geist-sans), sans-serif; color: #bac6e4; margin: 28px 0 18px; }
+.wistery-shell .solid-button { background: #526fb2; border-color: #9ab4f5; color: white; }
+.success-message { padding: 14px; background: #254536; color: #dbf2d2; font-size: 13px; line-height: 1.5; }
+.map-canvas, .guild-canvas, .dpad, .guild-dpad { touch-action: none; user-select: none; -webkit-user-select: none; }
+
+@media (max-width: 1000px) {
+  .staff-layout { grid-template-columns: 1fr; gap: 28px; }
+  .member-form-card { grid-row: auto; }
+  .mobile-add-member { display: flex; }
+  .avatar-workshop { grid-template-columns: 1fr; }
+  .avatar-preview-panel { position: static; padding: 20px; }
+  .avatar-stage canvas { width: 200px; }
+}
+@media (pointer: coarse), (max-width: 760px), (max-height: 500px) and (orientation: landscape) {
+  .instructions, .map-index { display: none; }
+  .dpad, .guild-dpad { position: absolute; z-index: 6; left: auto; right: max(16px, env(safe-area-inset-right)); bottom: max(16px, env(safe-area-inset-bottom)); display: grid; grid-template: repeat(2, 48px) / repeat(3, 48px); gap: 3px; }
+  .dpad button, .guild-dpad button { border: 2px solid #f2f3ea; color: #f2f3ea; background: #202824; font-size: 20px; touch-action: none; }
+  .dpad-up, .guild-up { grid-area: 1 / 2; } .dpad-left, .guild-left { grid-area: 2 / 1; } .dpad-down, .guild-down { grid-area: 2 / 2; } .dpad-right, .guild-right { grid-area: 2 / 3; }
+  .interaction-prompt { left: 16px; bottom: calc(135px + env(safe-area-inset-bottom)); width: calc(100% - 32px); transform: translate(0, 18px); }
+  .interaction-prompt.is-visible { transform: translate(0, 0); }
+  .guild-interaction-prompt { bottom: calc(135px + env(safe-area-inset-bottom)); }
+  .interaction-prompt kbd, .guild-interaction-prompt kbd { display: none; }
+  .guild-map-title span { font-size: 0; }
+  .guild-map-title span::after { content: "USA LE FRECCE TOUCH · TOCCA IL LUOGO PER ENTRARE"; font-size: 9px; }
+}
+@media (max-width: 760px) {
+  .game-header { top: max(12px, env(safe-area-inset-top)); left: 12px; max-width: calc(100% - 82px); gap: 8px; }
+  .game-header h1 { font-size: 11px; line-height: 1.3; }
+  .game-header .brand-mark { flex-shrink: 0; width: 28px; height: 32px; }
+  .audio-toggle { top: max(12px, env(safe-area-inset-top)); right: 12px; min-width: 44px; min-height: 44px; justify-content: center; }
+  .interior-container { padding: 28px 18px max(40px, env(safe-area-inset-bottom)); }
+  .interior-container > h1 { font-size: clamp(40px, 11vw, 68px); margin-bottom: 28px; }
+  .auth-card, .member-form-card { padding: 22px 18px; box-shadow: 5px 5px 0 #b9c3b8; }
+  .auth-card h2, .member-form-card h2 { font-size: 27px; }
+  .interior-topbar { padding-left: 18px; padding-right: 18px; font-size: 9px; }
+  .interior-topbar a { display: flex; align-items: center; min-height: 50px; }
+  .member-row { padding: 20px 0; gap: 10px; }
+  .member-info { flex: 1; }
+  .member-info small { line-height: 1.6; }
+  .member-actions { margin-left: 24px; }
+  .member-actions button { min-width: 100px; }
+  .staff-heading { align-items: center; }
+  .staff-heading h2 { font-size: 23px; }
+  .place-modal, .ranking-card { max-height: calc(100dvh - 28px); padding: 24px 18px 18px; }
+  .modal-backdrop, .guild-overlay { padding: 14px; }
+  .modal-count { padding-right: 42px; font-size: 8px; }
+  .modal-description { line-height: 1.65; }
+  .modal-footer { letter-spacing: 0; }
+  .guild-map-header { align-items: center; gap: 8px; padding: max(5px, env(safe-area-inset-top)) 12px 5px; }
+  .guild-map-header a { display: flex; align-items: center; min-height: 44px; font-size: 8px; }
+  .guild-header-actions { gap: 8px; }
+  .guild-audio-toggle { min-width: 44px; }
+  .guild-map-title { padding: 10px 14px; }
+  .guild-map-title h1 { font-size: 25px; }
+  .guild-stage { border-width: 4px; margin: 0 8px max(8px, env(safe-area-inset-bottom)); }
+  .ranking-row { gap: 9px; font-size: 11px; }
+  .ranking-row strong { font-size: 14px; overflow-wrap: anywhere; }
+  .avatar-style-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .avatar-style-grid span { font-size: 10px; }
+  .wistery-shell .interior-container > h1 { font-size: clamp(40px, 11vw, 64px); }
+}
+@media (max-height: 500px) and (orientation: landscape) {
+  .game-header { padding: 6px 10px; }
+  .guild-map-title { display: none; }
+  .interaction-prompt, .guild-interaction-prompt { left: 16px; bottom: 18px; width: min(340px, calc(100% - 200px)); transform: none; }
+  .interaction-prompt.is-visible, .guild-interaction-prompt.is-visible { transform: none; }
+  .interaction-prompt .prompt-icon, .guild-interaction-prompt .prompt-icon { display: none; }
+}

@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useGameAudio } from "./lib/game-audio";
 import { drawPixelPlayer, type Direction } from "./lib/pixel-player";
+import { type PlayerMember, readResponse } from "./lib/client-api";
+import { useDialogFocus } from "./lib/dialog-focus";
 
 type Place = {
   id: string;
@@ -50,8 +52,8 @@ const places: Place[] = [
     name: "Wistery Club",
     eyebrow: "COORDINATE SCONOSCIUTE",
     description:
-      "Patria dei Cobalt Flames, il Wistery è un luogo misterioso e proibito, avvolto nelle tenebre. Per ora non è possibile accedere.",
-    detail: "ACCESSO NEGATO · LUOGO PROIBITO · TORNA PRESTO",
+      "Patria dei Cobalt Flames, il Wistery è avvolto nelle tenebre. Solo i membri della Gilda possono varcare la soglia e forgiare il proprio avatar.",
+    detail: "ATELIER SEGRETO · RISERVATO AI MEMBRI DELLA GILDA",
     x: 1045,
     y: 735,
   },
@@ -375,17 +377,21 @@ function GameMap({
   onNearbyChange,
   modalOpen,
   onStep,
+  member,
 }: {
   nearby: Place | null;
   onNearbyChange: (place: Place | null) => void;
   modalOpen: boolean;
   onStep: () => void;
+  member: PlayerMember | null;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const playerRef = useRef({ ...START, dir: "down" as Direction });
   const keysRef = useRef(new Set<Direction>());
   const nearbyRef = useRef<Place | null>(nearby);
   const modalRef = useRef(modalOpen);
+  const memberRef = useRef(member);
+  useEffect(() => { memberRef.current = member; }, [member]);
 
   useEffect(() => {
     nearbyRef.current = nearby;
@@ -404,7 +410,7 @@ function GameMap({
     const resize = () => {
       const rect = canvas.getBoundingClientRect();
       canvas.width = Math.max(320, Math.floor(rect.width));
-      canvas.height = Math.max(420, Math.floor(rect.height));
+      canvas.height = Math.max(140, Math.floor(rect.height));
       ctx.imageSmoothingEnabled = false;
     };
     resize();
@@ -477,7 +483,7 @@ function GameMap({
       drawStaffPalace(ctx, places[3].x, places[3].y);
       drawGuild(ctx, places[4].x, places[4].y);
       for (const place of places) drawMarker(ctx, place, closest?.id === place.id, now);
-      drawPixelPlayer(ctx, player.x, player.y, player.dir, Boolean(dx || dy), now);
+      drawPixelPlayer(ctx, player.x, player.y, player.dir, Boolean(dx || dy), now, memberRef.current?.mustChangePassword ? null : memberRef.current);
       ctx.restore();
       frame = requestAnimationFrame(render);
     };
@@ -506,7 +512,7 @@ function GameMap({
     };
     const down = (event: KeyboardEvent) => {
       const dir = map[event.key];
-      if (dir) {
+      if (dir && !modalRef.current) {
         event.preventDefault();
         setDirection(dir, true);
       }
@@ -517,10 +523,14 @@ function GameMap({
     };
     window.addEventListener("keydown", down);
     window.addEventListener("keyup", up);
-    window.addEventListener("blur", () => keysRef.current.clear());
+    const clearKeys = () => keysRef.current.clear();
+    window.addEventListener("blur", clearKeys);
+    document.addEventListener("visibilitychange", clearKeys);
     return () => {
       window.removeEventListener("keydown", down);
       window.removeEventListener("keyup", up);
+      window.removeEventListener("blur", clearKeys);
+      document.removeEventListener("visibilitychange", clearKeys);
     };
   }, []);
 
@@ -539,6 +549,7 @@ function GameMap({
             }}
             onPointerUp={() => setDirection(direction, false)}
             onPointerCancel={() => setDirection(direction, false)}
+            onLostPointerCapture={() => setDirection(direction, false)}
           >
             {direction === "up" ? "↑" : direction === "down" ? "↓" : direction === "left" ? "←" : "→"}
           </button>
@@ -549,8 +560,11 @@ function GameMap({
 }
 
 export default function Home() {
+  const [member, setMember] = useState<PlayerMember | null>(null);
+  useEffect(() => { void fetch("/api/member/session", { cache: "no-store" }).then(readResponse).then((result) => setMember(result.member)).catch(() => setMember(null)); }, []);
   const [nearby, setNearby] = useState<Place | null>(null);
   const [selected, setSelected] = useState<Place | null>(null);
+  useDialogFocus(Boolean(selected));
   const { enabled: audioEnabled, toggle: toggleAudio, playClick, playStep } = useGameAudio();
   const openSelected = useCallback(() => {
     if (nearby) {
@@ -574,7 +588,7 @@ export default function Home() {
 
   return (
     <main className="game-shell">
-      <GameMap nearby={nearby} onNearbyChange={setNearby} modalOpen={Boolean(selected)} onStep={playStep} />
+      <GameMap nearby={nearby} onNearbyChange={setNearby} modalOpen={Boolean(selected)} onStep={playStep} member={member} />
 
       <header className="game-header">
         <div className="brand-mark" aria-hidden="true">T</div>
@@ -628,6 +642,7 @@ export default function Home() {
             <h2 id="modal-title">{selected.name}</h2>
             <p className="modal-description">{selected.description}</p>
             <p className="modal-detail">{selected.detail}</p>
+            {selected.id === "wistery" && <a className="modal-enter" href={member && !member.mustChangePassword ? "/wistery" : "/gilda"} onClick={playClick}>{member && !member.mustChangePassword ? "FORGIA IL TUO AVATAR" : "ACCEDI ALLA GILDA PER ENTRARE"} →</a>}
             {(selected.id === "staff" || selected.id === "guild") && (
               <a className="modal-enter" href={selected.id === "staff" ? "/staff" : "/gilda"} onClick={playClick}>
                 {selected.id === "staff" ? "ENTRA NEL PALAZZO" : "ENTRA NELLA GILDA"} <span>→</span>

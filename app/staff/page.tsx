@@ -2,12 +2,14 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-type Member = { id: string; firstName: string; lastName: string; fiscalCode: string; documentNumber: string; email: string; score: number };
-type Form = Pick<Member, "firstName" | "lastName" | "fiscalCode" | "documentNumber" | "email">;
-const emptyForm: Form = { firstName: "", lastName: "", fiscalCode: "", documentNumber: "", email: "" };
+import type { MemberInput } from "../lib/members";
+type Member = MemberInput & { id: string; score: number; mustChangePassword: boolean };
+type Form = Omit<MemberInput, "feeCents"> & { fee: string };
+const emptyForm: Form = { firstName: "", lastName: "", fiscalCode: "", documentNumber: "", email: "", phone: "", challongeUsername: "", challongeId: "", membershipStatus: "pending", paymentMethod: "", paymentPaid: false, fee: "" };
+const paymentLabels: Record<string, string> = { cash: "Contanti", bank: "Bonifico", card: "Carta", other: "Altro" };
 
 async function jsonResponse(response: Response) {
-  const result = await response.json().catch(() => null);
+  const result = await response.json().catch(() => null) as Record<string, any> | null;
   if (!response.ok) throw new Error(result?.error || "Il server non ha completato l'operazione. Riprova tra poco.");
   if (!result) throw new Error("Il server ha inviato una risposta non valida. Riprova tra poco.");
   return result;
@@ -22,6 +24,8 @@ export default function StaffPage() {
   const [issuedPassword, setIssuedPassword] = useState<{ name: string; email: string; password: string } | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [search, setSearch] = useState("");
+  const visibleMembers = members.filter((m) => `${m.firstName} ${m.lastName} ${m.fiscalCode} ${m.email ?? ""}`.toLowerCase().includes(search.toLowerCase()));
 
   const loadMembers = useCallback(async () => {
     const result = await jsonResponse(await fetch("/api/staff/members", { cache: "no-store" }));
@@ -62,8 +66,8 @@ export default function StaffPage() {
     setBusy(true);
     setError("");
     try {
-      const result = await jsonResponse(await fetch(editingId ? `/api/staff/members/${editingId}` : "/api/staff/members", { method: editingId ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) }));
-      if (result.password) setIssuedPassword({ name: `${result.member.firstName} ${result.member.lastName}`, email: result.member.email, password: result.password });
+      const result = await jsonResponse(await fetch(editingId ? `/api/staff/members/${editingId}` : "/api/staff/members", { method: editingId ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...form, feeCents: form.fee === "" ? null : Math.round(Number(form.fee) * 100) }) }));
+      if (result.password) setIssuedPassword({ name: `${result.member.firstName} ${result.member.lastName}`, email: result.member.email || result.member.fiscalCode, password: result.password });
       setForm(emptyForm);
       setEditingId(null);
       await loadMembers();
@@ -112,12 +116,21 @@ export default function StaffPage() {
           <div className="staff-layout">
             <div className="staff-main">
               <div className="staff-heading"><div><p className="section-kicker">ARCHIVIO MEMBRI</p><h2>{members.length} {members.length === 1 ? "membro" : "membri"} registrati</h2></div><button className="text-button" onClick={logout}>ESCI ↗</button></div>
-              {issuedPassword && <div className="credential-card" role="status"><button className="credential-close" onClick={() => setIssuedPassword(null)} aria-label="Chiudi credenziali">×</button><strong>Credenziali create per {issuedPassword.name}</strong><p>Consegna al membro email e password. La password compare solo ora: copiala prima di chiudere questo riquadro.</p><div><span>{issuedPassword.email}</span><code>{issuedPassword.password}</code></div><button className="text-button" onClick={() => void navigator.clipboard.writeText(`${issuedPassword.email}\n${issuedPassword.password}`)}>COPIA CREDENZIALI ↗</button></div>}
+              {issuedPassword && <div className="credential-card" role="status"><button className="credential-close" onClick={() => setIssuedPassword(null)} aria-label="Chiudi credenziali">×</button><strong>Credenziali create per {issuedPassword.name}</strong><p>Consegna identificativo e password temporanea al membro. Dovrà cambiarla al primo accesso. Copiala prima di chiudere questo riquadro.</p><div><span>{issuedPassword.email}</span><code>{issuedPassword.password}</code></div><button className="text-button" onClick={() => void navigator.clipboard.writeText(`${issuedPassword.email}\n${issuedPassword.password}`).catch(() => setError("Copia manualmente le credenziali dal riquadro."))}>COPIA CREDENZIALI ↗</button></div>}
               {error && <p className="form-error" role="alert">{error}</p>}
-              <div className="member-list">{members.length === 0 ? <div className="empty-list">Nessun membro ancora. Inizia dal modulo qui accanto.</div> : members.map((member, index) => <article className="member-row" key={member.id}><span className="member-number">{String(index + 1).padStart(2, "0")}</span><div className="member-info"><strong>{member.firstName} {member.lastName}</strong><small>{member.email}</small><span>CF {member.fiscalCode} · DOC {member.documentNumber}</span></div><div className="member-actions"><button onClick={() => { setEditingId(member.id); setForm({ firstName: member.firstName, lastName: member.lastName, fiscalCode: member.fiscalCode, documentNumber: member.documentNumber, email: member.email }); setIssuedPassword(null); }} disabled={busy}>MODIFICA</button><button className="danger" onClick={() => void remove(member)} disabled={busy}>ELIMINA</button></div></article>)}</div>
+              <label className="member-search">CERCA MEMBRO<input type="search" placeholder="Nome, cognome, CF o email" value={search} onChange={(e) => setSearch(e.target.value)} /></label>
+              <a className="outline-button mobile-add-member" href="#member-form" onClick={() => { setEditingId(null); setForm(emptyForm); }}>+ AGGIUNGI MEMBRO</a>
+              <div className="member-list">{visibleMembers.length === 0 ? <div className="empty-list">Nessun membro trovato.</div> : visibleMembers.map((member, index) => <article className="member-row" key={member.id}><span className="member-number">{String(index + 1).padStart(2, "0")}</span><div className="member-info"><strong>{member.firstName} {member.lastName}</strong><small>{member.email || "Email non indicata"} · {member.phone || "Telefono non indicato"}</small><span>CF {member.fiscalCode}<br />DOC {member.documentNumber}</span><span>Challonge: {member.challongeUsername || "da associare"}{member.challongeId ? ` · ID ${member.challongeId}` : ""}</span><span className="member-badges"><b>{member.membershipStatus === "registered" ? "TESSERATO" : "DA TESSERARE"}</b><b className={member.paymentPaid ? "paid" : "unpaid"}>{member.paymentPaid ? "PAGATO" : "NON PAGATO"}</b></span><span>{member.feeCents !== null ? `${(member.feeCents / 100).toFixed(2)} €` : "Importo da definire"}{member.paymentMethod ? ` · ${paymentLabels[member.paymentMethod]}` : ""}</span></div><div className="member-actions"><button onClick={() => { setEditingId(member.id); setForm({ ...member, fee: member.feeCents === null ? "" : String(member.feeCents / 100) }); setIssuedPassword(null); document.getElementById("member-form")?.scrollIntoView({ behavior: "smooth", block: "start" }); }} disabled={busy}>MODIFICA</button><button className="danger" onClick={() => void remove(member)} disabled={busy}>ELIMINA</button></div></article>)}</div>
             </div>
-            <aside className="member-form-card"><p className="section-kicker">{editingId ? "MODIFICA SCHEDA" : "NUOVA ISCRIZIONE"}</p><h2>{editingId ? "Modifica membro" : "Aggiungi membro"}</h2><p>{editingId ? "Aggiorna i dati. Le credenziali esistenti restano valide." : "La password buffa viene generata automaticamente al salvataggio."}</p><form className="stack-form" onSubmit={save}>
-              {([ ["firstName", "NOME"], ["lastName", "COGNOME"], ["fiscalCode", "CODICE FISCALE"], ["documentNumber", "NUMERO DOCUMENTO"], ["email", "EMAIL"] ] as [keyof Form, string][]).map(([key, label]) => <label key={key}>{label}<input type={key === "email" ? "email" : "text"} value={form[key]} onChange={(event) => setForm((current) => ({ ...current, [key]: event.target.value }))} autoComplete="off" required /></label>)}
+            <aside className="member-form-card" id="member-form"><p className="section-kicker">{editingId ? "MODIFICA SCHEDA" : "NUOVA ISCRIZIONE"}</p><h2>{editingId ? "Modifica membro" : "Aggiungi membro"}</h2><p>{editingId ? "Aggiorna anagrafica, profilo e tesseramento." : "Password temporanea generata al salvataggio, da cambiare al primo accesso. L’email è facoltativa."}</p><form className="stack-form" onSubmit={save}>
+              {([ ["firstName", "NOME"], ["lastName", "COGNOME"], ["fiscalCode", "CODICE FISCALE"], ["documentNumber", "NUMERO DOCUMENTO"], ["phone", "TELEFONO"], ["email", "EMAIL (FACOLTATIVA)"], ["challongeUsername", "USERNAME CHALLONGE"], ["challongeId", "ID CHALLONGE (FACOLTATIVO)"] ] as const).map(([key, label]) => <label key={key}>{label}<input type={key === "email" ? "email" : key === "phone" ? "tel" : "text"} value={form[key] ?? ""} onChange={(event) => setForm((current) => ({ ...current, [key]: event.target.value }))} autoComplete="off" required={["firstName", "lastName", "fiscalCode", "documentNumber"].includes(key)} /></label>)}
+              <p className="field-hint">Associa l’account Challonge del giocatore. Risultati e punteggi saranno disponibili dopo la configurazione del campionato.</p>
+              <fieldset className="membership-fields"><legend>TESSERAMENTO FISICO</legend>
+                <label>STATO<select value={form.membershipStatus} onChange={(e) => setForm({ ...form, membershipStatus: e.target.value })}><option value="pending">Da completare</option><option value="registered">Tesserato</option></select></label>
+                <label>IMPORTO (€)<input type="number" inputMode="decimal" min="0" max="100000" step="0.01" value={form.fee} onChange={(e) => setForm({ ...form, fee: e.target.value })} placeholder="Da definire" /></label>
+                <label>METODO DI PAGAMENTO<select required={form.paymentPaid} value={form.paymentMethod || ""} onChange={(e) => setForm({ ...form, paymentMethod: e.target.value })}><option value="">Da indicare</option><option value="cash">Contanti</option><option value="bank">Bonifico</option><option value="card">Carta</option><option value="other">Altro</option></select></label>
+                <label className="checkbox-label"><input type="checkbox" checked={form.paymentPaid} onChange={(e) => setForm({ ...form, paymentPaid: e.target.checked })} /> IMPORTO PAGATO</label>
+              </fieldset>
               <button className="solid-button" disabled={busy}>{editingId ? "SALVA MODIFICHE" : "CREA MEMBRO"} <span>→</span></button>
               {editingId && <button type="button" className="text-button" onClick={() => { setEditingId(null); setForm(emptyForm); }}>ANNULLA MODIFICA</button>}
             </form></aside>
