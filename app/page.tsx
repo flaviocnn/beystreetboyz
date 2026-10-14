@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useGameAudio } from "./lib/game-audio";
+import { useGameAudio, usePopupSound } from "./lib/game-audio";
 import { drawPixelPlayer, type Direction } from "./lib/pixel-player";
 import { type PlayerMember, readResponse } from "./lib/client-api";
 import { useDialogFocus } from "./lib/dialog-focus";
@@ -612,6 +612,7 @@ function GameMap({
   const encounterRef = useRef(createIdleEncounter(START));
   const [visitorSpeech, setVisitorSpeech] = useState<number | null>(null);
   const speechRef = useRef<number | null>(null);
+  usePopupSound(visitorSpeech !== null && !modalOpen);
   useEffect(() => { memberRef.current = member; }, [member]);
 
   useEffect(() => {
@@ -836,20 +837,19 @@ export default function Home() {
   useEffect(() => { void fetch("/api/member/session", { cache: "no-store" }).then(readResponse).then((result) => setMember(result.member)).catch(() => setMember(null)); }, []);
   const [nearby, setNearby] = useState<Place | null>(null);
   const [selected, setSelected] = useState<Place | null>(null);
+  usePopupSound(Boolean(nearby));
   useDialogFocus(Boolean(selected));
   const { enabled: audioEnabled, toggle: toggleAudio, playClick, playStep } = useGameAudio();
   const openSelected = useCallback(() => {
     if (nearby) {
-      playClick();
       setSelected(nearby);
     }
   }, [nearby, playClick]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Enter" && nearby && !selected) {
+      if (event.key === "Enter" && nearby && !selected && !event.repeat && !(event.target instanceof Element && event.target.closest('button, a, input, textarea, select'))) {
         event.preventDefault();
-        playClick();
         setSelected(nearby);
       }
       if (event.key === "Escape") setSelected(null);
@@ -907,7 +907,7 @@ export default function Home() {
             aria-labelledby="modal-title"
             onMouseDown={(event) => event.stopPropagation()}
           >
-            <button className="close-button" onClick={() => { playClick(); setSelected(null); }} autoFocus aria-label="Chiudi">×</button>
+            <button className="close-button" onClick={() => setSelected(null)} aria-label="Chiudi">×</button>
             <p className="modal-count">LOCATION / {String(places.findIndex((p) => p.id === selected.id) + 1).padStart(2, "0")}</p>
             <div className="modal-pixel-art" aria-hidden="true"><span /><span /><span /></div>
             <p className="modal-eyebrow">{selected.eyebrow}</p>
@@ -921,7 +921,7 @@ export default function Home() {
                 {selected.id === "staff" ? "ENTRA NEL PALAZZO" : "ENTRA NELLA GILDA"} <span>→</span>
               </a>
             )}
-            <div className="modal-footer"><span>TORINO QUEST</span><span>ESC PER CHIUDERE</span></div>
+            <div className="modal-footer"><span>FRECCE / TAB · INVIO PER SCEGLIERE</span><span>ESC PER CHIUDERE</span></div>
           </section>
         </div>
       )}

@@ -1,8 +1,11 @@
 export type Direction = "up" | "down" | "left" | "right";
 export type Avatar = { avatarStyle: number; avatarColor: number };
+export const BASE_STYLE_COUNT = 12;
 export const AVATAR_STYLES = [
   "Esploratore", "Skater", "Mago", "Cavaliere", "Cobalt Flame",
-  "BeyStreetBoyz", "Metallico", "Fenice", "Torero Nero", "Bad Girl", "Bad Guy",
+  "BeyStreetBoyz", "Metallico", "Fenice", "Torero Nero", "Bad Girl", "Bad Guy", "Demoniaco",
+  "Esploratrice", "Skater · donna", "Maga", "Cavaliera", "Cobalt Flame · donna",
+  "BeyStreetGirl", "Metallica", "Fenice · donna", "Torera Nera", "Bad Girl · alternativa", "Bad Girl · Hood", "Demoniaca",
 ];
 export const AVATAR_COLORS = [
   { name: "Salvia", hex: "#9ba39b" }, { name: "Cobalto", hex: "#527fee" },
@@ -12,7 +15,9 @@ export const AVATAR_COLORS = [
 ];
 
 export function drawPixelPlayer(ctx: CanvasRenderingContext2D, x: number, y: number, dir: Direction, walking: boolean, t: number, avatar?: Avatar | null) {
-  const style = avatar?.avatarStyle ?? 0;
+  const selectedStyle = avatar?.avatarStyle ?? 0;
+  const feminine = selectedStyle >= BASE_STYLE_COUNT;
+  const style = selectedStyle % BASE_STYLE_COUNT;
   const color = AVATAR_COLORS[avatar?.avatarColor ?? 0]?.hex || AVATAR_COLORS[0].hex;
   const step = walking && Math.floor(t / 130) % 2 ? 2 : 0;
   ctx.save();
@@ -107,10 +112,41 @@ export function drawPixelPlayer(ctx: CanvasRenderingContext2D, x: number, y: num
     ctx.fillRect(7, 7, 5, 13); ctx.fillRect(-5, 10, 10, 3);
     ctx.fillStyle = "#f2f3ea"; ctx.fillRect(-8, -8, 16, 5);
     ctx.fillStyle = "#202322"; ctx.fillRect(-7, -6, 14, 3);
+  } else if (style === 11) {
+    // Horns, bat wings, glowing eyes and a forked tail.
+    ctx.fillStyle = "#27202f";
+    ctx.fillRect(-20, 0, 9, 19); ctx.fillRect(11, 0, 9, 19);
+    ctx.fillRect(-23, -6, 5, 16); ctx.fillRect(18, -6, 5, 16);
+    ctx.fillStyle = color;
+    ctx.fillRect(-19, 3, 6, 11); ctx.fillRect(13, 3, 6, 11);
+    ctx.fillRect(-12, -24, 5, 13); ctx.fillRect(7, -24, 5, 13);
+    ctx.fillStyle = "#f1d8b1";
+    ctx.fillRect(-14, -28, 4, 8); ctx.fillRect(10, -28, 4, 8);
+    ctx.fillStyle = "#e86f52";
+    if (dir !== "up") { ctx.fillRect(-7, -4, 4, 3); ctx.fillRect(3, -4, 4, 3); }
+    ctx.fillRect(15, 17, 3, 10); ctx.fillRect(16, 24, 6, 3); ctx.fillRect(20, 18, 3, 7);
+    ctx.fillStyle = color; ctx.fillRect(-6, 8, 12, 9);
+    ctx.fillStyle = "#f1d8b1"; ctx.fillRect(-2, 9, 4, 5);
   } else {
     ctx.fillStyle = color; ctx.fillRect(-8, -15, 16, 4); ctx.fillRect(-15, 8, 5, 11);
   }
-  // Shared small highlights keep all eleven outfits readable at map scale.
+  if (feminine) {
+    // Outfit-specific hair and tailoring preserve each skin's silhouette.
+    const hair = style === 6 || style === 3 ? "#aab8bf" : style === 7 || style === 4 ? color : "#414039";
+    ctx.fillStyle = "#202322";
+    if (style === 5) { ctx.fillRect(10, -17, 7, 21); ctx.fillStyle = color; ctx.fillRect(12, -15, 3, 17); }
+    else if (style === 9 || style === 1) {
+      ctx.fillRect(-19, -12, 7, 17); ctx.fillRect(12, -12, 7, 17);
+      ctx.fillStyle = hair; ctx.fillRect(-18, -10, 4, 12); ctx.fillRect(14, -10, 4, 12);
+    } else {
+      ctx.fillRect(-14, -6, 5, 18); ctx.fillRect(9, -6, 5, 18);
+      ctx.fillStyle = hair; ctx.fillRect(-13, -4, 3, 13); ctx.fillRect(10, -4, 3, 13);
+    }
+    ctx.fillStyle = color; ctx.fillRect(-13, 6, 3, 3); ctx.fillRect(10, 6, 3, 3);
+    ctx.fillStyle = "#202322"; ctx.fillRect(-9, 10, 3, 7); ctx.fillRect(6, 10, 3, 7);
+    ctx.fillStyle = "#ecdfb4"; ctx.fillRect(-5, 16, 10, 2);
+  }
+  // Shared small highlights keep every outfit readable at map scale.
   ctx.fillStyle = "#ffffff35"; ctx.fillRect(-6, 8, 3, 7);
   ctx.fillStyle = "#101b2138"; ctx.fillRect(5, 9, 3, 9);
   if (dir === "up") {
@@ -119,7 +155,7 @@ export function drawPixelPlayer(ctx: CanvasRenderingContext2D, x: number, y: num
     ctx.fillStyle = color; ctx.fillRect(-5, 9, 10, 8);
     ctx.fillStyle = "#ffffff55"; ctx.fillRect(-3, 10, 6, 2);
     ctx.fillStyle = "#202322"; ctx.fillRect(-5, 15, 10, 2);
-  } else if (style !== 6 && style !== 10) {
+  } else if (style !== 6 && style !== 10 && style !== 11) {
     ctx.fillStyle = "#ffffff";
     if (dir !== "right") ctx.fillRect(-6, -4, 1, 1);
     if (dir !== "left") ctx.fillRect(4, -4, 1, 1);

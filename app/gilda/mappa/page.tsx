@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useGameAudio } from "../../lib/game-audio";
+import { useGameAudio, usePopupSound } from "../../lib/game-audio";
 import { drawPixelPlayer, type Direction } from "../../lib/pixel-player";
 import { type PlayerMember as Member, readResponse } from "../../lib/client-api";
 import { useDialogFocus } from "../../lib/dialog-focus";
@@ -101,10 +101,11 @@ export default function GuildMapPage() {
   const [loading, setLoading] = useState(true), [member, setMember] = useState<Member | null>(null);
   const [ranking, setRanking] = useState<RankingRow[]>([]), [error, setError] = useState("");
   const [near, setNear] = useState<PlaceId | null>(null), [opened, setOpened] = useState<PlaceId | null>(null);
+  usePopupSound(Boolean(near));
   useDialogFocus(!!opened);
   const { enabled: audioEnabled, toggle: toggleAudio, playClick, playStep } = useGameAudio("guild");
-  const open = useCallback((id: PlaceId) => { playClick(); setOpened(id); }, [playClick]);
-  const close = useCallback(() => { playClick(); setOpened(null); }, [playClick]);
+  const open = useCallback((id: PlaceId) => setOpened(id), []);
+  const close = useCallback(() => setOpened(null), []);
   const updateNear = useCallback((id: PlaceId | null) => setNear(id), []);
   useEffect(() => {
     let live = true;

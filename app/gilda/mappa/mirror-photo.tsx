@@ -8,6 +8,7 @@ const BACKGROUNDS = [
   { name: "Metal", ink: "#172630", paper: "#edf2ed", mid: "#526570", light: "#9cbbc2", accent: "#e4ebed" },
   { name: "Punk", ink: "#282038", paper: "#f7e8ef", mid: "#813b77", light: "#d682a9", accent: "#e7df63" },
   { name: "Nessuno", ink: "#17203d", paper: "#eceddf", mid: "#536fa1", light: "#a7bdd6", accent: "#dfc77b" },
+  { name: "Inferno", ink: "#240f1b", paper: "#fff0d1", mid: "#6e202c", light: "#ef6838", accent: "#ffce62" },
 ];
 const POSES = ["Frontale", "Trionfante", "Sdraiato", "Guanto di sfida"];
 export function drawPortrait(canvas: HTMLCanvasElement, avatar: Avatar, name: string, background: number, pose: number) {
@@ -46,10 +47,26 @@ export function drawPortrait(canvas: HTMLCanvasElement, avatar: Avatar, name: st
     for (const x of [88, 251]) for (let y = 163; y < 290; y += 31) {
       box(theme.accent, x, y, 20, 5); box(theme.accent, x + 7, y + 5, 5, 12); box(theme.accent, x + 2, y + 17, 20, 5);
     }
+  } else if (background === 4) {
+    // Obsidian towers, a blazing portal and rising lava flames.
+    box(theme.ink, 117, 149, 126, 166); box(theme.light, 124, 155, 112, 160);
+    box(theme.accent, 131, 164, 98, 150); box(theme.mid, 141, 174, 78, 140);
+    for (const x of [73, 253]) {
+      box(theme.ink, x, 172, 34, 146);
+      for (let y = 180; y < 310; y += 20) box(theme.mid, x + 4, y, 24, 3);
+      box(theme.ink, x + 7, 156, 20, 20);
+    }
+    for (let i = 0; i < 12; i++) {
+      const x = 72 + i * 18, h = 20 + (i * 17) % 49;
+      box(theme.light, x, 302 - h, 13, h);
+      box(theme.accent, x + 4, 310 - h, 5, h - 8);
+      box(theme.accent, 80 + (i * 47) % 200, 145 + (i * 29) % 115, 3, 5);
+    }
   }
-  box(theme.light, 81, 149, 9, 136); box(theme.light, 97, 152, 4, 77);
+  if (background !== 4) { box(theme.light, 81, 149, 9, 136); box(theme.light, 97, 152, 4, 77); }
   box(theme.ink, 69, 302, 222, 31);
   for (let y = 305; y < 334; y += 10) for (let x = 70; x < 290; x += 20) if ((x / 20 + y / 10) % 2 < 1) box(theme.mid, x, y, 19, 9);
+  if (background === 4) for (let x = 73; x < 285; x += 21) { box(theme.light, x, 312 + x % 9, 17, 3); box(theme.accent, x + 4, 315 + x % 9, 8, 2); }
   ctx.save();
   ctx.translate(pose === 2 ? 171 : 180, pose === 2 ? 256 : 230);
   if (pose === 2) ctx.rotate(-Math.PI / 2);

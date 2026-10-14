@@ -3,6 +3,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 const STORAGE_KEY = "torino-quest-audio";
+export function usePopupSound(open: boolean) {
+  const previous = useRef(false);
+  useEffect(() => {
+    if (previous.current !== open) window.dispatchEvent(new CustomEvent("torino-popup", { detail: open }));
+    previous.current = open;
+  }, [open]);
+}
 
 export function useGameAudio(theme: "city" | "guild" | "wistery" = "city") {
   const [enabled, setEnabled] = useState(true);
@@ -68,6 +75,18 @@ export function useGameAudio(theme: "city" | "guild" | "wistery" = "city") {
 
   const playStep = useCallback(() => {
     tone(92, .035, .024);
+  }, [tone]);
+
+  useEffect(() => {
+    let timer = 0;
+    const popup = (event: Event) => {
+      const opening = (event as CustomEvent<boolean>).detail;
+      window.clearTimeout(timer);
+      tone(opening ? 523 : 784, .07, .04, "triangle");
+      timer = window.setTimeout(() => tone(opening ? 1047 : 392, .11, .035, "triangle"), 65);
+    };
+    window.addEventListener("torino-popup", popup);
+    return () => { window.removeEventListener("torino-popup", popup); window.clearTimeout(timer); };
   }, [tone]);
 
   const toggle = useCallback(() => {

@@ -450,6 +450,11 @@ button:disabled { cursor: wait; opacity: .55; }
 .success-message { padding: 14px; background: #254536; color: #dbf2d2; font-size: 13px; line-height: 1.5; }
 .guild-map-legend { position: absolute; left: 12px; top: 122px; display: grid; grid-template-columns: 1fr 1fr; gap: 5px 8px; width: 144px; padding: 8px; color: #e7eddf; background: #1d2c24ed; font-size: 8px; pointer-events: none; }
 .guild-object-card { width: min(760px, 100%); }
+.avatar-variants { display: flex; gap: 10px; margin-bottom: 20px; }
+.avatar-variants button { flex: 1; min-height: 44px; padding: 12px; border: 2px solid #7586ae; background: #20283c; color: #e9ecf7; cursor: pointer; font: inherit; }
+.avatar-variants button[aria-pressed="true"] { border-color: #c5b0ed; background: #53446d; }
+[role="dialog"] :is(button, a, input, textarea, select):focus-visible { outline: 3px solid #bc7d21; outline-offset: 4px; box-shadow: 0 0 0 6px #fff5cf; }
+.modal-footer { gap: 12px; flex-wrap: wrap; line-height: 1.5; }
 .guild-object-card > .section-kicker { padding-right: 48px; line-height: 1.7; }
 .guild-object-card > h2 { padding-right: 32px; line-height: 1.1; margin-bottom: 22px; }
 .guild-object-board { width: min(820px, 100%); }
