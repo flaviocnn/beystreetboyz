@@ -268,7 +268,7 @@ button { font: inherit; }
 .member-info strong { font-family: var(--font-geist-sans), sans-serif; font-size: 18px; }
 .member-info small { font-size: 11px; overflow-wrap: anywhere; }
 .member-info span { color: #5e6b60; font-size: 9px; overflow-wrap: anywhere; }
-.member-actions { display: flex; gap: 10px; margin-left: auto; }
+.member-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-left: auto; }
 .member-actions button { padding: 7px; color: #202824; background: transparent; border: 1px solid #819385; font-size: 9px; font-weight: 900; cursor: pointer; }
 .member-actions button:hover { background: #d9e2d5; }
 .member-actions button.danger { color: #8a4035; border-color: #a77c74; }
@@ -427,7 +427,7 @@ button:disabled { cursor: wait; opacity: .55; }
 .avatar-directions button[aria-pressed="true"] { background: #49639b; }
 .avatar-options h2 { font-size: 15px; margin: 0 0 20px; }
 .avatar-options h2:not(:first-child) { margin-top: 30px; }
-.avatar-style-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 9px; }
+.avatar-style-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; }
 .avatar-style-grid button { display: grid; justify-items: center; align-content: start; padding: 8px 3px 12px; color: #c6d1ee; border: 2px solid #495979; background: #262f48; cursor: pointer; min-width: 0; }
 .avatar-style-grid button[aria-pressed="true"] { border-color: #adcbff; background: #364e78; box-shadow: 0 0 0 2px #adcbff; color: white; }
 .avatar-style-grid canvas { width: 100%; max-width: 96px; height: auto; image-rendering: pixelated; }

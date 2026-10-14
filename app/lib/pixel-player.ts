@@ -1,6 +1,9 @@
 export type Direction = "up" | "down" | "left" | "right";
 export type Avatar = { avatarStyle: number; avatarColor: number };
-export const AVATAR_STYLES = ["Esploratore", "Skater", "Mago", "Cavaliere", "Cobalt Flame"];
+export const AVATAR_STYLES = [
+  "Esploratore", "Skater", "Mago", "Cavaliere", "Cobalt Flame",
+  "BeyStreetBoyz", "Metallico", "Fenice", "Torero Nero", "Bad Girl", "Bad Guy",
+];
 export const AVATAR_COLORS = [
   { name: "Salvia", hex: "#9ba39b" }, { name: "Cobalto", hex: "#527fee" },
   { name: "Viola", hex: "#af79dc" }, { name: "Corallo", hex: "#ed737a" },
@@ -55,6 +58,47 @@ export function drawPixelPlayer(ctx: CanvasRenderingContext2D, x: number, y: num
     ctx.fillRect(-16, 6, 5, 13); ctx.fillRect(11, 6, 5, 13);
     ctx.fillStyle = "#202322"; ctx.fillRect(-7, 7, 14, 12);
     ctx.fillStyle = color; ctx.fillRect(-2, 8, 4, 9); ctx.fillRect(-5, 12, 10, 5);
+  } else if (style === 5) {
+    // Punk: tall mohawk, studded jacket and bright trouser stripe.
+    ctx.fillStyle = "#202322"; ctx.fillRect(-4, -32, 8, 20); ctx.fillRect(-13, 7, 26, 13);
+    ctx.fillStyle = color; ctx.fillRect(-3, -31, 6, 17); ctx.fillRect(-12, -26, 5, 13);
+    ctx.fillRect(-9, 10, 18, 4); ctx.fillRect(-14, 10, 4, 9); ctx.fillRect(10, 10, 4, 9);
+    ctx.fillStyle = "#f2f3ea"; ctx.fillRect(-7, 15, 3, 3); ctx.fillRect(4, 15, 3, 3);
+  } else if (style === 6) {
+    // Metallic: angular helmet, reflective visor and armored shoulders.
+    ctx.fillStyle = "#737f85"; ctx.fillRect(-12, -19, 24, 13); ctx.fillRect(-17, 6, 8, 12); ctx.fillRect(9, 6, 8, 12);
+    ctx.fillStyle = "#dfe6e8"; ctx.fillRect(-9, -17, 18, 5); ctx.fillRect(-8, 8, 16, 9);
+    ctx.fillStyle = color; ctx.fillRect(-9, -9, 18, 4); ctx.fillRect(-4, 11, 8, 4);
+    ctx.fillStyle = "#202322"; ctx.fillRect(-12, -6, 24, 3); ctx.fillRect(-3, -22, 6, 4);
+  } else if (style === 7) {
+    // Phoenix: feathered crest and two distinct flame wings.
+    ctx.fillStyle = color; ctx.fillRect(-6, -29, 6, 15); ctx.fillRect(2, -34, 5, 20);
+    ctx.fillRect(-18, 1, 7, 18); ctx.fillRect(11, 1, 7, 18);
+    ctx.fillStyle = "#edb94e"; ctx.fillRect(-22, -8, 6, 19); ctx.fillRect(16, -8, 6, 19);
+    ctx.fillRect(-15, 8, 7, 10); ctx.fillRect(8, 8, 7, 10);
+    ctx.fillStyle = color; ctx.fillRect(-8, 8, 16, 10);
+    ctx.fillStyle = "#f2f3ea"; ctx.fillRect(-3, 10, 6, 5);
+  } else if (style === 8) {
+    // Torero Nero: broad dark hat, colored band and flowing cape.
+    ctx.fillStyle = "#202322"; ctx.fillRect(-20, -19, 40, 6); ctx.fillRect(-13, -29, 26, 13);
+    ctx.fillRect(-18, 5, 8, 18); ctx.fillRect(10, 5, 8, 18);
+    ctx.fillStyle = color; ctx.fillRect(-12, -22, 24, 4); ctx.fillRect(-17, 10, 7, 9);
+    ctx.fillRect(10, 10, 7, 9); ctx.fillRect(-7, 8, 14, 9);
+    ctx.fillStyle = "#edb94e"; ctx.fillRect(-3, 8, 6, 12);
+  } else if (style === 9) {
+    // Bad Girl: side ponytail, asymmetrical fringe and studded jacket.
+    ctx.fillStyle = "#202322"; ctx.fillRect(-11, -21, 22, 10); ctx.fillRect(11, -20, 7, 19);
+    ctx.fillRect(-14, 8, 28, 11); ctx.fillRect(15, 4, 4, 6);
+    ctx.fillStyle = color; ctx.fillRect(-9, -18, 10, 5); ctx.fillRect(13, -18, 4, 13);
+    ctx.fillRect(-8, 10, 16, 6);
+    ctx.fillStyle = "#f2f3ea"; ctx.fillRect(-11, 14, 3, 3); ctx.fillRect(8, 14, 3, 3);
+  } else if (style === 10) {
+    // Bad Guy: hood, mask and dark coat.
+    ctx.fillStyle = "#202322"; ctx.fillRect(-15, -21, 30, 20); ctx.fillRect(-16, 7, 32, 15);
+    ctx.fillStyle = color; ctx.fillRect(-12, -18, 24, 5); ctx.fillRect(-12, 7, 5, 13);
+    ctx.fillRect(7, 7, 5, 13); ctx.fillRect(-5, 10, 10, 3);
+    ctx.fillStyle = "#f2f3ea"; ctx.fillRect(-8, -8, 16, 5);
+    ctx.fillStyle = "#202322"; ctx.fillRect(-7, -6, 14, 3);
   } else {
     ctx.fillStyle = color; ctx.fillRect(-8, -15, 16, 4); ctx.fillRect(-15, 8, 5, 11);
   }
