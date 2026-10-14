@@ -16,8 +16,8 @@ type Place = {
   y: number;
 };
 
-const WORLD = { width: 1500, height: 940 };
-const START = { x: 735, y: 455 };
+const WORLD = { width: 1600, height: 1100 };
+const START = { x: 800, y: 500 };
 const PALETTE = {
   ink: "#202322",
   dark: "#515753",
@@ -36,8 +36,8 @@ const places: Place[] = [
     description:
       "Una torre bioclimatica alta 167 metri, progettata da Renzo Piano come una lanterna trasparente sulla città.",
     detail: "44 piani · Serra panoramica · Auditorium sospeso",
-    x: 330,
-    y: 245,
+    x: 440,
+    y: 255,
   },
   {
     id: "dora",
@@ -46,8 +46,8 @@ const places: Place[] = [
     description:
       "Cemento, acciaio e memoria industriale: uno spazio urbano sotto le grandi strutture delle ex acciaierie.",
     detail: "Bowl · Street plaza · Archeologia industriale",
-    x: 1190,
-    y: 235,
+    x: 1210,
+    y: 250,
   },
   {
     id: "wistery",
@@ -56,8 +56,8 @@ const places: Place[] = [
     description:
       "Patria dei Cobalt Flames, il Wistery è avvolto nelle tenebre. Solo i membri della Gilda possono varcare la soglia e forgiare il proprio avatar.",
     detail: "ATELIER SEGRETO · RISERVATO AI MEMBRI DELLA GILDA",
-    x: 1045,
-    y: 735,
+    x: 800,
+    y: 950,
   },
   {
     id: "staff",
@@ -65,8 +65,8 @@ const places: Place[] = [
     eyebrow: "ACCESSO RISERVATO · TORINO QUEST",
     description: "L'archivio dei membri della città. Il personale autorizzato può creare e gestire le iscrizioni.",
     detail: "Serve la parola d'ordine per entrare",
-    x: 485,
-    y: 470,
+    x: 420,
+    y: 680,
   },
   {
     id: "guild",
@@ -74,8 +74,8 @@ const places: Place[] = [
     eyebrow: "SALA DEI MEMBRI · TORINO QUEST",
     description: "Varca la soglia con le credenziali consegnate dallo staff. All'interno ti aspetta la mappa della Gilda e la classifica.",
     detail: "Accesso membri · Classifica della Gilda",
-    x: 975,
-    y: 465,
+    x: 1160,
+    y: 680,
   },
 ];
 
@@ -111,25 +111,51 @@ function drawGround(ctx: CanvasRenderingContext2D) {
 
   // Main walkways, assembled from tiny tiles to keep the old-console texture.
   ctx.fillStyle = "#e5e8df";
-  ctx.fillRect(0, 390, WORLD.width, 150);
-  ctx.fillRect(650, 0, 170, WORLD.height);
-  ctx.fillRect(780, 665, 330, 135);
+  ctx.fillRect(40, 450, WORLD.width - 80, 110);
+  ctx.fillRect(750, 40, 100, WORLD.height - 80);
+  ctx.fillRect(360, 770, 860, 75);
+  for (const [x, y, h] of [[245, 400, 100], [410, 335, 115], [1180, 330, 120], [390, 735, 110], [1130, 735, 110]]) ctx.fillRect(x, y, 60, h);
   ctx.strokeStyle = PALETTE.mid;
   ctx.lineWidth = 2;
   ctx.setLineDash([10, 8]);
-  ctx.strokeRect(-4, 402, WORLD.width + 8, 126);
-  ctx.strokeRect(662, -4, 146, WORLD.height + 8);
+  ctx.strokeRect(40, 458, WORLD.width - 80, 94);
+  ctx.strokeRect(758, 40, 84, WORLD.height - 80);
   ctx.setLineDash([]);
   ctx.fillStyle = PALETTE.mid;
-  for (let y = 410; y < 525; y += 18) {
-    for (let x = 8; x < WORLD.width; x += 28) {
+  for (let y = 470; y < 545; y += 18) {
+    for (let x = 48; x < WORLD.width - 40; x += 28) {
       ctx.fillRect(x + ((y / 18) % 2) * 8, y, 13, 3);
     }
   }
-  for (let y = 8; y < WORLD.height; y += 18) {
-    for (let x = 672; x < 805; x += 28) {
+  for (let y = 48; y < WORLD.height - 40; y += 18) {
+    for (let x = 770; x < 835; x += 28) {
       ctx.fillRect(x + ((y / 18) % 2) * 8, y, 13, 3);
     }
+  }
+  // Small paved forecourts keep entrances clear and give each landmark a plot.
+  for (const p of places) {
+    ctx.fillStyle = "#c5cdc0"; ctx.fillRect(p.x - 108, p.y + 65, 216, 52);
+    ctx.fillStyle = "#e6e9df"; ctx.fillRect(p.x - 103, p.y + 69, 206, 44);
+    ctx.fillStyle = "#b6c0af";
+    for (let x = p.x - 96; x < p.x + 100; x += 24) ctx.fillRect(x, p.y + 106, 12, 2);
+  }
+  for (const [x, y] of [[625, 420], [975, 420], [625, 865], [975, 865]]) {
+    ctx.fillStyle = "#66765e"; ctx.fillRect(x - 24, y, 48, 18);
+    ctx.fillStyle = "#a9b99b"; ctx.fillRect(x - 21, y - 5, 42, 15);
+    ctx.fillStyle = "#e4d6a4";
+    for (let i = 0; i < 4; i++) ctx.fillRect(x - 17 + i * 10, y - 3, 4, 4);
+  }
+  pixelText(ctx, "QUARTIERE DEI BLADER", 800, 430, 11, "center", PALETTE.dark);
+  for (const [x, top, bottom] of [[665, "↖ INTESA", "STAFF ↙"], [935, "DORA ↗", "GILDA ↘"]] as const) {
+    ctx.fillStyle = PALETTE.dark; ctx.fillRect(x - 3, 552, 6, 47);
+    ctx.fillStyle = PALETTE.ink; ctx.fillRect(x - 51, 557, 102, 34);
+    ctx.fillStyle = "#d6dfca"; ctx.fillRect(x - 48, 560, 96, 28);
+    pixelText(ctx, top, x, 567, 10); pixelText(ctx, bottom, x, 581, 10);
+  }
+  for (const [x, y] of [[345, 420], [1305, 420], [310, 800], [1280, 800]]) {
+    ctx.fillStyle = "#27362c"; ctx.fillRect(x - 2, y - 30, 4, 38); ctx.fillRect(x - 8, y - 37, 16, 14);
+    ctx.fillStyle = "#ece5bc"; ctx.fillRect(x - 5, y - 34, 10, 8);
+    ctx.fillStyle = "#7f8e77"; ctx.fillRect(x - 7, y + 8, 14, 4);
   }
 }
 
@@ -145,12 +171,15 @@ function drawTree(ctx: CanvasRenderingContext2D, x: number, y: number) {
   ctx.strokeStyle = PALETTE.ink;
   ctx.lineWidth = 3;
   ctx.strokeRect(x - 14, y - 4, 28, 19);
+  ctx.fillStyle = "#829477"; ctx.fillRect(x - 12, y - 7, 9, 9);
+  ctx.fillStyle = "#becbb0"; ctx.fillRect(x - 8, y - 9, 5, 4);
+  ctx.fillStyle = "#38493b"; ctx.fillRect(x + 7, y + 6, 7, 6);
 }
 
 function drawBeybladeGarden(ctx: CanvasRenderingContext2D, now: number) {
   ctx.save();
   // Compact garden to the left of Intesa, with a path to the main road.
-  ctx.translate(15, 202);
+  ctx.translate(70, 242);
   ctx.scale(0.82, 1);
   ctx.translate(-355, -202);
   ctx.fillStyle = PALETTE.mid;
@@ -257,6 +286,9 @@ function drawHouse(
   h: number,
   label?: string,
 ) {
+  ctx.fillStyle = "#20232220"; ctx.fillRect(x + 9, y + 28, w + 8, h - 15);
+  ctx.fillStyle = "#69766a";
+  ctx.beginPath(); ctx.moveTo(x - 12, y + 18); ctx.lineTo(x + w / 2, y - 14); ctx.lineTo(x + w + 12, y + 18); ctx.closePath(); ctx.fill();
   ctx.fillStyle = PALETTE.mid;
   ctx.fillRect(x - 5, y + 12, w + 10, h - 7);
   ctx.fillStyle = PALETTE.ink;
@@ -271,6 +303,8 @@ function drawHouse(
   ctx.fill();
   ctx.fillStyle = PALETTE.pale;
   ctx.fillRect(x + 7, y + 28, w - 14, h - 27);
+  ctx.fillStyle = "#bbc3b6";
+  for (let row = 0; row < 4; row++) for (let col = 0; col < 5; col++) ctx.fillRect(x + 10 + col * 23 + row % 2 * 6, y + 60 + row * 9, 14, 2);
   ctx.strokeStyle = PALETTE.ink;
   ctx.lineWidth = 4;
   ctx.strokeRect(x, y + 20, w, h - 20);
@@ -281,12 +315,17 @@ function drawHouse(
     ctx.fillRect(wx + 3, y + 40, 12, 7);
     ctx.fillStyle = PALETTE.ink;
   }
+  ctx.fillStyle = PALETTE.ink; ctx.fillRect(x + w / 2 - 10, y + h - 36, 20, 25);
+  ctx.fillStyle = PALETTE.mid; ctx.fillRect(x + w / 2 - 6, y + h - 32, 12, 21);
+  ctx.fillStyle = PALETTE.paper; ctx.fillRect(x + w / 2 + 2, y + h - 23, 3, 3);
+  ctx.fillStyle = PALETTE.dark; ctx.fillRect(x - 6, y + 20, w + 12, 6);
   if (label) pixelText(ctx, label, x + w / 2, y + h - 10, 9);
 }
 
 function drawIntesa(ctx: CanvasRenderingContext2D, x: number, y: number) {
   ctx.save();
   ctx.translate(x, y);
+  ctx.fillStyle = "#20232225"; ctx.fillRect(-54, -103, 136, 194);
   // Slender glass tower, external structural ribs and the rooftop greenhouse.
   ctx.fillStyle = PALETTE.pale;
   ctx.fillRect(-60, -115, 120, 194);
@@ -320,6 +359,15 @@ function drawIntesa(ctx: CanvasRenderingContext2D, x: number, y: number) {
   ctx.fillRect(-36, -151, 72, 17);
   ctx.fillStyle = PALETTE.mid;
   for (let gx = -31; gx <= 29; gx += 15) ctx.fillRect(gx, -149, 5, 13);
+  // Glass highlights, a recessed entrance and greenery in the roof conservatory.
+  ctx.fillStyle = "#f8fff780";
+  ctx.fillRect(-37, -110, 9, 179); ctx.fillRect(23, -110, 5, 179);
+  ctx.fillStyle = "#6d8169";
+  for (const gx of [-28, -6, 22]) { ctx.fillRect(gx, -143, 8, 7); ctx.fillRect(gx + 2, -147, 4, 5); }
+  ctx.fillStyle = PALETTE.ink; ctx.fillRect(-21, 52, 42, 29);
+  ctx.fillStyle = "#9eb5ac"; ctx.fillRect(-16, 56, 13, 21); ctx.fillRect(3, 56, 13, 21);
+  ctx.fillStyle = PALETTE.paper; ctx.fillRect(-18, 49, 36, 4);
+  ctx.fillStyle = PALETTE.dark; ctx.fillRect(-38, 82, 76, 5);
   pixelText(ctx, "INTESA", 0, 98, 12);
   ctx.restore();
 }
@@ -327,6 +375,7 @@ function drawIntesa(ctx: CanvasRenderingContext2D, x: number, y: number) {
 function drawSkatepark(ctx: CanvasRenderingContext2D, x: number, y: number) {
   ctx.save();
   ctx.translate(x, y);
+  ctx.fillStyle = "#20232220"; ctx.fillRect(-110, -42, 240, 134);
   // Concrete skate plaza below Parco Dora's monumental industrial canopy.
   ctx.fillStyle = PALETTE.ink;
   ctx.fillRect(-128, -101, 256, 10);
@@ -360,6 +409,13 @@ function drawSkatepark(ctx: CanvasRenderingContext2D, x: number, y: number) {
   ctx.fillStyle = PALETTE.ink;
   ctx.fillRect(-10, -17, 20, 54);
   ctx.fillRect(-82, 50, 164, 7);
+  // Weathered red steel, ramps and rails recall the industrial canopy.
+  ctx.fillStyle = "#88705b";
+  for (const px of [-116, -39, 36, 113]) { ctx.fillRect(px, -88, 4, 39); ctx.fillRect(px - 4, -52, 12, 5); }
+  ctx.fillStyle = "#b3beb5"; ctx.fillRect(-97, 57, 31, 13); ctx.fillRect(67, 57, 31, 13);
+  ctx.fillStyle = "#eff2e8"; ctx.fillRect(-97, 57, 31, 3); ctx.fillRect(67, 57, 31, 3);
+  ctx.fillStyle = PALETTE.dark; ctx.fillRect(-22, 54, 44, 4); ctx.fillRect(-19, 58, 3, 15); ctx.fillRect(16, 58, 3, 15);
+  ctx.fillStyle = PALETTE.paper; ctx.fillRect(-21, -13, 4, 32);
   pixelText(ctx, "PARCO DORA", 0, 101, 12);
   ctx.restore();
 }
@@ -386,6 +442,15 @@ function drawWistery(ctx: CanvasRenderingContext2D, x: number, y: number) {
   ctx.fillRect(-10, -5, 4, 4);
   ctx.fillRect(32, -27, 15, 9);
   ctx.fillRect(-47, -27, 15, 9);
+  ctx.fillStyle = "#777fb6"; ctx.fillRect(-45, -26, 11, 6); ctx.fillRect(34, -26, 11, 6);
+  ctx.fillStyle = "#434c70";
+  for (let row = 0; row < 5; row++) {
+    ctx.fillRect(-65, -16 + row * 14, 12 + row % 2 * 6, 3);
+    ctx.fillRect(49, -11 + row * 14, 15, 3);
+  }
+  ctx.fillStyle = "#777fb6"; ctx.fillRect(-7, -55, 5, 11); ctx.fillRect(1, -61, 5, 17); ctx.fillRect(8, -52, 4, 8);
+  ctx.fillStyle = "#303b38";
+  for (let leaf = 0; leaf < 6; leaf++) { ctx.fillRect(-78 + leaf % 2 * 6, -28 + leaf * 12, 8, 8); ctx.fillRect(69 - leaf % 2 * 6, -20 + leaf * 12, 8, 8); }
   ctx.strokeStyle = PALETTE.paper;
   ctx.lineWidth = 3;
   ctx.strokeRect(-73, -60, 146, 125);
@@ -396,6 +461,7 @@ function drawWistery(ctx: CanvasRenderingContext2D, x: number, y: number) {
 function drawStaffPalace(ctx: CanvasRenderingContext2D, x: number, y: number) {
   ctx.save();
   ctx.translate(x, y);
+  ctx.fillStyle = "#20232225"; ctx.fillRect(-70, -68, 161, 143);
   ctx.fillStyle = PALETTE.ink;
   ctx.fillRect(-88, -91, 176, 12);
   ctx.fillRect(-77, -112, 154, 20);
@@ -404,6 +470,8 @@ function drawStaffPalace(ctx: CanvasRenderingContext2D, x: number, y: number) {
   ctx.fillRect(-78, -78, 156, 143);
   ctx.fillStyle = PALETTE.paper;
   ctx.fillRect(-68, -69, 136, 124);
+  ctx.fillStyle = "#bec6b8";
+  for (let row = 0; row < 10; row++) for (let col = 0; col < 6; col++) ctx.fillRect(-64 + col * 21 + row % 2 * 5, -64 + row * 11, 13, 2);
   ctx.strokeStyle = PALETTE.ink;
   ctx.lineWidth = 5;
   ctx.strokeRect(-78, -79, 156, 144);
@@ -420,6 +488,15 @@ function drawStaffPalace(ctx: CanvasRenderingContext2D, x: number, y: number) {
   ctx.fillRect(-96, 59, 192, 10);
   ctx.fillStyle = PALETTE.paper;
   ctx.fillRect(-8, 22, 5, 5);
+  // Stone columns, carved pediment and broad front steps.
+  for (const px of [-68, -24, 18, 62]) {
+    ctx.fillStyle = "#829080"; ctx.fillRect(px, -61, 6, 115);
+    ctx.fillStyle = "#f2f3ea"; ctx.fillRect(px - 2, -65, 10, 5); ctx.fillRect(px - 2, 49, 10, 6);
+  }
+  ctx.fillStyle = "#d7ddcd"; ctx.fillRect(-55, -124, 110, 8);
+  pixelText(ctx, "ARCHIVIO", 0, -101, 10);
+  ctx.fillStyle = PALETTE.dark; ctx.fillRect(-45, 68, 90, 5);
+  ctx.fillStyle = PALETTE.mid; ctx.fillRect(-51, 73, 102, 5);
   pixelText(ctx, "STAFF", 0, 87, 12);
   ctx.restore();
 }
@@ -446,10 +523,15 @@ function drawGuild(ctx: CanvasRenderingContext2D, x: number, y: number, wednesda
   ctx.lineTo(108, -72);
   ctx.closePath();
   ctx.fill();
+  ctx.save(); ctx.clip(); ctx.strokeStyle = "#626f61"; ctx.lineWidth = 2;
+  for (let ry = -119; ry < -72; ry += 10) { ctx.beginPath(); ctx.moveTo(-108, ry); ctx.lineTo(108, ry); ctx.stroke(); }
+  ctx.restore();
   ctx.fillStyle = wednesday ? "#d9bb75" : PALETTE.mid;
   ctx.fillRect(-94, -71, 188, 133);
   ctx.fillStyle = PALETTE.paper;
   ctx.fillRect(-83, -61, 166, 112);
+  ctx.fillStyle = "#c4cdbb";
+  for (let row = 0; row < 8; row++) for (let col = 0; col < 7; col++) ctx.fillRect(-78 + col * 22 + row % 2 * 5, -56 + row * 13, 14, 2);
   ctx.strokeStyle = PALETTE.ink;
   ctx.lineWidth = 5;
   ctx.strokeRect(-94, -71, 188, 133);
@@ -460,6 +542,13 @@ function drawGuild(ctx: CanvasRenderingContext2D, x: number, y: number, wednesda
   ctx.fillStyle = wednesday ? "#f6d77d" : PALETTE.mid;
   ctx.fillRect(-66, -31, 18, 18);
   ctx.fillRect(48, -31, 18, 18);
+  for (const px of [-79, 67]) {
+    ctx.fillStyle = "#566f58"; ctx.fillRect(px, 2, 12, 33);
+    ctx.fillStyle = "#ced9be"; ctx.fillRect(px + 4, 8, 4, 15);
+    ctx.fillStyle = PALETTE.ink; ctx.fillRect(px - 2, -1, 16, 3);
+  }
+  ctx.fillStyle = PALETTE.dark; ctx.fillRect(-42, 62, 84, 6);
+  ctx.fillStyle = PALETTE.mid; ctx.fillRect(-48, 68, 96, 6);
   if (wednesday) {
     ctx.fillStyle = "#f6d77d";
     ctx.fillRect(-14, 7, 28, 50);
@@ -518,6 +607,7 @@ function GameMap({
   const nearbyRef = useRef<Place | null>(nearby);
   const modalRef = useRef(modalOpen);
   const memberRef = useRef(member);
+  const canWalkRef = useRef<(x: number, y: number) => boolean>(() => false);
   useEffect(() => { memberRef.current = member; }, [member]);
 
   useEffect(() => {
@@ -533,6 +623,30 @@ function GameMap({
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+    const scenery = document.createElement("canvas");
+    scenery.width = WORLD.width; scenery.height = WORLD.height;
+    const scene = scenery.getContext("2d");
+    if (!scene) return;
+    drawGround(scene);
+    drawHouse(scene, 605, 100, 120, 105, "CAFFÈ");
+    drawHouse(scene, 90, 875, 150, 112, "PORTA SUSA");
+    drawHouse(scene, 1360, 845, 135, 108, "OFFICINE");
+    drawHouse(scene, 440, 915, 126, 103);
+    for (const [x, y] of [[90, 120], [150, 150], [600, 300], [650, 335], [1000, 145], [1440, 350], [1390, 390], [230, 650], [210, 700], [1350, 650], [1370, 700], [630, 1020], [980, 1030]]) drawTree(scene, x, y);
+    drawIntesa(scene, places[0].x, places[0].y);
+    drawSkatepark(scene, places[1].x, places[1].y);
+    drawWistery(scene, places[2].x, places[2].y);
+    drawStaffPalace(scene, places[3].x, places[3].y);
+    // All entry points sit on forecourts; solid footprints keep the avatar outside walls.
+    const solids = [
+      { x: 370, y: 95, w: 140, h: 245 }, { x: 324, y: 550, w: 192, h: 198 },
+      { x: 1052, y: 546, w: 216, h: 208 }, { x: 714, y: 890, w: 172, h: 125 },
+      { x: 593, y: 86, w: 144, h: 119 }, { x: 78, y: 861, w: 174, h: 126 },
+      { x: 1348, y: 831, w: 159, h: 122 }, { x: 428, y: 901, w: 150, h: 117 },
+    ];
+    const canWalk = (x: number, y: number) => x >= 28 && x <= WORLD.width - 28 && y >= 35 && y <= WORLD.height - 30
+      && !solids.some(r => x + 10 > r.x && x - 10 < r.x + r.w && y + 24 > r.y && y + 14 < r.y + r.h);
+    canWalkRef.current = canWalk;
 
     const resize = () => {
       const rect = canvas.getBoundingClientRect();
@@ -565,11 +679,13 @@ function GameMap({
         dy *= 0.707;
       }
       const speed = 0.19 * dt;
-      player.x = Math.max(28, Math.min(WORLD.width - 28, player.x + dx * speed));
-      player.y = Math.max(35, Math.min(WORLD.height - 30, player.y + dy * speed));
+      const beforeX = player.x, beforeY = player.y;
+      if (canWalk(player.x + dx * speed, player.y)) player.x += dx * speed;
+      if (canWalk(player.x, player.y + dy * speed)) player.y += dy * speed;
+      const walking = player.x !== beforeX || player.y !== beforeY;
       if (Math.abs(dx) > Math.abs(dy)) player.dir = dx < 0 ? "left" : "right";
       else if (dy) player.dir = dy < 0 ? "up" : "down";
-      if ((dx || dy) && now - lastFootstep > 245) {
+      if (walking && now - lastFootstep > 245) {
         onStep();
         lastFootstep = now;
       }
@@ -588,28 +704,20 @@ function GameMap({
         onNearbyChange(closest);
       }
 
-      const cameraX = Math.max(0, Math.min(WORLD.width - canvas.width, player.x - canvas.width / 2));
-      const cameraY = Math.max(0, Math.min(WORLD.height - canvas.height, player.y - canvas.height / 2));
+      const zoom = canvas.width < 520 ? .85 : Math.max(.72, Math.min(1, canvas.width / 1100));
+      const viewWidth = canvas.width / zoom, viewHeight = canvas.height / zoom;
+      const cameraX = viewWidth > WORLD.width ? (WORLD.width - viewWidth) / 2 : Math.max(0, Math.min(WORLD.width - viewWidth, player.x - viewWidth / 2));
+      const cameraY = viewHeight > WORLD.height ? (WORLD.height - viewHeight) / 2 : Math.max(0, Math.min(WORLD.height - viewHeight, player.y - viewHeight / 2));
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = PALETTE.paper; ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.save();
+      ctx.scale(zoom, zoom);
       ctx.translate(-Math.round(cameraX), -Math.round(cameraY));
-      drawGround(ctx);
-      drawHouse(ctx, 470, 80, 120, 105, "CAFFÈ");
-      drawHouse(ctx, 50, 665, 150, 112, "PORTA SUSA");
-      drawHouse(ctx, 1260, 630, 135, 108, "OFFICINE");
-      drawHouse(ctx, 410, 720, 126, 103);
+      ctx.drawImage(scenery, 0, 0);
       drawBeybladeGarden(ctx, now);
-      drawTree(ctx, 1330, 420);
-      drawTree(ctx, 1290, 468);
-      drawTree(ctx, 320, 560);
-      drawTree(ctx, 375, 600);
-      drawIntesa(ctx, places[0].x, places[0].y);
-      drawSkatepark(ctx, places[1].x, places[1].y);
-      drawWistery(ctx, places[2].x, places[2].y);
-      drawStaffPalace(ctx, places[3].x, places[3].y);
       drawGuild(ctx, places[4].x, places[4].y, wednesday, now);
       for (const place of places) drawMarker(ctx, place, closest?.id === place.id, now);
-      drawPixelPlayer(ctx, player.x, player.y, player.dir, Boolean(dx || dy), now, memberRef.current?.mustChangePassword ? null : memberRef.current);
+      drawPixelPlayer(ctx, player.x, player.y, player.dir, walking, now, memberRef.current?.mustChangePassword ? null : memberRef.current);
       ctx.restore();
       frame = requestAnimationFrame(render);
     };
@@ -621,7 +729,16 @@ function GameMap({
   }, [onNearbyChange, onStep, wednesday]);
 
   const setDirection = (direction: Direction, active: boolean) => {
-    if (active) keysRef.current.add(direction);
+    if (active && !modalRef.current) {
+      if (!keysRef.current.has(direction)) {
+        const player = playerRef.current;
+        const x = player.x + (direction === "left" ? -8 : direction === "right" ? 8 : 0);
+        const y = player.y + (direction === "up" ? -8 : direction === "down" ? 8 : 0);
+        if (canWalkRef.current(x, y)) { player.x = x; player.y = y; }
+        player.dir = direction;
+      }
+      keysRef.current.add(direction);
+    }
     else keysRef.current.delete(direction);
   };
 

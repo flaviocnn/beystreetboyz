@@ -18,12 +18,15 @@ export function drawPixelPlayer(ctx: CanvasRenderingContext2D, x: number, y: num
   ctx.save();
   ctx.translate(Math.round(x), Math.round(y));
   ctx.fillStyle = "rgba(32,35,34,.18)";
-  ctx.fillRect(-12, 15, 24, 7);
+  ctx.fillRect(-11, 23, 22, 4); ctx.fillRect(-15, 24, 30, 2);
+  ctx.translate(0, walking ? -step / 2 : 0);
   ctx.fillStyle = "#202322";
   ctx.fillRect(-9, -15, 18, 5);
   ctx.fillRect(-13, -10, 26, 16);
   ctx.fillStyle = "#f2f3ea";
   ctx.fillRect(-8, -7, 16, 10);
+  ctx.fillStyle = "#c5cbb9"; ctx.fillRect(-8, 0, 16, 3);
+  ctx.fillStyle = "#71806d"; ctx.fillRect(-8, -13, 8, 3);
   ctx.fillStyle = "#202322";
   if (dir === "up") ctx.fillRect(-8, -7, 16, 10);
   else if (dir === "left") ctx.fillRect(-9, -4, 4, 4);
@@ -36,8 +39,13 @@ export function drawPixelPlayer(ctx: CanvasRenderingContext2D, x: number, y: num
   ctx.fillStyle = color;
   ctx.fillRect(-6, 8, 12, 7);
   ctx.fillStyle = "#202322";
-  ctx.fillRect(-11 - step, 18, 8, 8);
-  ctx.fillRect(3 + step, 18, 8, 8);
+  ctx.fillRect(-15, 7 + step, 5, 10); ctx.fillRect(10, 9 - step, 5, 10);
+  ctx.fillStyle = "#e4e8da";
+  ctx.fillRect(-14, 14 + step, 3, 4); ctx.fillRect(11, 16 - step, 3, 4);
+  ctx.fillStyle = "#202322";
+  ctx.fillRect(-9, 18 + step, 7, 7);
+  ctx.fillRect(3, 20 - step, 7, 7);
+  ctx.fillStyle = "#7d897c"; ctx.fillRect(-9, 23 + step, 7, 2); ctx.fillRect(3, 25 - step, 7, 2);
   // Each silhouette is drawn on the same pixel grid and follows the player direction.
   if (style === 1) {
     ctx.fillStyle = color; ctx.fillRect(-10, -17, 20, 7);
@@ -101,6 +109,21 @@ export function drawPixelPlayer(ctx: CanvasRenderingContext2D, x: number, y: num
     ctx.fillStyle = "#202322"; ctx.fillRect(-7, -6, 14, 3);
   } else {
     ctx.fillStyle = color; ctx.fillRect(-8, -15, 16, 4); ctx.fillRect(-15, 8, 5, 11);
+  }
+  // Shared small highlights keep all eleven outfits readable at map scale.
+  ctx.fillStyle = "#ffffff35"; ctx.fillRect(-6, 8, 3, 7);
+  ctx.fillStyle = "#101b2138"; ctx.fillRect(5, 9, 3, 9);
+  if (dir === "up") {
+    ctx.fillStyle = "#303a34"; ctx.fillRect(-7, -6, 14, 8);
+    ctx.fillStyle = "#647160"; ctx.fillRect(-6, -5, 4, 3);
+    ctx.fillStyle = color; ctx.fillRect(-5, 9, 10, 8);
+    ctx.fillStyle = "#ffffff55"; ctx.fillRect(-3, 10, 6, 2);
+    ctx.fillStyle = "#202322"; ctx.fillRect(-5, 15, 10, 2);
+  } else if (style !== 6 && style !== 10) {
+    ctx.fillStyle = "#ffffff";
+    if (dir !== "right") ctx.fillRect(-6, -4, 1, 1);
+    if (dir !== "left") ctx.fillRect(4, -4, 1, 1);
+    ctx.fillStyle = "#75816c"; ctx.fillRect(dir === "left" ? -7 : dir === "right" ? 5 : -2, 1, 3, 1);
   }
   ctx.restore();
 }
