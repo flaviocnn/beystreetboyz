@@ -145,6 +145,91 @@ function drawTree(ctx: CanvasRenderingContext2D, x: number, y: number) {
   ctx.strokeRect(x - 14, y - 4, 28, 19);
 }
 
+function drawBeybladeGarden(ctx: CanvasRenderingContext2D, now: number) {
+  ctx.save();
+  // A pocket garden between the tower, café and staff palace.
+  ctx.fillStyle = PALETTE.mid;
+  ctx.fillRect(355, 202, 274, 130);
+  ctx.fillStyle = "#d0dac5";
+  ctx.fillRect(359, 206, 266, 122);
+  ctx.fillStyle = PALETTE.pale;
+  ctx.fillRect(380, 259, 226, 43);
+  ctx.fillRect(582, 280, 24, 110);
+  for (let x = 370; x < 625; x += 20) {
+    ctx.fillStyle = PALETTE.dark;
+    ctx.fillRect(x, 315, 3, 5);
+    ctx.fillRect(x + 5, 319, 3, 3);
+  }
+  drawTree(ctx, 378, 227);
+  drawTree(ctx, 607, 227);
+  // Flower beds and a little slatted bench.
+  for (const x of [376, 607]) {
+    for (let y = 274; y <= 302; y += 14) {
+      ctx.fillStyle = PALETTE.dark;
+      ctx.fillRect(x, y, 2, 7);
+      ctx.fillStyle = y === 274 ? "#edb94e" : "#ed737a";
+      ctx.fillRect(x - 3, y - 3, 8, 4);
+      ctx.fillStyle = PALETTE.paper;
+      ctx.fillRect(x, y - 3, 2, 2);
+    }
+  }
+  ctx.fillStyle = PALETTE.ink;
+  ctx.fillRect(399, 301, 4, 11);
+  ctx.fillRect(426, 301, 4, 11);
+  ctx.fillStyle = PALETTE.dark;
+  ctx.fillRect(395, 290, 39, 5);
+  ctx.fillRect(395, 297, 39, 6);
+  pixelText(ctx, "BEY GARDEN", 492, 216, 10);
+
+  // Stepped, pixel-art stadium: two tops orbit and spin in the bowl.
+  ctx.fillStyle = PALETTE.ink;
+  ctx.fillRect(467, 266, 56, 27);
+  ctx.fillRect(473, 260, 44, 39);
+  ctx.fillStyle = PALETTE.paper;
+  ctx.fillRect(471, 269, 48, 21);
+  ctx.fillRect(476, 264, 38, 31);
+  ctx.fillStyle = PALETTE.mid;
+  ctx.fillRect(478, 270, 34, 19);
+  for (let i = 0; i < 2; i++) {
+    const angle = now / 240 + i * Math.PI;
+    const x = Math.round(495 + Math.cos(angle) * 12);
+    const y = Math.round(279 + Math.sin(angle) * 6);
+    ctx.fillStyle = PALETTE.dark;
+    ctx.fillRect(x - 5, y + 3, 11, 2);
+    ctx.fillStyle = i === 0 ? "#527fee" : "#ed737a";
+    ctx.fillRect(x - 5, y - 2, 11, 5);
+    ctx.fillRect(x - 2, y - 5, 5, 11);
+    ctx.fillStyle = PALETTE.paper;
+    ctx.fillRect(x - 1, y - 1, 3, 3);
+  }
+  // Exactly three friends, with different outfits and happy, raised arms.
+  const friends = [
+    { x: 445, y: 254, color: 2, style: 0 },
+    { x: 545, y: 254, color: 5, style: 1 },
+    { x: 550, y: 302, color: 4, style: 0 },
+  ];
+  friends.forEach((friend, index) => {
+    const cheer = Math.sin(now / 230 + index * 2) > 0.4;
+    const y = friend.y - (cheer ? 3 : 0);
+    drawPixelPlayer(ctx, friend.x, y, "down", false, now, {
+      avatarStyle: friend.style, avatarColor: friend.color,
+    });
+    ctx.fillStyle = PALETTE.ink;
+    ctx.fillRect(friend.x - 3, y + 1, 2, 2);
+    ctx.fillRect(friend.x + 3, y + 1, 2, 2);
+    ctx.fillRect(friend.x - 1, y + 3, 4, 2);
+    if (cheer) {
+      ctx.fillRect(friend.x - 15, y + 3, 5, 7);
+      ctx.fillRect(friend.x + 11, y + 3, 5, 7);
+      ctx.fillStyle = PALETTE.paper;
+      ctx.fillRect(friend.x - 14, y + 3, 3, 3);
+      ctx.fillRect(friend.x + 12, y + 3, 3, 3);
+      pixelText(ctx, index === 2 ? "♪" : "!", friend.x + 18, y - 18, 12);
+    }
+  });
+  ctx.restore();
+}
+
 function drawHouse(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -471,8 +556,7 @@ function GameMap({
       drawHouse(ctx, 50, 665, 150, 112, "PORTA SUSA");
       drawHouse(ctx, 1260, 630, 135, 108, "OFFICINE");
       drawHouse(ctx, 410, 720, 126, 103);
-      drawTree(ctx, 515, 285);
-      drawTree(ctx, 580, 322);
+      drawBeybladeGarden(ctx, now);
       drawTree(ctx, 1330, 420);
       drawTree(ctx, 1290, 468);
       drawTree(ctx, 320, 560);
