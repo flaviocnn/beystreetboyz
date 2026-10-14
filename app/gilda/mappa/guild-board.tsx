@@ -7,10 +7,9 @@ type Message = {
   id: string; memberId: string; body: string; createdAt: string;
   firstName: string; lastName: string;
 };
-type RankingRow = { id: string; firstName: string; lastName: string; score: number };
 
-export default function GuildBoard({ member, ranking, rankingError, onClick }: {
-  member: PlayerMember; ranking: RankingRow[]; rankingError: string; onClick: () => void;
+export default function GuildBoard({ member, onClick }: {
+  member: PlayerMember; onClick: () => void;
 }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [draft, setDraft] = useState("");
@@ -64,11 +63,6 @@ export default function GuildBoard({ member, ranking, rankingError, onClick }: {
           <header><strong>{message.firstName} {message.lastName}{message.memberId === member.id ? " · TU" : ""}</strong><time dateTime={message.createdAt}>{new Date(message.createdAt).toLocaleString("it-IT", { timeZone: "Europe/Rome", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</time></header>
           <p>{message.body}</p>
         </article>)}</div>}
-    </section>
-    <section className="guild-board-ranking" aria-labelledby="guild-board-ranking-title">
-      <h3 id="guild-board-ranking-title">Classifica della Gilda</h3>
-      <p className="ranking-note">Le prestazioni dei membri, tappa dopo tappa.</p>
-      {rankingError ? <p className="form-error" role="alert">{rankingError}</p> : <div className="ranking-list">{ranking.map((row, index) => <div className={`ranking-row ${row.id === member.id ? "is-you" : ""}`} key={row.id}><span>{String(index + 1).padStart(2, "0")}</span><strong>{row.firstName} {row.lastName}{row.id === member.id ? " · TU" : ""}</strong><b>{row.score} PT</b></div>)}</div>}
     </section>
   </div>;
 }

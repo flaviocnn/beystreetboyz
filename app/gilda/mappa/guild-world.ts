@@ -1,16 +1,18 @@
 import { drawPixelPlayer, type Avatar } from "../../lib/pixel-player";
 
-export type PlaceId = "board" | "mirror" | "champion" | "library";
+export type PlaceId = "board" | "ranking" | "mirror" | "champion" | "library";
 export const WORLD = { width: 1450, height: 1080 };
 export const START = { x: 725, y: 700 };
 export const PLACES: { id: PlaceId; name: string; x: number; y: number; symbol: string }[] = [
   { id: "board", name: "Bacheca della Gilda", x: 725, y: 505, symbol: "B" },
+  { id: "ranking", name: "Classifica della Gilda", x: 1015, y: 680, symbol: "R" },
   { id: "mirror", name: "Specchio dei blader", x: 310, y: 535, symbol: "S" },
   { id: "champion", name: "Statua di GranBurstone", x: 1120, y: 535, symbol: "C" },
   { id: "library", name: "Libreria dei giochi", x: 360, y: 875, symbol: "L" },
 ];
 const SOLIDS = [
   { x: 588, y: 305, w: 274, h: 151 },
+  { x: 936, y: 540, w: 160, h: 90 },
   { x: 218, y: 260, w: 184, h: 240 },
   { x: 1035, y: 285, w: 170, h: 210 },
   { x: 204, y: 663, w: 312, h: 170 },
@@ -87,10 +89,26 @@ export function drawGuildWorld(ctx: CanvasRenderingContext2D) {
     rect(ctx, "#344935", x - 26, 586, 52, 70); rect(ctx, "#8da284", x - 20, 575, 40, 67);
     rect(ctx, "#c1ccab", x - 30, 574, 60, 12);
   }
-  // Leaderboard.
+  // Members' message board.
   rect(ctx, "#27332a", 588, 305, 274, 151); rect(ctx, "#e9eedb", 596, 313, 258, 135);
   rect(ctx, "#27332a", 608, 325, 234, 28); label(ctx, "BACHECA DELLA GILDA", 725, 344, "#edf1df", 14);
-  for (let i = 0; i < 3; i++) { rect(ctx, "#627953", 620, 370 + i * 22, 18, 11); rect(ctx, "#879b76", 650, 370 + i * 22, 158 - i * 30, 11); }
+  for (let i = 0; i < 3; i++) {
+    const x = 620 + i * 69, y = 366 + (i % 2) * 9;
+    rect(ctx, i === 1 ? "#c5ddce" : "#e5d5a5", x, y, 59, 56);
+    rect(ctx, "#526b52", x + 12, y + 15, 35, 4);
+    rect(ctx, "#879b76", x + 9, y + 28, 41, 3);
+    rect(ctx, "#879b76", x + 9, y + 37, 30, 3);
+    rect(ctx, "#27332a", x + 27, y - 3, 6, 6);
+  }
+  // A separate scoreboard stands on the eastern side of the hall.
+  rect(ctx, "#27332a", 936, 540, 160, 90);
+  rect(ctx, "#d4dec5", 944, 548, 144, 74);
+  rect(ctx, "#27332a", 951, 555, 130, 22);
+  label(ctx, "CLASSIFICA", 1016, 571, "#edf1df", 13);
+  for (let i = 0; i < 3; i++) {
+    label(ctx, String(i + 1), 963, 593 + i * 10, "#354835", 9);
+    rect(ctx, "#819c76", 976, 586 + i * 10, 83 - i * 17, 5);
+  }
   // Full-length mirror and golden frame.
   rect(ctx, "#30372e", 218, 267, 184, 232); rect(ctx, "#bdad76", 224, 259, 172, 230);
   rect(ctx, "#776e49", 237, 272, 146, 203); rect(ctx, "#a7c6c2", 245, 281, 130, 187);
@@ -121,6 +139,7 @@ export function drawGuildWorld(ctx: CanvasRenderingContext2D) {
   rect(ctx, "#617251", 1020, 851, 38, 25); rect(ctx, "#617251", 1110, 851, 38, 25);
   label(ctx, "UN ALTRO TURNO?", 1082, 906, "#52664b", 12);
   label(ctx, "← SPECCHIO     CAMPIONE →", 725, 677, "#e8efdc", 12);
+  label(ctx, "CLASSIFICA →", 876, 713, "#e8efdc", 11);
   label(ctx, "↖ LIBRERIA", 725, 972, "#e8efdc", 12);
 }
 export function drawRoomDetails(ctx: CanvasRenderingContext2D, near: PlaceId | null, now: number, avatar: Avatar) {

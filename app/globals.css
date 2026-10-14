@@ -144,6 +144,7 @@ button { font: inherit; }
 .prompt-icon { display: grid; place-items: center; width: 34px; height: 34px; flex: 0 0 auto; color: var(--ink); background: var(--paper); font-weight: 900; font-size: 20px; }
 .interaction-prompt button > span:nth-child(2) { display: grid; gap: 4px; font-size: 12px; font-weight: 800; }
 .interaction-prompt small { color: var(--pale); font-size: 8px; letter-spacing: .14em; }
+.interaction-prompt .guild-event-hint { color: #f5d17d; font-size: 10px; font-style: normal; font-weight: 700; line-height: 1.35; }
 .interaction-prompt kbd { margin-left: auto; padding: 7px 8px; color: var(--ink); background: var(--paper); font-size: 9px; font-weight: 900; white-space: nowrap; }
 
 .map-index {
@@ -309,6 +310,7 @@ button { font: inherit; }
 .ranking-card { position: relative; width: min(620px, 100%); max-height: 88vh; overflow: auto; padding: 30px; color: #202824; background: #f3f2e9; border: 4px solid #202824; box-shadow: 10px 10px 0 #889c84; }
 .ranking-card h2 { margin: 0 0 10px; font-family: var(--font-geist-sans), sans-serif; font-size: clamp(27px, 5vw, 43px); letter-spacing: -.05em; }
 .ranking-note { margin: 0 0 24px; color: #526157; font-family: var(--font-geist-sans), sans-serif; font-size: 14px; }
+.guild-event-modal { margin: -8px 0 22px; padding: 11px 13px; border-left: 4px solid #c29445; background: #f8edcb; color: #503d22; font: 700 13px/1.45 var(--font-geist-sans), sans-serif; }
 .ranking-list { border-top: 3px solid #202824; }
 .ranking-row { display: flex; gap: 15px; align-items: center; padding: 13px 5px; border-bottom: 1px solid #a7b5a7; font-size: 12px; }
 .ranking-row > span { color: #7a8b7c; font-weight: 900; }
@@ -445,10 +447,11 @@ button:disabled { cursor: wait; opacity: .55; }
 .guild-object-card > .section-kicker { padding-right: 48px; line-height: 1.7; }
 .guild-object-card > h2 { padding-right: 32px; line-height: 1.1; margin-bottom: 22px; }
 .guild-object-board { width: min(820px, 100%); }
+.guild-object-ranking { width: min(700px, 100%); }
 .guild-board { display: grid; gap: 24px; }
 .guild-board section { min-width: 0; }
 .guild-board-write { padding: 20px; border: 2px solid #718a70; background: #e1e9d8; }
-.guild-board-heading h3, .guild-board-feed h3, .guild-board-ranking h3 { margin: 5px 0 8px; font-size: 22px; letter-spacing: -.04em; }
+.guild-board-heading h3, .guild-board-feed h3 { margin: 5px 0 8px; font-size: 22px; letter-spacing: -.04em; }
 .guild-board-heading p, .guild-board-done, .guild-board-empty { margin: 0 0 16px; color: #435746; font: 14px/1.5 var(--font-geist-sans), sans-serif; }
 .guild-board-done { margin: 14px 0 0; padding: 12px; border-left: 4px solid #4c7456; background: #f0f5e9; }
 .guild-board-write form { display: grid; gap: 9px; }
@@ -457,7 +460,7 @@ button:disabled { cursor: wait; opacity: .55; }
 .guild-board-submit { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
 .guild-board-submit small, .guild-board-feed-title span { color: #58705a; font-size: 11px; }
 .guild-board-submit .solid-button { width: auto; min-height: 44px; }
-.guild-board-feed, .guild-board-ranking { border-top: 2px solid #879c83; padding-top: 14px; }
+.guild-board-feed { border-top: 2px solid #879c83; padding-top: 14px; }
 .guild-board-feed-title { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
 .guild-board-messages { display: grid; gap: 10px; }
 .guild-board-messages article { padding: 13px 15px; border: 1px solid #a5b4a0; background: #f4f5e9; }
@@ -465,7 +468,6 @@ button:disabled { cursor: wait; opacity: .55; }
 .guild-board-messages header { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 5px 12px; color: #2b422f; font-size: 12px; }
 .guild-board-messages time { color: #667766; font-size: 10px; }
 .guild-board-messages p { margin: 9px 0 0; color: #26372c; font: 15px/1.5 var(--font-geist-sans), sans-serif; white-space: pre-wrap; overflow-wrap: anywhere; }
-.guild-board-ranking .ranking-note { margin-top: 0; }
 .guild-object-mirror { width: min(920px, 100%); background: #e9eee2; }
 .mirror-workshop { display: grid; grid-template-columns: minmax(0, 1fr) minmax(240px, .85fr); gap: 25px; align-items: start; }
 .mirror-photo-preview { background: #1a2931; padding: 8px; box-shadow: 6px 6px 0 #98a48d; }

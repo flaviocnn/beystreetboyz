@@ -25,6 +25,8 @@ const PALETTE = {
   pale: "#d8ddd4",
   paper: "#f2f3ea",
 };
+const torinoWeekday = new Intl.DateTimeFormat("en-US", { weekday: "long", timeZone: "Europe/Rome" });
+const isChampionshipWednesday = (date: Date) => torinoWeekday.format(date) === "Wednesday";
 
 const places: Place[] = [
   {
@@ -422,9 +424,21 @@ function drawStaffPalace(ctx: CanvasRenderingContext2D, x: number, y: number) {
   ctx.restore();
 }
 
-function drawGuild(ctx: CanvasRenderingContext2D, x: number, y: number) {
+function drawGuild(ctx: CanvasRenderingContext2D, x: number, y: number, wednesday: boolean, now: number) {
   ctx.save();
   ctx.translate(x, y);
+  if (wednesday) {
+    const pulse = .7 + Math.sin(now / 550) * .15;
+    ctx.fillStyle = `rgba(248, 201, 99, ${.13 * pulse})`;
+    ctx.fillRect(-118, -140, 236, 220);
+    ctx.fillStyle = `rgba(255, 213, 109, ${.28 * pulse})`;
+    ctx.fillRect(-105, -80, 210, 150);
+    for (const [sparkX, sparkY] of [[-105, -105], [103, -100], [-116, 24], [113, 20]]) {
+      ctx.fillStyle = "#f8d671";
+      ctx.fillRect(sparkX, sparkY, 7, 7);
+      ctx.fillRect(sparkX - 4, sparkY + 2, 15, 3);
+    }
+  }
   ctx.fillStyle = PALETTE.ink;
   ctx.beginPath();
   ctx.moveTo(-108, -72);
@@ -432,7 +446,7 @@ function drawGuild(ctx: CanvasRenderingContext2D, x: number, y: number) {
   ctx.lineTo(108, -72);
   ctx.closePath();
   ctx.fill();
-  ctx.fillStyle = PALETTE.mid;
+  ctx.fillStyle = wednesday ? "#d9bb75" : PALETTE.mid;
   ctx.fillRect(-94, -71, 188, 133);
   ctx.fillStyle = PALETTE.paper;
   ctx.fillRect(-83, -61, 166, 112);
@@ -443,14 +457,23 @@ function drawGuild(ctx: CanvasRenderingContext2D, x: number, y: number) {
   ctx.fillRect(-23, 0, 46, 61);
   ctx.fillRect(-72, -37, 30, 30);
   ctx.fillRect(42, -37, 30, 30);
-  ctx.fillStyle = PALETTE.mid;
+  ctx.fillStyle = wednesday ? "#f6d77d" : PALETTE.mid;
   ctx.fillRect(-66, -31, 18, 18);
   ctx.fillRect(48, -31, 18, 18);
+  if (wednesday) {
+    ctx.fillStyle = "#f6d77d";
+    ctx.fillRect(-14, 7, 28, 50);
+    ctx.fillStyle = PALETTE.ink;
+    ctx.fillRect(-2, 7, 4, 50);
+    ctx.fillStyle = "#8b623c";
+    ctx.fillRect(-94, 60, 188, 7);
+  }
   ctx.fillStyle = PALETTE.ink;
   ctx.fillRect(-13, -103, 26, 25);
   ctx.fillStyle = PALETTE.paper;
   pixelText(ctx, "G", 0, -90, 17, "center", PALETTE.paper);
   pixelText(ctx, "GILDA DEL GRIFONE", 0, 87, 11);
+  if (wednesday) pixelText(ctx, "MERCOLEDÌ · TAPPA RANKED", 0, 110, 10, "center", "#6b4a1e");
   ctx.restore();
 }
 
@@ -480,12 +503,14 @@ function GameMap({
   modalOpen,
   onStep,
   member,
+  wednesday,
 }: {
   nearby: Place | null;
   onNearbyChange: (place: Place | null) => void;
   modalOpen: boolean;
   onStep: () => void;
   member: PlayerMember | null;
+  wednesday: boolean;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const playerRef = useRef({ ...START, dir: "down" as Direction });
@@ -582,7 +607,7 @@ function GameMap({
       drawSkatepark(ctx, places[1].x, places[1].y);
       drawWistery(ctx, places[2].x, places[2].y);
       drawStaffPalace(ctx, places[3].x, places[3].y);
-      drawGuild(ctx, places[4].x, places[4].y);
+      drawGuild(ctx, places[4].x, places[4].y, wednesday, now);
       for (const place of places) drawMarker(ctx, place, closest?.id === place.id, now);
       drawPixelPlayer(ctx, player.x, player.y, player.dir, Boolean(dx || dy), now, memberRef.current?.mustChangePassword ? null : memberRef.current);
       ctx.restore();
@@ -593,7 +618,7 @@ function GameMap({
       cancelAnimationFrame(frame);
       observer.disconnect();
     };
-  }, [onNearbyChange, onStep]);
+  }, [onNearbyChange, onStep, wednesday]);
 
   const setDirection = (direction: Direction, active: boolean) => {
     if (active) keysRef.current.add(direction);
@@ -662,6 +687,13 @@ function GameMap({
 
 export default function Home() {
   const [member, setMember] = useState<PlayerMember | null>(null);
+  const [wednesday, setWednesday] = useState(false);
+  useEffect(() => {
+    const update = () => setWednesday(isChampionshipWednesday(new Date()));
+    update();
+    const timer = window.setInterval(update, 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
   useEffect(() => { void fetch("/api/member/session", { cache: "no-store" }).then(readResponse).then((result) => setMember(result.member)).catch(() => setMember(null)); }, []);
   const [nearby, setNearby] = useState<Place | null>(null);
   const [selected, setSelected] = useState<Place | null>(null);
@@ -689,7 +721,7 @@ export default function Home() {
 
   return (
     <main className="game-shell">
-      <GameMap nearby={nearby} onNearbyChange={setNearby} modalOpen={Boolean(selected)} onStep={playStep} member={member} />
+      <GameMap nearby={nearby} onNearbyChange={setNearby} modalOpen={Boolean(selected)} onStep={playStep} member={member} wednesday={wednesday} />
 
       <header className="game-header">
         <div className="brand-mark" aria-hidden="true">T</div>
@@ -716,7 +748,7 @@ export default function Home() {
         {nearby && (
           <button onClick={openSelected}>
             <span className="prompt-icon">!</span>
-            <span><small>SEI VICINO A</small>{nearby.name}</span>
+            <span><small>SEI VICINO A</small>{nearby.name}{nearby.id === "guild" && <em className="guild-event-hint">{wednesday ? "È mercoledì! Stasera c’è una tappa del campionato." : "Ogni mercoledì sera: tappe di campionato!"}</em>}</span>
             <kbd>INVIO ↵</kbd>
           </button>
         )}
@@ -743,6 +775,7 @@ export default function Home() {
             <h2 id="modal-title">{selected.name}</h2>
             <p className="modal-description">{selected.description}</p>
             <p className="modal-detail">{selected.detail}</p>
+            {selected.id === "guild" && <p className="guild-event-modal">{wednesday ? "La Gilda si è accesa: stasera è il momento delle tappe di campionato!" : "Il mercoledì sera la Gilda si accende per le tappe di campionato."}</p>}
             {selected.id === "wistery" && <a className="modal-enter" href={member && !member.mustChangePassword ? "/wistery" : "/gilda"} onClick={playClick}>{member && !member.mustChangePassword ? "FORGIA IL TUO AVATAR" : "ACCEDI ALLA GILDA PER ENTRARE"} →</a>}
             {(selected.id === "staff" || selected.id === "guild") && (
               <a className="modal-enter" href={selected.id === "staff" ? "/staff" : "/gilda"} onClick={playClick}>
