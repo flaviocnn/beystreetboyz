@@ -440,6 +440,53 @@ button:disabled { cursor: wait; opacity: .55; }
 .avatar-save-note { font: 15px/1.6 var(--font-geist-sans), sans-serif; color: #bac6e4; margin: 28px 0 18px; }
 .wistery-shell .solid-button { background: #526fb2; border-color: #9ab4f5; color: white; }
 .success-message { padding: 14px; background: #254536; color: #dbf2d2; font-size: 13px; line-height: 1.5; }
+.guild-map-legend { position: absolute; left: 12px; top: 122px; display: grid; grid-template-columns: 1fr 1fr; gap: 5px 8px; width: 144px; padding: 8px; color: #e7eddf; background: #1d2c24ed; font-size: 8px; pointer-events: none; }
+.guild-object-card { width: min(760px, 100%); }
+.guild-object-card > .section-kicker { padding-right: 48px; line-height: 1.7; }
+.guild-object-card > h2 { padding-right: 32px; line-height: 1.1; margin-bottom: 22px; }
+.guild-object-mirror { width: min(920px, 100%); background: #e9eee2; }
+.mirror-workshop { display: grid; grid-template-columns: minmax(0, 1fr) minmax(240px, .85fr); gap: 25px; align-items: start; }
+.mirror-photo-preview { background: #1a2931; padding: 8px; box-shadow: 6px 6px 0 #98a48d; }
+.mirror-photo-preview img { display: block; width: 100%; height: auto; image-rendering: pixelated; }
+.mirror-photo-options > p { font: 15px/1.6 var(--font-geist-sans), sans-serif; margin: 0 0 18px; color: #485746; }
+.mirror-name { display: grid; gap: 8px; margin-bottom: 20px; font-size: 10px; font-weight: 800; letter-spacing: .08em; }
+.mirror-name input { width: 100%; min-width: 0; height: 48px; padding: 10px; border: 2px solid #71836b; background: #fffdf5; color: #202824; font: 16px var(--font-geist-sans), sans-serif; border-radius: 0; }
+.mirror-photo-options fieldset { min-width: 0; border: 0; padding: 0; margin: 0 0 20px; }
+.mirror-photo-options legend { margin-bottom: 10px; font-size: 10px; font-weight: 800; letter-spacing: .08em; }
+.mirror-choices { display: flex; flex-wrap: wrap; gap: 7px; }
+.mirror-choices button { flex: 1; min-height: 44px; padding: 8px; border: 1px solid #7e9175; background: #f7f5e9; color: #26372c; font-size: 10px; cursor: pointer; }
+.mirror-choices button[aria-pressed="true"] { background: #334e3b; color: #f7f5e9; box-shadow: inset 0 -3px #a8bd96; }
+.mirror-photo-options .mirror-photo-hint { margin-top: 16px; font-size: 12px; }
+.mirror-photo-options .mirror-save-message { padding: 12px; background: #d5e1c9; color: #283e2c; font-size: 13px; }
+.champion-memorial { text-align: center; padding: 0 12px 14px; }
+.champion-sprite { margin: 0 auto; max-width: 360px; background: radial-gradient(ellipse, #d2c59b 0%, #e1dfc8 43%, transparent 70%); }
+.champion-sprite canvas { display: block; width: 100%; height: auto; image-rendering: pixelated; }
+.champion-year { display: inline-block; margin: 0; padding: 8px 15px; border: 2px solid #8f8054; color: #5c4e2d; font-size: 11px; font-weight: 800; letter-spacing: .12em; }
+.champion-memorial h3 { margin: 18px 0 12px; font-size: clamp(28px, 6vw, 42px); letter-spacing: -.06em; }
+.champion-memorial > p:not(.champion-year) { font: 16px/1.6 var(--font-geist-sans), sans-serif; color: #53604a; }
+.champion-memorial blockquote { margin: 24px 0 0; padding-top: 20px; border-top: 1px solid #b1b89a; color: #6d6949; font: italic 19px/1.5 Georgia, serif; }
+.guild-object-description { color: #4b5f4e; font: 16px/1.6 var(--font-geist-sans), sans-serif; }
+.library-shelves { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px 12px; padding: 18px; background: #344637; border: 5px solid #77896c; }
+.library-shelves button { display: grid; align-content: start; justify-items: center; gap: 7px; min-width: 0; min-height: 154px; padding: 12px 8px; background: var(--box-color); border: 3px solid #263a2c; border-bottom: 10px solid #17271a; color: #24322b; cursor: pointer; box-shadow: 0 7px #a8b092; }
+.library-shelves button[aria-pressed="true"] { outline: 3px solid #f2e2a0; outline-offset: 2px; transform: translateY(-3px); }
+.game-box-symbol { font-size: 32px; line-height: 1.2; min-height: 39px; }
+.library-shelves strong { font-size: 13px; overflow-wrap: anywhere; }
+.library-shelves small { font-size: 9px; line-height: 1.5; }
+.library-game-detail { margin-top: 24px; padding: 20px; border: 2px solid #88977d; background: #e2e7d7; }
+.library-game-detail h3 { margin: 0 0 10px; font-size: 25px; letter-spacing: -.03em; }
+.library-game-detail p { color: #445541; font: 16px/1.6 var(--font-geist-sans), sans-serif; }
+.library-note { display: block; font-size: 10px; line-height: 1.6; color: #5a694f; }
+@media (max-width: 650px) {
+  .mirror-workshop { grid-template-columns: 1fr; gap: 25px; }
+  .mirror-photo-preview { width: min(100%, 340px); margin: 0 auto; }
+  .guild-object-card > h2 { font-size: 27px; }
+  .library-shelves { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 12px; padding: 15px; }
+  .library-shelves button { min-height: 145px; }
+  .guild-map-title h1 { font-size: 24px; }
+}
+@media (max-height: 500px) and (orientation: landscape) {
+  .guild-map-legend { display: none; }
+}
 .map-canvas, .guild-canvas, .dpad, .guild-dpad { touch-action: none; user-select: none; -webkit-user-select: none; }
 
 @media (max-width: 1000px) {
