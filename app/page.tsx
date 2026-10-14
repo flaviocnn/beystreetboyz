@@ -5,6 +5,7 @@ import { useGameAudio } from "./lib/game-audio";
 import { drawPixelPlayer, type Direction } from "./lib/pixel-player";
 import { type PlayerMember, readResponse } from "./lib/client-api";
 import { useDialogFocus } from "./lib/dialog-focus";
+import { createIdleEncounter, updateIdleEncounter, VISITORS } from "./lib/idle-visitor";
 
 type Place = {
   id: string;
@@ -608,6 +609,9 @@ function GameMap({
   const modalRef = useRef(modalOpen);
   const memberRef = useRef(member);
   const canWalkRef = useRef<(x: number, y: number) => boolean>(() => false);
+  const encounterRef = useRef(createIdleEncounter(START));
+  const [visitorSpeech, setVisitorSpeech] = useState<number | null>(null);
+  const speechRef = useRef<number | null>(null);
   useEffect(() => { memberRef.current = member; }, [member]);
 
   useEffect(() => {
@@ -662,6 +666,7 @@ function GameMap({
     let last = performance.now();
     let lastFootstep = 0;
     const render = (now: number) => {
+      const elapsed = Math.min(100, now - last);
       const dt = Math.min(32, now - last);
       last = now;
       const player = playerRef.current;
@@ -689,6 +694,10 @@ function GameMap({
         onStep();
         lastFootstep = now;
       }
+      updateIdleEncounter(encounterRef.current, player, elapsed, modalRef.current || document.hidden, canWalk);
+      const visitor = encounterRef.current.visitor;
+      const speech = visitor?.phase === "talking" ? visitor.kind : null;
+      if (speech !== speechRef.current) { speechRef.current = speech; setVisitorSpeech(speech); }
 
       let closest: Place | null = null;
       let closestDistance = Infinity;
@@ -717,6 +726,13 @@ function GameMap({
       drawBeybladeGarden(ctx, now);
       drawGuild(ctx, places[4].x, places[4].y, wednesday, now);
       for (const place of places) drawMarker(ctx, place, closest?.id === place.id, now);
+      if (visitor) {
+        ctx.save();
+        ctx.globalAlpha = visitor.phase === "leaving" ? Math.max(0, 1 - visitor.age / 1000) : 1;
+        drawPixelPlayer(ctx, visitor.x, visitor.y, visitor.dir, visitor.phase === "walking" && !modalRef.current, now, VISITORS[visitor.kind]);
+        pixelText(ctx, visitor.kind === 0 ? "DARK" : "PHOENIX", visitor.x, visitor.y - 44, 10, "center", visitor.kind === 0 ? "#664581" : "#97601f");
+        ctx.restore();
+      }
       drawPixelPlayer(ctx, player.x, player.y, player.dir, walking, now, memberRef.current?.mustChangePassword ? null : memberRef.current);
       ctx.restore();
       frame = requestAnimationFrame(render);
@@ -780,6 +796,12 @@ function GameMap({
   return (
     <>
       <canvas ref={canvasRef} className="map-canvas" aria-label="Mappa interattiva di Torino in stile videogame 8-bit" />
+      {visitorSpeech !== null && !modalOpen && <aside className={`visitor-dialogue visitor-${visitorSpeech}`} role="status" aria-live="polite">
+        <span className="visitor-dialogue-label">UN INCONTRO IN CITTÀ</span>
+        <strong>{VISITORS[visitorSpeech].name}</strong>
+        <p>«{VISITORS[visitorSpeech].message}»</p>
+        <button aria-label="Chiudi il messaggio dell’NPC" onClick={() => { encounterRef.current.visitor = null; speechRef.current = null; setVisitorSpeech(null); }}>×</button>
+      </aside>}
       <div className="dpad" aria-label="Controlli movimento">
         {(["up", "left", "down", "right"] as Direction[]).map((direction) => (
           <button
