@@ -1,4 +1,4 @@
-import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 
 export const members = sqliteTable("members", {
   id: text("id").primaryKey(),
@@ -23,3 +23,11 @@ export const members = sqliteTable("members", {
   score: integer("score").notNull().default(0),
   createdAt: text("created_at").notNull(),
 });
+
+export const guildMessages = sqliteTable("guild_messages", {
+  id: text("id").primaryKey(),
+  memberId: text("member_id").notNull().references(() => members.id, { onDelete: "cascade" }),
+  day: text("day").notNull(),
+  body: text("body").notNull(),
+  createdAt: text("created_at").notNull(),
+}, (table) => [uniqueIndex("guild_messages_member_day_unique").on(table.memberId, table.day)]);

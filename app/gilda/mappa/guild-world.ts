@@ -4,7 +4,7 @@ export type PlaceId = "board" | "mirror" | "champion" | "library";
 export const WORLD = { width: 1450, height: 1080 };
 export const START = { x: 725, y: 700 };
 export const PLACES: { id: PlaceId; name: string; x: number; y: number; symbol: string }[] = [
-  { id: "board", name: "Classifica della Gilda", x: 725, y: 505, symbol: "B" },
+  { id: "board", name: "Bacheca della Gilda", x: 725, y: 505, symbol: "B" },
   { id: "mirror", name: "Specchio dei blader", x: 310, y: 535, symbol: "S" },
   { id: "champion", name: "Statua di GranBurstone", x: 1120, y: 535, symbol: "C" },
   { id: "library", name: "Libreria dei giochi", x: 360, y: 875, symbol: "L" },
@@ -89,7 +89,7 @@ export function drawGuildWorld(ctx: CanvasRenderingContext2D) {
   }
   // Leaderboard.
   rect(ctx, "#27332a", 588, 305, 274, 151); rect(ctx, "#e9eedb", 596, 313, 258, 135);
-  rect(ctx, "#27332a", 608, 325, 234, 28); label(ctx, "CLASSIFICA DELLA GILDA", 725, 344, "#edf1df", 14);
+  rect(ctx, "#27332a", 608, 325, 234, 28); label(ctx, "BACHECA DELLA GILDA", 725, 344, "#edf1df", 14);
   for (let i = 0; i < 3; i++) { rect(ctx, "#627953", 620, 370 + i * 22, 18, 11); rect(ctx, "#879b76", 650, 370 + i * 22, 158 - i * 30, 11); }
   // Full-length mirror and golden frame.
   rect(ctx, "#30372e", 218, 267, 184, 232); rect(ctx, "#bdad76", 224, 259, 172, 230);

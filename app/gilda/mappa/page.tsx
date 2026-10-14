@@ -6,6 +6,7 @@ import { type PlayerMember as Member, readResponse } from "../../lib/client-api"
 import { useDialogFocus } from "../../lib/dialog-focus";
 import { WORLD, START, PLACES, GAMES, canWalk, nearbyPlace, drawGuildWorld, drawRoomDetails, drawMinimap, drawChampion, type PlaceId } from "./guild-world";
 import MirrorPhoto from "./mirror-photo";
+import GuildBoard from "./guild-board";
 
 type RankingRow = { id: string; firstName: string; lastName: string; score: number };
 const KEY_DIRECTIONS: Record<string, Direction> = { ArrowUp: "up", w: "up", ArrowDown: "down", s: "down", ArrowLeft: "left", a: "left", ArrowRight: "right", d: "right" };
@@ -75,7 +76,7 @@ function GuildRoom({ onOpen, onNear, onStep, paused, member }: {
   }, [onOpen, onNear, onStep, member]);
   return <>
     <canvas ref={canvasRef} className="guild-canvas" aria-label="Mappa della Gilda: bacheca a nord, specchio a nord-ovest, statua del campione a nord-est e libreria a sud-ovest. Muoviti con le frecce o i pulsanti touch e interagisci vicino agli oggetti." />
-    <div className="guild-map-legend" aria-label="Legenda mappa"><span>S · Specchio</span><span>C · Campione</span><span>L · Libreria</span><span>B · Classifica</span></div>
+    <div className="guild-map-legend" aria-label="Legenda mappa"><span>S · Specchio</span><span>C · Campione</span><span>L · Libreria</span><span>B · Bacheca</span></div>
     <div className="guild-dpad" aria-label="Controlli movimento">{(["up", "left", "down", "right"] as Direction[]).map((direction) => <button key={direction} className={`guild-${direction}`} aria-label={`Vai ${DIRECTION_NAMES[direction]}`} disabled={paused}
       onPointerDown={(event) => { if (!pausedRef.current) { event.currentTarget.setPointerCapture(event.pointerId); beginWalk(keysRef.current, playerRef.current, direction); } }}
       onPointerUp={() => keysRef.current.delete(direction)} onPointerCancel={() => keysRef.current.delete(direction)} onLostPointerCapture={() => keysRef.current.delete(direction)}>
@@ -140,7 +141,7 @@ export default function GuildMapPage() {
         {opened === "mirror" && <MirrorPhoto member={member} onClick={playClick} />}
         {opened === "champion" && <div className="champion-memorial"><div className="champion-sprite"><ChampionPortrait /></div><p className="champion-year">CAMPIONE RANKED · 2025</p><h3>GranBurstone</h3><p>Al campione della ranked dell’anno scorso.<br />Il suo nome resta scolpito nella storia della Gilda.</p><blockquote>Un trofeo passa di mano.<br />Una leggenda resta.</blockquote></div>}
         {opened === "library" && <Library onClick={playClick} />}
-        {opened === "board" && <><p className="ranking-note">Le prestazioni dei membri, tappa dopo tappa.</p>{error ? <p className="form-error" role="alert">{error}</p> : <div className="ranking-list">{ranking.map((row, index) => <div className={`ranking-row ${row.id === member.id ? "is-you" : ""}`} key={row.id}><span>{String(index + 1).padStart(2, "0")}</span><strong>{row.firstName} {row.lastName}{row.id === member.id ? " · TU" : ""}</strong><b>{row.score} PT</b></div>)}</div>}</>}
+        {opened === "board" && <GuildBoard member={member} ranking={ranking} rankingError={error} onClick={playClick} />}
       </section></div>}
     </>}
   </main>;
