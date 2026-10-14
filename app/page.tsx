@@ -34,7 +34,7 @@ const places: Place[] = [
     description:
       "Una torre bioclimatica alta 167 metri, progettata da Renzo Piano come una lanterna trasparente sulla città.",
     detail: "44 piani · Serra panoramica · Auditorium sospeso",
-    x: 260,
+    x: 330,
     y: 245,
   },
   {
@@ -147,7 +147,10 @@ function drawTree(ctx: CanvasRenderingContext2D, x: number, y: number) {
 
 function drawBeybladeGarden(ctx: CanvasRenderingContext2D, now: number) {
   ctx.save();
-  // A pocket garden between the tower, café and staff palace.
+  // Compact garden to the left of Intesa, with a path to the main road.
+  ctx.translate(15, 202);
+  ctx.scale(0.82, 1);
+  ctx.translate(-355, -202);
   ctx.fillStyle = PALETTE.mid;
   ctx.fillRect(355, 202, 274, 130);
   ctx.fillStyle = "#d0dac5";
@@ -218,6 +221,20 @@ function drawBeybladeGarden(ctx: CanvasRenderingContext2D, now: number) {
     ctx.fillRect(friend.x - 3, y + 1, 2, 2);
     ctx.fillRect(friend.x + 3, y + 1, 2, 2);
     ctx.fillRect(friend.x - 1, y + 3, 4, 2);
+    if (index === 1) {
+      // Cigarette and a few drifting pixel puffs for this NPC only.
+      ctx.fillStyle = PALETTE.paper;
+      ctx.fillRect(friend.x + 5, y + 2, 8, 2);
+      ctx.fillStyle = "#ed737a";
+      ctx.fillRect(friend.x + 12, y + 2, 2, 2);
+      for (let puff = 0; puff < 3; puff++) {
+        const rise = (now / 90 + puff * 7) % 22;
+        ctx.globalAlpha = 0.65 * (1 - rise / 22);
+        ctx.fillStyle = PALETTE.dark;
+        ctx.fillRect(friend.x + 13 + Math.round(Math.sin(rise / 4) * 3), Math.round(y - rise), 3, 3);
+      }
+      ctx.globalAlpha = 1;
+    }
     if (cheer) {
       ctx.fillRect(friend.x - 15, y + 3, 5, 7);
       ctx.fillRect(friend.x + 11, y + 3, 5, 7);
