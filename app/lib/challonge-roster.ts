@@ -21,6 +21,9 @@ async function providerGet(path: string, query: URLSearchParams) {
 export async function fetchRoster(input: string) {
   const reference = tournamentReference(input);
   const query = new URLSearchParams(reference.community ? { community_id: reference.community } : {});
+  // Community-owned tournaments created by the API-key owner are excluded
+  // from user scope by default, even when looked up by their numeric ID.
+  query.set("include_community_tournaments", "1");
   const body = await providerGet(`tournaments/${encodeURIComponent(reference.ref)}.json`, query);
   const tournament = object(body.data), attributes = object(tournament.attributes);
   const id = String(tournament.id ?? "");

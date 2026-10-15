@@ -53,6 +53,9 @@ del tesseramento annuale, che resta indipendente nell'anagrafica.
 `CHALLONGE_API_KEY` è una variabile server sensibile su Vercel. L'importazione usa
 API v2.1 con autenticazione API key v1, legge pagine complete e non invia segreti
 al browser. Il torneo deve essere accessibile all'account proprietario della chiave.
+Ogni richiesta include `include_community_tournaments=1` per leggere anche i
+tornei delle community creati da quell'account, sia all'importazione sia al resync
+per ID numerico. Non è necessario spostare il torneo su un account personale.
 I rifiuti di accesso e i limiti API sono mostrati senza modificare i dati salvati.
 
 Migrazioni additive: `0009_stage_checkin.sql` e `0010_checkin_complete_payment.sql`, tre tabelle con RLS e privilegi

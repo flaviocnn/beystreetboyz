@@ -40,6 +40,7 @@ test('check-in routes: authorization, roster sync, financial records, concurrenc
     let roster=[{id:'11',type:'participant',attributes:{name:'Member display',username:'member_fixture',states:{active:true}}},{id:'12',type:'participant',attributes:{name:'Guest',username:null,states:{active:false}}}];
     globalThis.fetch=async(url,init)=>{
       const parsed=new URL(url);assert.equal(parsed.hostname,'api.challonge.com');assert.equal(init.headers.Authorization,'test-only-api-key');assert.equal(parsed.searchParams.has('api_key'),false);
+      assert.equal(parsed.searchParams.get('include_community_tournaments'),'1','Community scope must survive lookup, participant pagination and numeric-ID resync');
       if(providerFailure)return Response.json({errors:['failure']},{status:503});
       if(parsed.pathname.endsWith('/participants.json'))return Response.json({data:roster,links:{next:null},meta:{count:roster.length}});
       return Response.json({data:{id:'42',type:'tournament',attributes:{name:'Fixture tournament'}}});
