@@ -1,16 +1,17 @@
 # Torino Quest — Vercel + Supabase
 
-Versione locale Next.js + PostgreSQL/Drizzle, sul ramo `codex/vercel-supabase`.
-Il sito ChatGPT Sites usa ancora il database cloud D1, separato da PostgreSQL.
-Il 15 ottobre 2026 è stata pubblicata su Sites la versione 15 (commit
-`d22c551cfda91d0414c8a2ea831f69178372a392`): username Challonge come nome
-principale in classifica, bacheca, Gilda, Wistery, specchio e lista staff.
-Il trasferimento autorizzato è completato: il cloud contiene 24 membri, 3 messaggi,
-una tappa e 24 risultati (23 assegnati), per 778 punti complessivi.
-Backup, migrazione, importazione e confronto integrale sono stati verificati;
-vedi `docs/sites-cloud-transfer.md`. Password, avatar e anagrafiche cloud esistenti
-sono stati conservati. La versione Vercel/Supabase
-rimane su questo ramo; il codice Sites è sul suo repository originale.
+**Produzione predefinita: https://beystreetboyz.vercel.app**, con database Supabase.
+Repository attivo: `https://github.com/flaviocnn/beystreetboyz`.
+Applicazione Next.js + PostgreSQL/Drizzle; accesso con Challonge oppure email/CF.
+
+Dal 15 ottobre 2026 Sites è soltanto archivio storico: nessuna nuova pubblicazione
+o sincronizzazione deve essere destinata a quel cloud. Vercel/Supabase è l'unica
+fonte di verità di produzione. Docker PostgreSQL è un ambiente di sviluppo separato.
+
+Il passaggio definitivo trasferisce 25 membri, 6 messaggi, una tappa e 24 risultati
+associati, per **786 punti**. L'account OAuth GranBurstone mantiene il proprio ID
+Vercel e riceve l'anagrafica e i 15 punti storici, senza duplicati.
+Procedura e backup riservati: [produzione Vercel](docs/production.md).
 
 ## Avvio sul Mac
 
@@ -32,13 +33,15 @@ su questo Mac. `local:setup` non sovrascrive `.env.local`. La nuova parola d'ord
 staff è `STAFF_PASSPHRASE` in quel file; le password dei membri restano invariate.
 Sul nuovo dominio gli utenti devono effettuare nuovamente il login.
 
-La copia aggiornata contiene **24 membri e 3 messaggi**. L'export contiene dati
+La copia Docker precedente al passaggio contiene **25 membri e 3 messaggi**;
+la produzione conserva anche gli aggiornamenti successivi di Sites (6 messaggi).
+Gli export contengono dati
 personali e hash delle password: `.local-data/` e `.env*` sono esclusi da Git e
 Vercel. Non condividerli né spostarli in `public/`.
 L'import conserva ID, credenziali, avatar, tesseramenti e profili Challonge;
 salta gli ID già presenti senza sovrascriverli. Altri conflitti annullano l'import.
-Non è una sincronizzazione continua: prima del passaggio definitivo occorre
-trasferire eventuali nuove modifiche effettuate sul sito originale.
+Non è una sincronizzazione continua: non importare una vecchia copia Docker
+in produzione per sovrascrivere dati Vercel più recenti.
 
 Per fermare PostgreSQL senza cancellare i dati:
 
@@ -65,33 +68,37 @@ docker compose --env-file .env.local stop
    node --env-file=.env.supabase.local scripts/sync-tournament.mjs data/tournaments/psmc5x5.json
    ```
 
-4. Carica il codice in un tuo repository **privato** e importalo su Vercel.
-   Il remote Git esistente appartiene a Sites: configura un nuovo remote per
-   il tuo repository, non pubblicare la migrazione sul remote Sites.
+4. Il progetto è già collegato al repository `flaviocnn/beystreetboyz` e a Vercel.
+   Non usare i vecchi helper di pubblicazione Sites.
 5. Su Vercel: preset **Next.js**, radice `.`, Node.js 24.x, installazione `npm ci`,
-   build `npm run build`. Configura queste variabili server:
+   build `npm run db:migrate && npm run build`. Configura queste variabili server:
 
    | Variabile | Valore |
    | --- | --- |
    | `DATABASE_URL` | Supabase Transaction pooler, porta 6543 |
    | `SESSION_SECRET` | Segreto casuale di almeno 32 byte |
    | `STAFF_PASSPHRASE` | Nuova parola d'ordine privata staff |
+   | `CHALLONGE_CLIENT_ID` | ID dell'app OAuth |
+   | `CHALLONGE_CLIENT_SECRET` | Segreto OAuth, variabile sensibile |
+   | `CHALLONGE_REDIRECT_URI` | `https://beystreetboyz.vercel.app/api/auth/challonge/callback` |
 
    Genera il segreto con `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`.
-   Non usare prefissi `NEXT_PUBLIC_`. `DATABASE_MIGRATION_URL` non serve su Vercel.
+   Non usare prefissi `NEXT_PUBLIC_` per segreti. L'integrazione Vercel/Supabase
+   fornisce già `POSTGRES_URL`, accettata in alternativa a `DATABASE_URL`.
+   Per migrare si usa `DATABASE_MIGRATION_URL`, altrimenti `POSTGRES_URL_NON_POOLING`.
    Non impostare su Vercel l'URL del PostgreSQL Docker locale.
    Usa un database separato per le Preview per evitare modifiche ai dati reali.
 6. Esegui Deploy e verifica login, staff, password, avatar e bacheca prima di
    trasferire il dominio definitivo.
 
-La build non esegue migrazioni. Il driver disabilita prepared statements per
+La build Vercel esegue le migrazioni prima della compilazione. Il driver disabilita prepared statements per
 il Transaction pooler. RLS è attivo senza policy pubbliche; anon/authenticated
 non possono accedere alle tabelle. Il server usa la connessione PostgreSQL
 privilegiata, non una chiave anon.
 
-**Supabase Auth non è attivato**: resta il login esistente per mantenere le
-credenziali. I riferimenti Challonge sono conservati; questa migrazione non
-aggiunge nuove integrazioni esterne.
+**Supabase Auth non è attivato**: le sessioni dell'app mantengono sia il login
+locale esistente sia OAuth Challonge. Le identità verificate sono conservate
+separatamente dai campi anagrafici modificabili.
 
 Documentazione: [Supabase](https://supabase.com/docs/guides/database/connecting-to-postgres),
 [Vercel](https://vercel.com/docs/frameworks/full-stack/nextjs).
@@ -100,6 +107,7 @@ Documentazione: [Supabase](https://supabase.com/docs/guides/database/connecting-
 
 ```sh
 npm test
+node --test tests/production-plan.test.mjs
 npm run build
 # Con il server locale acceso:
 npm run test:integration
@@ -121,9 +129,11 @@ tappa senza duplicare punti e ricalcola per ogni membro le migliori 10 tappe.
 La correzione Nika37 → `__Grizzly__` è documentata in `docs/correzioni-tornei.md`.
 Savino e Isabella Palermo hanno schede parziali: prima del loro accesso serve
 un'email o un codice fiscale, seguito dal reset della password nello staff.
-L'export originale del sito resta in `.local-data/sites-export.json`; per
-Supabase usa `local-export.json`, che include i membri e gli abbinamenti più
-recenti. Il comando `node --env-file=.env.local scripts/export-local.mjs`
+L'export originale del sito resta in `.local-data/sites-export.json`.
+Il backup definitivo Sites è `.local-data/sites-cutover-2026-10-15.json`;
+il backup Supabase definitivo è `.local-data/vercel-post-cutover-2026-10-15.json`.
+`local-export.json` è una copia precedente, non la fonte di produzione.
+Il comando `node --env-file=.env.local scripts/export-local.mjs`
 crea un export aggiornato, rifiutando di sovrascrivere quello esistente.
 
 Audit eseguito: nessuna vulnerabilità nelle dipendenze di produzione.

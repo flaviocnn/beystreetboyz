@@ -46,6 +46,25 @@ const db = migrationClient();
 try {
   await db.begin(async tx => {
     await tx`SELECT pg_advisory_xact_lock(847302902)`;
+    // A migrated member can retain a newer production ID (e.g. an OAuth account).
+    // Resolve only the explicit Challonge association, never a similar real name.
+    const knownMembers = await tx`SELECT id, challonge_username FROM public.members`;
+    for (const row of results) {
+      if (!row.memberId) continue;
+      const byId = knownMembers.find(m => m.id === row.memberId);
+      if (!row.challongeUsername) {
+        if (!byId) throw new Error("Risultato senza username e con ID non più presente: verificare l'associazione.");
+        continue;
+      }
+      const byUsername = knownMembers.filter(m => m.challonge_username?.toLowerCase() === row.challongeUsername.toLowerCase());
+      if (byUsername.length !== 1 || (byId && byId.id !== byUsername[0].id)) throw new Error("Associazione Challonge incoerente: verificare la scheda prima del sync.");
+      row.memberId = byUsername[0].id;
+    }
+    memberIds.clear();
+    for (const row of results) if (row.memberId) {
+      if (memberIds.has(row.memberId)) throw new Error("Membro assegnato a più risultati dopo il collegamento OAuth.");
+      memberIds.add(row.memberId);
+    }
     const [prior] = await tx`SELECT count(*)::integer AS stages FROM public.tournament_stages`;
     if (prior.stages === 0) {
       const expectedScores = new Map(results.filter(row => row.memberId).map(row => [row.memberId, row.stagePoints]));

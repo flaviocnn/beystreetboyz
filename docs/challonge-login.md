@@ -1,5 +1,27 @@
 # Login con Challonge
 
+## Produzione Vercel (15 ottobre 2026)
+
+- Dominio: https://beystreetboyz.vercel.app
+- Callback da registrare su Challonge:
+  `https://beystreetboyz.vercel.app/api/auth/challonge/callback`.
+- Le tre variabili OAuth sono configurate in produzione; client secret e chiave
+  delle sessioni sono variabili sensibili. Non sono incluse nel repository.
+- L’app accetta anche `POSTGRES_URL` installata dall’integrazione Supabase/Vercel.
+  Le migrazioni vengono eseguite prima della build; per migrarle si usa
+  `DATABASE_MIGRATION_URL`, altrimenti `POSTGRES_URL_NON_POOLING` e i fallback.
+- Migrazioni 0001–0008 applicate al database Supabase. Dopo l'attivazione OAuth
+  è stato eseguito il trasferimento definitivo dei dati storici: 25 membri,
+  6 messaggi, una tappa e 24 risultati. Vedere [produzione](production.md).
+- Verificati dal sito pubblico: redirect a Challonge, callback configurato,
+  cookie HttpOnly e endpoint sessione. Il consenso con un account reale resta
+  necessario per il collaudo completo.
+
+Durante `vercel link` la CLI ha riscritto `.env.local`. La connessione al database
+locale è stata recuperata dal container esistente; chiave di sessione e parola
+d’ordine staff locali sono state rigenerate nel file, invalidando le sessioni
+locali precedenti. I dati locali non sono stati modificati.
+
 Il pulsante nella pagina `/gilda` usa OAuth authorization code, scope `me` e
 `https://api.challonge.com/v2.1/me.json`. La password Challonge non passa nell’app.
 
@@ -16,9 +38,8 @@ Il pulsante nella pagina `/gilda` usa OAuth authorization code, scope `me` e
 4. Verifica con un profilo censito e un profilo nuovo: autorizzazione, accesso,
    logout e successivo accesso senza duplicati. Verifica anche il rifiuto del consenso.
 
-Questa implementazione appartiene al progetto locale Next.js/PostgreSQL.
-Un’eventuale versione Sites ancora su SQLite/D1 richiede il porting delle due
-tabelle e delle query transazionali prima della pubblicazione.
+Questa implementazione appartiene alla produzione Vercel/Supabase e al progetto
+di sviluppo Next.js/PostgreSQL. Sites resta esclusivamente archivio storico.
 
 ## Associazioni
 

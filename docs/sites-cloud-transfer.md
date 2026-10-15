@@ -1,5 +1,9 @@
 # Trasferimento Sites completato — 15 ottobre 2026
 
+> Documento storico. Dopo questo trasferimento è stato eseguito il passaggio
+> definitivo a Vercel/Supabase: vedere [produzione](production.md).
+> Sites non è più un ambiente di produzione e non deve ricevere aggiornamenti.
+
 Sito: https://torino-quest.cannavo-flavio.chatgpt.site
 
 - Versione pubblicata: 15.

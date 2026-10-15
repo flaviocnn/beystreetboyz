@@ -9,7 +9,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "node --test tests/idle-visitor.test.mjs tests/database-errors.test.mjs tests/challonge-oauth.test.mjs",
+    "test": "node --test tests/idle-visitor.test.mjs tests/database-errors.test.mjs tests/challonge-oauth.test.mjs tests/production-plan.test.mjs",
     "test:integration": "node --env-file-if-exists=.env.local --test tests/postgres-api.test.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "drizzle-kit generate",
