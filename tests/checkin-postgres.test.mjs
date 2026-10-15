@@ -84,6 +84,48 @@ test('check-in routes: authorization, roster sync, financial records, concurrenc
     assert.deepEqual({...annual},{payment_paid:true,payment_method:'bank',membership_status:'registered'});
     const audit=(await db`SELECT before_state,after_state,operator_label FROM checkin_audit WHERE action='correct'`)[0];
     assert.equal(audit.before_state.paymentStatus,'paid');assert.equal(audit.after_state.paymentStatus,'unpaid');assert.equal(audit.operator_label,'Desk A');
+
+    // Personal staff authorization never upgrades/replaces the Guild cookie.
+    const staffSessionRoute=await import('../app/api/staff/session/route.ts');
+    const memberRoutes=await import('../app/api/staff/members/route.ts');
+    const memberDetail=await import('../app/api/staff/members/[id]/route.ts');
+    const resetRoute=await import('../app/api/staff/members/[id]/reset-password/route.ts');
+    const {currentMember}=await import('../app/lib/member-access.ts');
+    const personalCookie=async(version=0,method='password')=>(await sessionCookie('member',memberId,new Request(base),version,method)).split(';')[0];
+    const personal=await personalCookie();
+    const personalRequest=(method,path,body,auth=personal)=>request(method,path,body,auth);
+    assert.equal((await staffSessionRoute.GET(personalRequest('GET','/api/staff/session'))).headers.has('set-cookie'),false);
+    assert.equal((await json(await staffSessionRoute.GET(personalRequest('GET','/api/staff/session')))).data.authenticated,false);
+    assert.equal((await memberRoutes.GET(personalRequest('GET','/api/staff/members'))).status,401);
+    assert.equal((await routes.GET(personalRequest('GET','/api/staff/checkin'))).status,401);
+    await db`UPDATE members SET role='staff' WHERE id=${memberId}`;
+    assert.equal((await json(await staffSessionRoute.GET(personalRequest('GET','/api/staff/session')))).data.authenticated,true);
+    assert.equal((await currentMember(personalRequest('GET','/api/member/session'))).id,memberId);
+    assert.equal((await memberRoutes.GET(personalRequest('GET','/api/staff/members'))).status,200);
+    assert.equal((await routes.GET(personalRequest('GET','/api/staff/checkin'))).status,200);
+    providerFailure=false;
+    assert.equal((await syncRoute(personalRequest('POST','/api/staff/checkin/'+eventId+'/sync'),ctx(eventId))).status,200);
+    // Role injection in create/update is ignored, even for an authorized caller.
+    const created=await json(await memberRoutes.POST(personalRequest('POST','/api/staff/members',{firstName:'Second fixture',role:'staff'})));
+    assert.equal(created.status,201);assert.equal(created.data.member.role,'member');
+    const target=created.data.member.id;
+    assert.equal((await memberDetail.PUT(personalRequest('PUT','/api/staff/members/'+target,{firstName:'Edited fixture',role:'staff'}),ctx(target))).status,200);
+    assert.equal((await db`SELECT role FROM members WHERE id=${target}`)[0].role,'member');
+    assert.equal((await resetRoute.POST(personalRequest('POST','/api/staff/members/'+target+'/reset-password',{}),ctx(target))).status,200);
+    assert.equal((await memberDetail.DELETE(personalRequest('DELETE','/api/staff/members/'+target),ctx(target))).status,200);
+    await db`UPDATE members SET must_change_password=true WHERE id=${memberId}`;
+    assert.equal((await memberRoutes.GET(personalRequest('GET','/api/staff/members'))).status,401);
+    const oauth=await personalCookie(0,'challonge');
+    assert.equal((await memberRoutes.GET(personalRequest('GET','/api/staff/members',null,oauth))).status,200);
+    await db`UPDATE members SET auth_version=1 WHERE id=${memberId}`;
+    assert.equal((await memberRoutes.GET(personalRequest('GET','/api/staff/members',null,oauth))).status,401);
+    const fresh=await personalCookie(1,'challonge');
+    assert.equal((await memberRoutes.GET(personalRequest('GET','/api/staff/members',null,fresh))).status,200);
+    await db`UPDATE members SET role='member' WHERE id=${memberId}`;
+    assert.equal((await memberRoutes.GET(personalRequest('GET','/api/staff/members',null,fresh))).status,401);
+    await db`UPDATE members SET role='staff' WHERE id=${memberId}`;
+    await db`DELETE FROM members WHERE id=${memberId}`;
+    assert.equal((await memberRoutes.GET(personalRequest('GET','/api/staff/members',null,fresh))).status,401);
   }finally{
     globalThis.fetch=originalFetch;
     for(const[k,v]of Object.entries(oldEnv)){if(v===undefined)delete process.env[k];else process.env[k]=v;}

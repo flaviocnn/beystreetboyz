@@ -1,14 +1,15 @@
 import { eq, sql } from "drizzle-orm";
 import { getDb } from "../../../../../../db";
 import { members } from "../../../../../../db/schema";
-import { getSession, hashPassword, newMemberPassword, sameOrigin } from "../../../../../lib/auth";
+import { hashPassword, newMemberPassword, sameOrigin } from "../../../../../lib/auth";
+import { staffSession } from "../../../../../lib/staff-access";
 import { apiError } from "../../../../../lib/members";
 
 type Context = { params: Promise<{ id: string }> };
 
 export async function POST(request: Request, context: Context) {
   if (!sameOrigin(request)) return apiError("Richiesta non valida", 403);
-  if ((await getSession(request))?.role !== "staff") return apiError("Accesso riservato allo staff", 401);
+  if (!(await staffSession(request))) return apiError("Accesso riservato allo staff", 401);
 
   const id = (await context.params).id;
   const password = newMemberPassword();

@@ -3,6 +3,18 @@
 Produzione: https://beystreetboyz.vercel.app/staff/checkin, accessibile dallo staff.
 Il Palazzo dello staff contiene il collegamento “CHECK-IN TAPPE”.
 
+I membri con `members.role = 'staff'` accedono automaticamente con la propria
+sessione della Gilda (Challonge oppure password personale), senza parola d'ordine
+aggiuntiva e senza perdere l'accesso alla Gilda. Una password temporanea deve
+essere cambiata prima di usare lo staff; il login OAuth non richiede quel cambio.
+Ruolo, esistenza del membro e versione della sessione vengono verificati sul
+server a ogni richiesta, incluse gestione anagrafiche, reset e check-in.
+La parola d'ordine condivisa resta un accesso alternativo. Uscire dallo staff
+chiude anche la sessione personale corrente. I ruoli non sono modificabili dai
+form anagrafici e non vengono assegnati automaticamente in base allo username.
+La migrazione `0011_member_staff_role.sql` abilita solo gli otto ID verificati
+richiesti dall'organizzatore. Il ruolo predefinito per nuovi membri è `member`.
+
 1. Crea il torneo su Challonge e fai iscrivere lì i partecipanti.
 2. Nel check-in scegli “Nuova tappa”, incolla link/ID, indica data e quota in euro.
    Il nome è facoltativo; in alternativa viene usato quello Challonge.
@@ -41,8 +53,9 @@ del tesseramento annuale, che resta indipendente nell'anagrafica.
   fanno parte di questa prima versione.
 - Ogni pagamento/correzione conserva importo, metodo, orario, operatore e stati
   precedente/successivo. L'interfaccia mostra le ultime 30 operazioni; il database
-  conserva l'intero audit. L'accesso staff è condiviso: il nome operatore è una
-  dichiarazione al banco, non un'identità personale verificata.
+  conserva l'intero audit. Con l'accesso personale è registrato anche l'ID del
+  membro autenticato; con la parola d'ordine resta l'attore condiviso `staff`.
+  Il nome operatore inserito al banco resta una dichiarazione libera.
 - Le versioni dei record impediscono a due operatori di sovrascriversi. In caso
   di conflitto si aggiorna la scheda e si riprova, senza duplicare l'incasso.
 - La schermata rilegge i dati dell'app ogni 15 secondi e al ritorno nella scheda;

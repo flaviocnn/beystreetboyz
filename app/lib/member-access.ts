@@ -12,6 +12,7 @@ export const staffMemberFields = {
   phone: members.phone, challongeUsername: members.challongeUsername, challongeId: members.challongeId,
   membershipStatus: members.membershipStatus, paymentMethod: members.paymentMethod,
   paymentPaid: members.paymentPaid, feeCents: members.feeCents, score: members.score, createdAt: members.createdAt,
+  role: members.role,
 };
 export async function currentMember(request: Request) {
   const session = await getSession(request);

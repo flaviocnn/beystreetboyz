@@ -121,7 +121,9 @@ export default function StaffPage() {
           <section className="auth-card">
             <div className="card-icon">⌑</div>
             <h2>La porta è chiusa.</h2>
-            <p>Inserisci la parola d'ordine per accedere all'archivio dei membri.</p>
+            <p>Hai un account abilitato? Accedi alla Gilda: il tuo ruolo staff apre automaticamente il palazzo. Se usi una password temporanea, cambiala prima di entrare.</p>
+            <Link className="solid-button" href="/gilda">ACCEDI CON IL TUO ACCOUNT →</Link>
+            <p>In alternativa, inserisci la parola d'ordine dello staff.</p>
             <form onSubmit={unlock} className="stack-form">
               <label>PAROLA D'ORDINE<input type="password" value={passphrase} onChange={(event) => setPassphrase(event.target.value)} autoComplete="current-password" required autoFocus /></label>
               <button className="solid-button" disabled={busy}>ENTRA NEL PALAZZO <span>→</span></button>

@@ -65,7 +65,7 @@ const places: Place[] = [
     name: "Il Palazzo dello Staff",
     eyebrow: "ACCESSO RISERVATO · TORINO QUEST",
     description: "L'archivio dei membri della città. Il personale autorizzato può creare e gestire le iscrizioni.",
-    detail: "Serve la parola d'ordine per entrare",
+    detail: "Accesso automatico per i membri con ruolo staff",
     x: 420,
     y: 680,
   },

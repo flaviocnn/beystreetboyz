@@ -2,7 +2,8 @@ import { and, eq, ne, sql } from "drizzle-orm";
 import { staffMemberFields } from "../../../../lib/member-access";
 import { getDb } from "../../../../../db";
 import { members } from "../../../../../db/schema";
-import { getSession, sameOrigin, hashPassword } from "../../../../lib/auth";
+import { sameOrigin, hashPassword } from "../../../../lib/auth";
+import { staffSession } from "../../../../lib/staff-access";
 import { apiError, parseMemberInput } from "../../../../lib/members";
 import { isUniqueViolation } from "../../../../lib/database-errors";
 
@@ -10,7 +11,7 @@ type Context = { params: Promise<{ id: string }> };
 
 export async function PUT(request: Request, context: Context) {
   if (!sameOrigin(request)) return apiError("Richiesta non valida", 403);
-  if ((await getSession(request))?.role !== "staff") return apiError("Accesso riservato allo staff", 401);
+  if (!(await staffSession(request))) return apiError("Accesso riservato allo staff", 401);
   const body = await request.json().catch(() => ({})) as Record<string, unknown>;
   const input = parseMemberInput(body);
   if (!input || !body) return apiError("Controlla i dati, il profilo Challonge e il pagamento", 400);
@@ -39,7 +40,7 @@ export async function PUT(request: Request, context: Context) {
 
 export async function DELETE(request: Request, context: Context) {
   if (!sameOrigin(request)) return apiError("Richiesta non valida", 403);
-  if ((await getSession(request))?.role !== "staff") return apiError("Accesso riservato allo staff", 401);
+  if (!(await staffSession(request))) return apiError("Accesso riservato allo staff", 401);
   const [deleted] = await getDb().delete(members).where(eq(members.id, (await context.params).id)).returning({ id: members.id });
   if (!deleted) return apiError("Membro non trovato", 404);
   return Response.json({ deleted: true });

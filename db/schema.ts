@@ -17,6 +17,7 @@ export const members = pgTable("members", {
   feeCents: integer("fee_cents"),
   mustChangePassword: boolean("must_change_password").notNull().default(false),
   authVersion: integer("auth_version").notNull().default(0),
+  role: text("role").notNull().default("member"),
   avatarStyle: integer("avatar_style").notNull().default(0),
   avatarColor: integer("avatar_color").notNull().default(0),
   passwordSalt: text("password_salt").notNull(),

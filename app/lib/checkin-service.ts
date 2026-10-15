@@ -1,7 +1,8 @@
 import { and, desc, eq, sql } from "drizzle-orm";
 import { getDb } from "../../db";
 import { checkinAudit, checkinEvents, checkinParticipants, members } from "../../db/schema";
-import { getSession, sameOrigin } from "./auth";
+import { sameOrigin } from "./auth";
+import { staffSession } from "./staff-access";
 import { checkinSummary, paymentTransition, validEventDate } from "./checkin";
 import { fetchRoster } from "./challonge-roster";
 import { isUniqueViolation } from "./database-errors";
@@ -14,8 +15,8 @@ class CheckinError extends Error {
 export async function staffCheckinRequest(request: Request, run: (actor: string) => Promise<unknown>, mutation = false) {
   try {
     if (mutation && !sameOrigin(request)) throw new CheckinError("Richiesta non valida", 403);
-    const session = await getSession(request);
-    if (session?.role !== "staff") throw new CheckinError("Accesso riservato allo staff", 401);
+    const session = await staffSession(request);
+    if (!session) throw new CheckinError("Accesso riservato allo staff", 401);
     return Response.json(await run(session.id), { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     if (error instanceof CheckinError) return Response.json({ error: error.message }, { status: error.status, headers: { "Cache-Control": "no-store" } });

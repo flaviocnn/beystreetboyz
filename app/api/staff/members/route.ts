@@ -2,12 +2,13 @@ import { asc, sql } from "drizzle-orm";
 import { staffMemberFields } from "../../../lib/member-access";
 import { getDb } from "../../../../db";
 import { members } from "../../../../db/schema";
-import { getSession, hashPassword, newMemberPassword, sameOrigin } from "../../../lib/auth";
+import { hashPassword, newMemberPassword, sameOrigin } from "../../../lib/auth";
+import { staffSession } from "../../../lib/staff-access";
 import { apiError, parseMemberInput } from "../../../lib/members";
 import { isUniqueViolation } from "../../../lib/database-errors";
 
 async function authorize(request: Request) {
-  return (await getSession(request))?.role === "staff";
+  return !!(await staffSession(request));
 }
 
 export async function GET(request: Request) {

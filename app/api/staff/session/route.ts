@@ -1,8 +1,9 @@
-import { checkStaffPhrase, clearSessionCookie, getSession, sameOrigin, sessionCookie } from "../../../lib/auth";
+import { checkStaffPhrase, clearSessionCookie, sameOrigin, sessionCookie } from "../../../lib/auth";
+import { staffSession } from "../../../lib/staff-access";
 import { apiError } from "../../../lib/members";
 
 export async function GET(request: Request) {
-  const session = await getSession(request);
+  const session = await staffSession(request);
   return Response.json({ authenticated: session?.role === "staff" }, { headers: { "Cache-Control": "no-store" } });
 }
 
