@@ -3,6 +3,8 @@ import { memberDisplayName } from "../../lib/member-name";
 import { useEffect, useRef, useState } from "react";
 import { drawPixelPlayer, type Avatar } from "../../lib/pixel-player";
 import type { PlayerMember } from "../../lib/client-api";
+import type { PersonalStage } from "../../lib/decks";
+import { achievementCaption, topEightStages, type MirrorAchievement } from "../../lib/mirror-achievement";
 
 const BACKGROUNDS = [
   { name: "Fenici", ink: "#351d2c", paper: "#fff0d4", mid: "#a54146", light: "#f4a457", accent: "#ffd66d" },
@@ -12,16 +14,19 @@ const BACKGROUNDS = [
   { name: "Inferno", ink: "#240f1b", paper: "#fff0d1", mid: "#6e202c", light: "#ef6838", accent: "#ffce62" },
 ];
 const POSES = ["Frontale", "Trionfante", "Sdraiato", "Guanto di sfida"];
-export function drawPortrait(canvas: HTMLCanvasElement, avatar: Avatar, name: string, background: number, pose: number) {
+export function drawPortrait(canvas: HTMLCanvasElement, avatar: Avatar, name: string, background: number, pose: number, achievement: MirrorAchievement | null = null) {
   canvas.width = 1080; canvas.height = 1350;
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
+  const caption = achievementCaption(achievement, (value, size) => { ctx.font = `bold ${size}px monospace`; return ctx.measureText(value).width; });
+  const height = caption ? 435 + caption.height + 38 : 450;
+  canvas.height = height * 3;
   ctx.imageSmoothingEnabled = false; ctx.scale(3, 3);
   const theme = BACKGROUNDS[background] || BACKGROUNDS[0];
   const box = (color: string, x: number, y: number, w: number, h: number) => { ctx.fillStyle = color; ctx.fillRect(x, y, w, h); };
   const text = (value: string, y: number, size: number, color = theme.paper, maxWidth?: number) => { ctx.fillStyle = color; ctx.font = `bold ${size}px monospace`; ctx.textAlign = "center"; ctx.fillText(value, 180, y, maxWidth); };
-  box(theme.ink, 0, 0, 360, 450); box(theme.paper, 10, 10, 340, 430); box(theme.ink, 15, 15, 330, 420);
-  for (let x = 25; x < 340; x += 14) { box(theme.accent, x, 23, 7, 3); box(theme.accent, x, 423, 7, 3); }
+  box(theme.ink, 0, 0, 360, height); box(theme.paper, 10, 10, 340, height - 20); box(theme.ink, 15, 15, 330, height - 30);
+  for (let x = 25; x < 340; x += 14) { box(theme.accent, x, 23, 7, 3); box(theme.accent, x, height - 27, 7, 3); }
   text("R A N K E D", 54, 14, theme.accent);
   text("BeyStreetBoyz", 85, 30);
   text("GILDA DEL GRIFONE / TORINO", 106, 9, theme.light);
@@ -91,33 +96,53 @@ export function drawPortrait(canvas: HTMLCanvasElement, avatar: Avatar, name: st
   text(displayName, 375, fontSize, theme.paper, 295);
   text("IL MIO SIGILLO. LA MIA GILDA.", 398, 10, theme.light);
   text("MEMBER PORTRAIT  /  BEYSTREETBOYZ", 414, 8, theme.accent);
+  if (caption) {
+    box(theme.accent, 25, 430, 310, 3);
+    box(theme.mid, 25, 435, 310, caption.height);
+    for (const line of caption.lines) text(line.text, 435 + line.y, line.size, line.accent ? theme.accent : theme.paper);
+  }
 }
 
 export default function MirrorPhoto({ member, onClick }: { member: PlayerMember; onClick: () => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [name, setName] = useState(memberDisplayName(member));
   const [background, setBackground] = useState(0), [pose, setPose] = useState(0);
-  const [photo, setPhoto] = useState<{ url: string; blob: Blob } | null>(null);
+  const [photo, setPhoto] = useState<{ url: string; blob: Blob; width: number; height: number } | null>(null);
   const [message, setMessage] = useState("");
+  const [stages, setStages] = useState<PersonalStage[]>([]), [stageSlug, setStageSlug] = useState("");
+  const [stagesStatus, setStagesStatus] = useState<"loading" | "ready" | "error">("loading");
+  const [reloadStages, setReloadStages] = useState(0);
+  const achievement = stages.find(stage => stage.slug === stageSlug) ?? null;
+  useEffect(() => {
+    const controller = new AbortController();
+    void fetch("/api/guild/stages", { cache: "no-store", signal: controller.signal }).then(async response => {
+      const data = await response.json().catch(() => null);
+      if (!response.ok || !Array.isArray(data?.stages)) throw new Error("stages_unavailable");
+      if (controller.signal.aborted) return;
+      setStages(topEightStages(data.stages)); setStagesStatus("ready");
+    }).catch(() => { if (!controller.signal.aborted) setStagesStatus("error"); });
+    return () => controller.abort();
+  }, [member.id, reloadStages]);
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     let live = true, url = "";
     setPhoto(null); setMessage("");
-    drawPortrait(canvas, member, name, background, pose);
+    drawPortrait(canvas, member, name, background, pose, achievement);
+    const width = canvas.width, height = canvas.height;
     canvas.toBlob((blob) => {
       if (!blob || !live) return;
-      url = URL.createObjectURL(blob); setPhoto({ url, blob });
+      url = URL.createObjectURL(blob); setPhoto({ url, blob, width, height });
     }, "image/png");
     return () => { live = false; if (url) URL.revokeObjectURL(url); };
-  }, [member, name, background, pose]);
+  }, [member, name, background, pose, achievement]);
   async function shareInstagram() {
     if (!photo) return;
     onClick();
     const file = new File([photo.blob], "Ranked-BeyStreetBoyz.png", { type: "image/png" });
     if (navigator.canShare?.({ files: [file] }) && navigator.share) {
       try {
-        await navigator.share({ files: [file], title: "Ranked BeyStreetBoyz", text: "Il mio avatar della Gilda del Grifone" });
+        await navigator.share({ files: [file], title: "Ranked BeyStreetBoyz", text: achievement ? `${achievement.name} · ${achievement.finalRank}° posto · Ranked BeyStreetBoyz` : "Il mio avatar della Gilda del Grifone" });
         return;
       } catch (cause) {
         if (cause instanceof Error && cause.name === "AbortError") return;
@@ -128,14 +153,20 @@ export default function MirrorPhoto({ member, onClick }: { member: PlayerMember;
     setMessage("Foto scaricata. Apri Instagram e caricala dal tuo dispositivo.");
   }
   return <div className="mirror-workshop">
-    <div className="mirror-photo-preview"><canvas ref={canvasRef} hidden />{photo && <img src={photo.url} width={1080} height={1350} alt={`Ritratto pixel art di ${name || "un membro"}, con il brand Ranked BeyStreetBoyz`} />}</div>
+    <div className="mirror-photo-preview"><canvas ref={canvasRef} hidden />{photo && <img src={photo.url} width={photo.width} height={photo.height} alt={`Ritratto pixel art di ${name || "un membro"}, con il brand Ranked BeyStreetBoyz${achievement ? `, ${achievement.name}, ${achievement.finalRank}° posto${achievement.deck ? ", con deck registrato" : ""}` : ""}`} />}</div>
     <div className="mirror-photo-options"><p>Uno specchio, il tuo avatar, il tuo sigillo. Crea una cartolina da portare con te.</p>
       <label className="mirror-name">NOME SULLA FOTO<input value={name} maxLength={80} onChange={(e) => setName(e.target.value)} placeholder="Il tuo nome o nickname" /></label>
       <fieldset><legend>BACKGROUND</legend><div className="mirror-choices">{BACKGROUNDS.map((theme, index) => <button key={theme.name} aria-pressed={background === index} onClick={() => { setBackground(index); onClick(); }}>{theme.name}</button>)}</div></fieldset>
       <fieldset><legend>POSA</legend><div className="mirror-choices">{POSES.map((label, index) => <button key={label} aria-pressed={pose === index} onClick={() => { setPose(index); onClick(); }}>{label}</button>)}</div></fieldset>
+      <fieldset className="mirror-achievement"><legend>PIAZZAMENTO DI TAPPA</legend>
+        {stagesStatus === "loading" ? <p role="status">Cerco le tue tappe in top 8…</p> : stagesStatus === "error" ? <div><p role="alert">Non riesco a caricare le tappe. Puoi comunque creare il ritratto semplice.</p><button className="text-button" onClick={() => { onClick(); setStagesStatus("loading"); setReloadStages(value => value + 1); }}>RIPROVA</button></div> : stages.length ? <>
+          <label className="mirror-name">TAPPA DA MOSTRARE<select value={stageSlug} onChange={event => { setStageSlug(event.target.value); onClick(); }}><option value="">Nessuna · solo ritratto</option>{stages.map(stage => <option key={stage.slug} value={stage.slug}>{stage.name} · {stage.finalRank}° posto · {stage.eventDate}</option>)}</select></label>
+          {achievement && <p>{achievement.deck ? "Il deck registrato sarà incluso automaticamente nella foto." : "Nessun deck registrato per questa tappa: la foto includerà nome e piazzamento. Puoi aggiungere il deck nell’Archivio delle Tappe."}</p>}
+        </> : <p>Non hai ancora risultati in top 8 importati. Le tappe compariranno qui dopo la sincronizzazione dello staff.</p>}
+      </fieldset>
       {photo ? <a className="solid-button" href={photo.url} download="Ranked-BeyStreetBoyz.png" onClick={() => { onClick(); setMessage("Ritratto pronto: se richiesto, conferma il salvataggio nel browser."); }}>SCARICA PNG <span>↓</span></a> : <p role="status">Preparo il ritratto…</p>}
       <button className="outline-button" disabled={!photo} onClick={() => void shareInstagram()}>CONDIVIDI SU INSTAGRAM ↗</button>
-      <p className="mirror-photo-hint">Formato ritratto · 1080 × 1350 px<br />Su mobile scegli Instagram dal menu di condivisione. Se il dispositivo non lo supporta, la foto viene scaricata per caricarla nell’app.</p>
+      <p className="mirror-photo-hint">Formato ritratto · {photo ? `${photo.width} × ${photo.height}` : "1080 × 1350"} px{achievement && <><br />L’altezza si adatta al testo per non tagliare nome e componenti.</>}<br />Su mobile scegli Instagram dal menu di condivisione. Se il dispositivo non lo supporta, la foto viene scaricata per caricarla nell’app.</p>
       {message && <p className="mirror-save-message" role="status">{message}</p>}
     </div>
   </div>;

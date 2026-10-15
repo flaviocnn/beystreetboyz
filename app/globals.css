@@ -492,6 +492,8 @@ button:disabled { cursor: wait; opacity: .55; }
 .mirror-photo-options > p { font: 15px/1.6 var(--font-geist-sans), sans-serif; margin: 0 0 18px; color: #485746; }
 .mirror-name { display: grid; gap: 8px; margin-bottom: 20px; font-size: 10px; font-weight: 800; letter-spacing: .08em; }
 .mirror-name input { width: 100%; min-width: 0; height: 48px; padding: 10px; border: 2px solid #71836b; background: #fffdf5; color: #202824; font: 16px var(--font-geist-sans), sans-serif; border-radius: 0; }
+.mirror-name select { width: 100%; min-width: 0; min-height: 48px; padding: 10px; border: 2px solid #71836b; background: #fffdf5; color: #202824; font: 16px var(--font-geist-sans), sans-serif; border-radius: 0; }
+.mirror-achievement p { margin: 8px 0; font: 13px/1.5 var(--font-geist-sans), sans-serif; color: #485746; }
 .mirror-photo-options fieldset { min-width: 0; border: 0; padding: 0; margin: 0 0 20px; }
 .mirror-photo-options legend { margin-bottom: 10px; font-size: 10px; font-weight: 800; letter-spacing: .08em; }
 .mirror-choices { display: flex; flex-wrap: wrap; gap: 7px; }

@@ -42,3 +42,15 @@ revocati. Nessuna modifica a risultati, punti o pagamenti esistenti.
 
 Test: `npm test`, `npm run test:decks`, `npm run test:checkin`, TypeScript e build.
 I test database usano solo database temporanei locali isolati.
+
+## Foto allo Specchio dei blader
+
+Lo specchio legge lo stesso storico personale e offre solo risultati numerici
+da 1 a 8. La scelta iniziale “Nessuna · solo ritratto” conserva la foto originale.
+Scegliendo una tappa vengono disegnati nel PNG il nome e il piazzamento; solo il
+primo posto è chiamato vincitore. Il deck registrato, se presente, è aggiunto
+automaticamente come testo completo dei tre beyblade, anche per componenti CX
+e nomi personalizzati. Senza deck compaiono solo risultato e nome della tappa.
+La larghezza resta 1080 px; l'altezza si adatta al testo senza troncamenti.
+Download e condivisione usano lo stesso PNG dell'anteprima. Nessun risultato o
+deck viene modificato. Un errore di caricamento non impedisce il ritratto base.
