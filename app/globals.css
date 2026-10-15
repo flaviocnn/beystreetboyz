@@ -670,3 +670,5 @@ button:disabled { cursor: wait; opacity: .55; }
     line-height: 1.5;
   }
 }
+.checkin-staff-link { margin: 0 0 28px; gap: 20px; flex-wrap: wrap; }
+.checkin-staff-link span { font-size: 16px; }

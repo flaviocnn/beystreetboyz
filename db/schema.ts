@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { boolean, date, integer, pgTable, primaryKey, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import { boolean, check, date, integer, jsonb, pgTable, primaryKey, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 
 export const members = pgTable("members", {
   id: text("id").primaryKey(),
@@ -41,6 +41,30 @@ export const challongeIdentities = pgTable("challonge_identities", {
 export const oauthAttempts = pgTable("oauth_attempts", {
   stateHash: text("state_hash").primaryKey(),
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+});
+
+export const checkinEvents = pgTable("checkin_events", {
+  id: text("id").primaryKey(), tournamentId: text("tournament_id").notNull().unique(),
+  tournamentRef: text("tournament_ref").notNull(), sourceUrl: text("source_url").notNull(),
+  name: text("name").notNull(), eventDate: date("event_date").notNull(), feeCents: integer("fee_cents").notNull(),
+  lastSyncedAt: timestamp("last_synced_at", { withTimezone: true }).notNull(),
+  revision: integer("revision").notNull().default(0), createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+export const checkinParticipants = pgTable("checkin_participants", {
+  id: text("id").primaryKey(), eventId: text("event_id").notNull().references(() => checkinEvents.id),
+  participantId: text("participant_id").notNull(), displayName: text("display_name").notNull(), challongeUsername: text("challonge_username"),
+  memberId: text("member_id").references(() => members.id, { onDelete: "set null" }), registered: boolean("registered").notNull().default(true),
+  presence: text("presence").notNull().default("pending"), paymentStatus: text("payment_status").notNull().default("unpaid"),
+  paidCents: integer("paid_cents"), paymentMethod: text("payment_method"), paidAt: timestamp("paid_at", { withTimezone: true }), paidBy: text("paid_by"),
+  version: integer("version").notNull().default(0),
+}, t => [uniqueIndex("checkin_participant_once").on(t.eventId, t.participantId), uniqueIndex("checkin_member_once").on(t.eventId, t.memberId).where(sql`${t.memberId} IS NOT NULL`),
+  check("checkin_complete_payment", sql`${t.paymentStatus} <> 'paid' OR (${t.paidCents} IS NOT NULL AND ${t.paidCents} >= 0)`)]);
+export const checkinAudit = pgTable("checkin_audit", {
+  id: text("id").primaryKey(), eventId: text("event_id").notNull().references(() => checkinEvents.id),
+  participantId: text("participant_id").notNull().references(() => checkinParticipants.id), action: text("action").notNull(),
+  actorId: text("actor_id").notNull(), operatorLabel: text("operator_label").notNull(), note: text("note").notNull(),
+  beforeState: jsonb("before_state").notNull(), afterState: jsonb("after_state").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
 export const tournamentStages = pgTable("tournament_stages", {

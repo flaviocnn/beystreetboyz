@@ -143,3 +143,10 @@ non è stato applicato `npm audit fix --force` perché propone downgrade incompa
 ## Accesso con Challonge
 
 Configurazione OAuth, associazioni e attivazione: [guida al login Challonge](docs/challonge-login.md).
+
+## Check-in delle tappe
+
+Dal Palazzo dello staff apri **Check-in tappe** per collegare un torneo Challonge,
+importare gli iscritti e registrare presenza e pagamento fisico della singola quota.
+Riepilogo pre-torneo, ospiti senza anagrafica, correzioni e cronologia sono inclusi.
+Il tesseramento annuale resta separato. [Procedura e verifiche](docs/checkin.md).
