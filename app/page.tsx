@@ -874,8 +874,8 @@ export default function Home() {
         <span className="key">↑</span><span className="key">↓</span><span className="key">←</span><span className="key">→</span>
         <span>MUOVITI</span>
         <i />
-        <span className="key wide">ENTER</span>
-        <span>ESPLORA</span>
+        <span className="key wide">INVIO</span>
+        <span>INTERAGISCI</span>
       </aside>
 
       <button className="audio-toggle" onClick={toggleAudio} aria-pressed={audioEnabled} aria-label={audioEnabled ? "Disattiva audio" : "Attiva audio"}>
@@ -908,17 +908,17 @@ export default function Home() {
             onMouseDown={(event) => event.stopPropagation()}
           >
             <button className="close-button" onClick={() => setSelected(null)} aria-label="Chiudi">×</button>
-            <p className="modal-count">LOCATION / {String(places.findIndex((p) => p.id === selected.id) + 1).padStart(2, "0")}</p>
+            <p className="modal-count">LUOGO / {String(places.findIndex((p) => p.id === selected.id) + 1).padStart(2, "0")}</p>
             <div className="modal-pixel-art" aria-hidden="true"><span /><span /><span /></div>
             <p className="modal-eyebrow">{selected.eyebrow}</p>
             <h2 id="modal-title">{selected.name}</h2>
             <p className="modal-description">{selected.description}</p>
             <p className="modal-detail">{selected.detail}</p>
             {selected.id === "guild" && <p className="guild-event-modal">{wednesday ? "La Gilda si è accesa: stasera è il momento delle tappe di campionato!" : "Il mercoledì sera la Gilda si accende per le tappe di campionato."}</p>}
-            {selected.id === "wistery" && <a className="modal-enter" href={member && !member.mustChangePassword ? "/wistery" : "/gilda"} onClick={playClick}>{member && !member.mustChangePassword ? "FORGIA IL TUO AVATAR" : "ACCEDI ALLA GILDA PER ENTRARE"} →</a>}
+            {selected.id === "wistery" && <a className="modal-enter" href={member && !member.mustChangePassword ? "/wistery" : "/gilda"} onClick={playClick}>{member && !member.mustChangePassword ? "Personalizza il tuo avatar" : "Accedi per entrare"} →</a>}
             {(selected.id === "staff" || selected.id === "guild") && (
               <a className="modal-enter" href={selected.id === "staff" ? "/staff" : "/gilda"} onClick={playClick}>
-                {selected.id === "staff" ? "ENTRA NEL PALAZZO" : "ENTRA NELLA GILDA"} <span>→</span>
+                {selected.id === "staff" ? "Accedi all’area staff" : "Entra nella Gilda"} <span>→</span>
               </a>
             )}
             <div className="modal-footer"><span>FRECCE / TAB · INVIO PER SCEGLIERE</span><span>ESC PER CHIUDERE</span></div>

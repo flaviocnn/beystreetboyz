@@ -1,4 +1,5 @@
 "use client";
+import { memberDisplayName } from "../../lib/member-name";
 import { useEffect, useRef, useState } from "react";
 import { drawPixelPlayer, type Avatar } from "../../lib/pixel-player";
 import type { PlayerMember } from "../../lib/client-api";
@@ -18,7 +19,7 @@ export function drawPortrait(canvas: HTMLCanvasElement, avatar: Avatar, name: st
   ctx.imageSmoothingEnabled = false; ctx.scale(3, 3);
   const theme = BACKGROUNDS[background] || BACKGROUNDS[0];
   const box = (color: string, x: number, y: number, w: number, h: number) => { ctx.fillStyle = color; ctx.fillRect(x, y, w, h); };
-  const text = (value: string, y: number, size: number, color = theme.paper) => { ctx.fillStyle = color; ctx.font = `bold ${size}px monospace`; ctx.textAlign = "center"; ctx.fillText(value, 180, y); };
+  const text = (value: string, y: number, size: number, color = theme.paper, maxWidth?: number) => { ctx.fillStyle = color; ctx.font = `bold ${size}px monospace`; ctx.textAlign = "center"; ctx.fillText(value, 180, y, maxWidth); };
   box(theme.ink, 0, 0, 360, 450); box(theme.paper, 10, 10, 340, 430); box(theme.ink, 15, 15, 330, 420);
   for (let x = 25; x < 340; x += 14) { box(theme.accent, x, 23, 7, 3); box(theme.accent, x, 423, 7, 3); }
   text("R A N K E D", 54, 14, theme.accent);
@@ -87,14 +88,14 @@ export function drawPortrait(canvas: HTMLCanvasElement, avatar: Avatar, name: st
   let fontSize = 22;
   ctx.font = `bold ${fontSize}px monospace`;
   while (ctx.measureText(displayName).width > 295 && fontSize > 11) { fontSize--; ctx.font = `bold ${fontSize}px monospace`; }
-  text(displayName, 375, fontSize);
+  text(displayName, 375, fontSize, theme.paper, 295);
   text("IL MIO SIGILLO. LA MIA GILDA.", 398, 10, theme.light);
   text("MEMBER PORTRAIT  /  BEYSTREETBOYZ", 414, 8, theme.accent);
 }
 
 export default function MirrorPhoto({ member, onClick }: { member: PlayerMember; onClick: () => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [name, setName] = useState(member.firstName.slice(0, 24));
+  const [name, setName] = useState(memberDisplayName(member));
   const [background, setBackground] = useState(0), [pose, setPose] = useState(0);
   const [photo, setPhoto] = useState<{ url: string; blob: Blob } | null>(null);
   const [message, setMessage] = useState("");
@@ -129,7 +130,7 @@ export default function MirrorPhoto({ member, onClick }: { member: PlayerMember;
   return <div className="mirror-workshop">
     <div className="mirror-photo-preview"><canvas ref={canvasRef} hidden />{photo && <img src={photo.url} width={1080} height={1350} alt={`Ritratto pixel art di ${name || "un membro"}, con il brand Ranked BeyStreetBoyz`} />}</div>
     <div className="mirror-photo-options"><p>Uno specchio, il tuo avatar, il tuo sigillo. Crea una cartolina da portare con te.</p>
-      <label className="mirror-name">NOME SULLA FOTO<input value={name} maxLength={24} onChange={(e) => setName(e.target.value)} placeholder="Il tuo nome o nickname" /></label>
+      <label className="mirror-name">NOME SULLA FOTO<input value={name} maxLength={80} onChange={(e) => setName(e.target.value)} placeholder="Il tuo nome o nickname" /></label>
       <fieldset><legend>BACKGROUND</legend><div className="mirror-choices">{BACKGROUNDS.map((theme, index) => <button key={theme.name} aria-pressed={background === index} onClick={() => { setBackground(index); onClick(); }}>{theme.name}</button>)}</div></fieldset>
       <fieldset><legend>POSA</legend><div className="mirror-choices">{POSES.map((label, index) => <button key={label} aria-pressed={pose === index} onClick={() => { setPose(index); onClick(); }}>{label}</button>)}</div></fieldset>
       {photo ? <a className="solid-button" href={photo.url} download="Ranked-BeyStreetBoyz.png" onClick={() => { onClick(); setMessage("Ritratto pronto: se richiesto, conferma il salvataggio nel browser."); }}>SCARICA PNG <span>↓</span></a> : <p role="status">Preparo il ritratto…</p>}

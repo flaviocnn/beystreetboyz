@@ -1,5 +1,7 @@
 "use client";
+import { memberDisplayName } from "../lib/member-name";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { readResponse, type PlayerMember } from "../lib/client-api";
 
 export default function GuildEntrance() {
@@ -13,7 +15,20 @@ export default function GuildEntrance() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   useEffect(() => {
-    void fetch("/api/member/session", { cache: "no-store" }).then(readResponse).then((result) => setMember(result.member)).catch((cause) => setError(cause.message)).finally(() => setLoading(false));
+    let oauthMessage = "";
+    const oauthError = new URLSearchParams(window.location.search).get("challonge_error");
+    if (oauthError) {
+      const messages: Record<string, string> = {
+        not_configured: "L’accesso con Challonge sarà disponibile appena lo staff avrà completato l’attivazione. Puoi usare email o codice fiscale.",
+        expired: "La richiesta di accesso è scaduta o è già stata utilizzata. Riprova con Challonge.",
+        cancelled: "Accesso con Challonge annullato. Puoi riprovare quando vuoi.",
+        account_conflict: "Il profilo Challonge è associato a dati non coerenti. Contatta lo staff per verificare il collegamento.",
+        unavailable: "Non è stato possibile completare l’accesso con Challonge. Riprova tra poco.",
+      };
+      oauthMessage = messages[oauthError] || messages.unavailable;
+      window.history.replaceState(null, "", "/gilda");
+    }
+    void fetch("/api/member/session", { cache: "no-store" }).then(readResponse).then((result) => { setMember(result.member); if (oauthMessage) setError(oauthMessage); }).catch((cause) => setError(cause.message)).finally(() => setLoading(false));
   }, []);
   async function submit(event: React.FormEvent) {
     event.preventDefault(); setBusy(true); setError("");
@@ -32,9 +47,10 @@ export default function GuildEntrance() {
     finally { setBusy(false); }
   }
   const changing = !!member && (member.mustChangePassword || changeOpen);
-  return <main className="interior-shell guild-shell"><header className="interior-topbar"><a href="/" className="back-link">← TORNA ALLA MAPPA</a><span>GILDA DEL GRIFONE</span></header><div className="interior-container guild-entrance"><div className="guild-emblem" aria-hidden="true">G</div><p className="section-kicker">UNA PORTA PER I MEMBRI</p><h1>La Gilda<br />del Grifone<span className="period">.</span></h1>{loading ? <p>Controllo le credenziali…</p> : <section className="auth-card">
-    {member && !changing ? <><p className="section-kicker">ACCESSO RICONOSCIUTO</p><h2>Bentornato, {member.firstName}.</h2><p>La Gilda ti aspetta. Visita il Wistery per scegliere il tuo avatar.</p><a className="solid-button" href="/gilda/mappa">ENTRA NELLA GILDA →</a><a className="outline-button" href="/wistery">PERSONALIZZA AL WISTERY ↗</a><button className="text-button" onClick={() => { setChangeOpen(true); setError(""); }}>CAMBIA PASSWORD</button></> : <>
+  return <main className="interior-shell guild-shell"><header className="interior-topbar"><Link href="/" className="back-link">← TORNA ALLA MAPPA</Link><span>GILDA DEL GRIFONE</span></header><div className="interior-container guild-entrance"><div className="guild-emblem" aria-hidden="true">G</div><p className="section-kicker">UNA PORTA PER I MEMBRI</p><h1>La Gilda<br />del Grifone<span className="period">.</span></h1>{loading ? <p>Controllo le credenziali…</p> : <section className="auth-card">
+    {member && !changing ? <><p className="section-kicker">ACCESSO RICONOSCIUTO</p><h2>Bentornato, {memberDisplayName(member)}.</h2><p>La Gilda ti aspetta. Visita il Wistery per scegliere il tuo avatar.</p><a className="solid-button" href="/gilda/mappa">ENTRA NELLA GILDA →</a><a className="outline-button" href="/wistery">PERSONALIZZA AL WISTERY ↗</a><button className="text-button" onClick={() => { setChangeOpen(true); setError(""); }}>CAMBIA PASSWORD</button></> : <>
       <p className="section-kicker">{changing ? "IL TUO SIGILLO PERSONALE" : "CREDENZIALI DELLA GILDA"}</p><h2>{changing ? "Scegli una nuova password." : "Mostra il tuo sigillo."}</h2><p>{changing ? "Prima di proseguire, sostituisci la password temporanea con una personale di almeno 10 caratteri." : "Entra con email oppure codice fiscale e password. Il browser ricorderà il tuo accesso."}</p>
+      {!changing && <div className="challonge-login"><a className="solid-button" href="/api/auth/challonge">ACCEDI CON CHALLONGE →</a><p>Ritrova il tuo membro della Gilda con il profilo Challonge. Se sei nuovo, creeremo il tuo profilo da completare con lo staff.</p><p className="section-kicker">OPPURE USA LE CREDENZIALI DELLA GILDA</p></div>}
       <form className="stack-form" onSubmit={submit}>
         {!changing && <label>EMAIL O CODICE FISCALE<input value={identifier} onChange={(event) => setIdentifier(event.target.value)} autoComplete="username" autoCapitalize="none" spellCheck={false} required /></label>}
         <label>{changing ? "PASSWORD ATTUALE / TEMPORANEA" : "PASSWORD"}<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" maxLength={200} required /></label>

@@ -1,4 +1,5 @@
 "use client";
+import { memberDisplayName } from "../../lib/member-name";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useGameAudio, usePopupSound } from "../../lib/game-audio";
 import { drawPixelPlayer, type Direction } from "../../lib/pixel-player";
@@ -8,7 +9,7 @@ import { WORLD, START, PLACES, GAMES, canWalk, nearbyPlace, drawGuildWorld, draw
 import MirrorPhoto from "./mirror-photo";
 import GuildBoard from "./guild-board";
 
-type RankingRow = { id: string; firstName: string; lastName: string; score: number };
+type RankingRow = { id: string; firstName: string; lastName: string | null; challongeUsername: string | null; score: number; rank: number };
 const KEY_DIRECTIONS: Record<string, Direction> = { ArrowUp: "up", w: "up", ArrowDown: "down", s: "down", ArrowLeft: "left", a: "left", ArrowRight: "right", d: "right" };
 const DIRECTION_NAMES = { up: "su", down: "giù", left: "a sinistra", right: "a destra" };
 function beginWalk(keys: Set<Direction>, player: { x: number; y: number; dir: Direction }, direction: Direction) {
@@ -131,7 +132,7 @@ export default function GuildMapPage() {
   return <main className="guild-map-shell">
     <header className="guild-map-header"><a href="/gilda">← ATRIO DELLA GILDA</a><span>LA GILDA DEL GRIFONE</span><div className="guild-header-actions"><button className="guild-audio-toggle" onClick={toggleAudio} aria-pressed={audioEnabled} aria-label={audioEnabled ? "Disattiva audio" : "Attiva audio"}><span aria-hidden="true">{audioEnabled ? "♫" : "×"}</span><span className="guild-audio-label">AUDIO {audioEnabled ? "ON" : "OFF"}</span></button><a href="/">MAPPA DI TORINO ↗</a></div></header>
     {loading ? <div className="guild-map-message">Apro la sala della Gilda…</div> : !member ? <div className="guild-map-message"><h1>La porta è chiusa.</h1><p>{error || "Accedi con le tue credenziali per entrare."}</p><a className="solid-button" href="/gilda">VAI ALL’ACCESSO →</a></div> : <>
-      <div className="guild-map-title"><p>BENVENUTO, {member.firstName.toUpperCase()}</p><h1>Una Gilda da esplorare</h1><span>FRECCE / WASD · AVVICINATI E PREMI INVIO</span></div>
+      <div className="guild-map-title"><p>BENVENUTO, {memberDisplayName(member)}</p><h1>Una Gilda da esplorare</h1><span>FRECCE / WASD · AVVICINATI E PREMI INVIO</span></div>
       <div className="guild-stage"><GuildRoom onOpen={open} onNear={updateNear} onStep={playStep} paused={!!opened} member={member} />
         <div className={`guild-interaction-prompt ${nearby && !opened ? "is-visible" : ""}`} aria-live="polite">{nearby && !opened && <button onClick={() => open(nearby.id)}><span className="prompt-icon">!</span><span><small>ESPLORA</small>{nearby.name}</span><kbd>INVIO ↵</kbd></button>}</div>
       </div>
@@ -143,7 +144,7 @@ export default function GuildMapPage() {
         {opened === "champion" && <div className="champion-memorial"><div className="champion-sprite"><ChampionPortrait /></div><p className="champion-year">CAMPIONE RANKED · 2025</p><h3>GranBurstone</h3><p>Al campione della ranked dell’anno scorso.<br />Il suo nome resta scolpito nella storia della Gilda.</p><blockquote>Un trofeo passa di mano.<br />Una leggenda resta.</blockquote></div>}
         {opened === "library" && <Library onClick={playClick} />}
         {opened === "board" && <GuildBoard member={member} onClick={playClick} />}
-        {opened === "ranking" && <><p className="ranking-note">Le prestazioni dei membri, tappa dopo tappa.</p>{error ? <p className="form-error" role="alert">{error}</p> : <div className="ranking-list">{ranking.map((row, index) => <div className={`ranking-row ${row.id === member.id ? "is-you" : ""}`} key={row.id}><span>{String(index + 1).padStart(2, "0")}</span><strong>{row.firstName} {row.lastName}{row.id === member.id ? " · TU" : ""}</strong><b>{row.score} PT</b></div>)}</div>}</>}
+        {opened === "ranking" && <><p className="ranking-note">Le prestazioni dei membri, tappa dopo tappa. A pari punti contano vittorie di tappa e migliori prestazioni.</p>{error ? <p className="form-error" role="alert">{error}</p> : <div className="ranking-list">{ranking.map(row => <div className={`ranking-row ${row.id === member.id ? "is-you" : ""}`} key={row.id}><span>{String(row.rank).padStart(2, "0")}</span><strong>{memberDisplayName(row)}{row.id === member.id ? " · TU" : ""}</strong><b>{row.score} PT</b></div>)}</div>}</>}
       </section></div>}
     </>}
   </main>;

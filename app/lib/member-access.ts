@@ -4,7 +4,7 @@ import { members } from "../../db/schema";
 import { getSession } from "./auth";
 
 export const publicMemberFields = {
-  id: members.id, firstName: members.firstName, lastName: members.lastName, email: members.email,
+  id: members.id, firstName: members.firstName, lastName: members.lastName, email: members.email, challongeUsername: members.challongeUsername,
   mustChangePassword: members.mustChangePassword, avatarStyle: members.avatarStyle, avatarColor: members.avatarColor,
 };
 export const staffMemberFields = {
@@ -17,9 +17,12 @@ export async function currentMember(request: Request) {
   const session = await getSession(request);
   if (session?.role !== "member") return null;
   const [member] = await getDb().select().from(members).where(eq(members.id, session.id)).limit(1);
-  return member && member.authVersion === session.version ? member : null;
+  if (!member || member.authVersion !== session.version) return null;
+  // A temporary local password must still be changed when used for password login.
+  // OAuth already proves possession of the member's Challonge account.
+  return session.method === "challonge" ? { ...member, mustChangePassword: false } : member;
 }
 export function memberView(member: typeof members.$inferSelect) {
-  const { id, firstName, lastName, email, mustChangePassword, avatarStyle, avatarColor } = member;
-  return { id, firstName, lastName, email, mustChangePassword, avatarStyle, avatarColor };
+  const { id, firstName, lastName, email, challongeUsername, mustChangePassword, avatarStyle, avatarColor } = member;
+  return { id, firstName, lastName, email, challongeUsername, mustChangePassword, avatarStyle, avatarColor };
 }

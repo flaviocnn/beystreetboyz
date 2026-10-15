@@ -1,11 +1,12 @@
 "use client";
+import { memberDisplayName } from "../../lib/member-name";
 
 import { useCallback, useEffect, useState } from "react";
 import { readResponse, type PlayerMember } from "../../lib/client-api";
 
 type Message = {
   id: string; memberId: string; body: string; createdAt: string;
-  firstName: string; lastName: string;
+  firstName: string; lastName: string | null; challongeUsername: string | null;
 };
 
 export default function GuildBoard({ member, onClick }: {
@@ -60,7 +61,7 @@ export default function GuildBoard({ member, onClick }: {
       <div className="guild-board-feed-title"><h3 id="guild-board-feed-title">Messaggi recenti</h3><span>{messages.length} / 50</span></div>
       {!loading && messages.length === 0 ? <p className="guild-board-empty">La bacheca è ancora vuota. Il primo messaggio può essere il tuo.</p> :
         <div className="guild-board-messages">{messages.map((message) => <article key={message.id} className={message.memberId === member.id ? "is-you" : ""}>
-          <header><strong>{message.firstName} {message.lastName}{message.memberId === member.id ? " · TU" : ""}</strong><time dateTime={message.createdAt}>{new Date(message.createdAt).toLocaleString("it-IT", { timeZone: "Europe/Rome", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</time></header>
+          <header><strong>{memberDisplayName(message)}{message.memberId === member.id ? " · TU" : ""}</strong><time dateTime={message.createdAt}>{new Date(message.createdAt).toLocaleString("it-IT", { timeZone: "Europe/Rome", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</time></header>
           <p>{message.body}</p>
         </article>)}</div>}
     </section>

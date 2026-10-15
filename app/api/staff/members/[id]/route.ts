@@ -4,6 +4,7 @@ import { getDb } from "../../../../../db";
 import { members } from "../../../../../db/schema";
 import { getSession, sameOrigin, hashPassword } from "../../../../lib/auth";
 import { apiError, parseMemberInput } from "../../../../lib/members";
+import { isUniqueViolation } from "../../../../lib/database-errors";
 
 type Context = { params: Promise<{ id: string }> };
 
@@ -14,8 +15,10 @@ export async function PUT(request: Request, context: Context) {
   const input = parseMemberInput(body);
   if (!input || !body) return apiError("Controlla i dati, il profilo Challonge e il pagamento", 400);
   const id = (await context.params).id;
-  const existing = await getDb().select({ id: members.id }).from(members).where(and(sql`upper(${members.fiscalCode}) = ${input.fiscalCode}`, ne(members.id, id))).limit(1);
-  if (existing.length) return apiError("Codice fiscale già presente", 409);
+  if (input.fiscalCode) {
+    const existing = await getDb().select({ id: members.id }).from(members).where(and(sql`upper(${members.fiscalCode}) = ${input.fiscalCode}`, ne(members.id, id))).limit(1);
+    if (existing.length) return apiError("Codice fiscale già presente", 409);
+  }
   const reset: { passwordSalt?: string; passwordHash?: string; mustChangePassword?: boolean; authVersion?: ReturnType<typeof sql> } = {};
   if (body.initialPassword !== undefined) {
     if (typeof body.initialPassword !== "string" || body.initialPassword.length < 10 || body.initialPassword.length > 128) return apiError("Password temporanea non valida", 400);
@@ -29,7 +32,7 @@ export async function PUT(request: Request, context: Context) {
     if (!member) return apiError("Membro non trovato", 404);
     return Response.json({ member });
   } catch (error) {
-    if (String(error).includes("UNIQUE")) return apiError("Questa email appartiene già a un membro", 409);
+    if (isUniqueViolation(error)) return apiError("Email, codice fiscale o profilo Challonge già assegnati", 409);
     throw error;
   }
 }

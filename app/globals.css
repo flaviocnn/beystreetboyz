@@ -19,6 +19,11 @@ body {
 
 button { font: inherit; }
 
+/* Keep the pixel identity for headings; give interface text room to breathe. */
+button, input, select, textarea { line-height: 1.5; }
+h1, h2, h3 { text-wrap: balance; overflow-wrap: break-word; }
+p { text-wrap: pretty; }
+
 .game-shell {
   position: relative;
   height: 100svh;
@@ -272,6 +277,7 @@ button { font: inherit; }
 .member-row { display: flex; align-items: center; gap: 15px; padding: 17px 10px; border-bottom: 1px solid #aeb9ad; }
 .member-number { align-self: flex-start; color: #7a8b7c; font-size: 11px; font-weight: 900; }
 .member-info { display: grid; gap: 5px; min-width: 0; }
+.member-info strong, .ranking-row strong, .guild-map-title p, .avatar-preview-panel p, .guild-board-messages strong { min-width: 0; overflow-wrap: anywhere; }
 .member-info strong { font-family: var(--font-geist-sans), sans-serif; font-size: 18px; }
 .member-info small { font-size: 11px; overflow-wrap: anywhere; }
 .member-info span { color: #5e6b60; font-size: 9px; overflow-wrap: anywhere; }
@@ -586,4 +592,81 @@ button:disabled { cursor: wait; opacity: .55; }
   .interaction-prompt, .guild-interaction-prompt { left: 16px; bottom: 18px; width: min(340px, calc(100% - 200px)); transform: none; }
   .interaction-prompt.is-visible, .guild-interaction-prompt.is-visible { transform: none; }
   .interaction-prompt .prompt-icon, .guild-interaction-prompt .prompt-icon { display: none; }
+}
+
+/* Shared typography, after responsive layout rules to avoid tiny mobile labels. */
+.kicker, .section-kicker, .modal-count, .modal-eyebrow,
+.visitor-dialogue-label, .modal-detail, .modal-footer,
+.stack-form label, .member-search, .guild-board-write label,
+.mirror-name, .mirror-photo-options legend {
+  font-size: 12px;
+  line-height: 1.5;
+  letter-spacing: .05em;
+}
+.game-header h1 { line-height: 1.25; letter-spacing: -.03em; }
+.instructions, .map-index { font-size: 11px; letter-spacing: .04em; }
+.key.wide { font-size: 11px; }
+.audio-toggle, .guild-audio-toggle { letter-spacing: .03em; }
+.modal-description, .auth-card p, .member-form-card > p:not(.section-kicker),
+.ranking-note, .guild-board-heading p, .guild-board-done, .guild-board-empty,
+.guild-board-messages p, .credential-card p {
+  font-size: 16px;
+  line-height: 1.65;
+}
+.solid-button, .outline-button, .modal-enter, .text-button,
+.member-actions button, .mirror-choices button {
+  font-size: 13px;
+  line-height: 1.5;
+  letter-spacing: .03em;
+}
+.solid-button, .modal-enter { gap: 12px; padding-block: 12px; }
+.place-modal { max-height: calc(100dvh - 48px); overflow-y: auto; }
+.place-modal h2 { line-height: 1.12; letter-spacing: -.04em; }
+.modal-detail { max-width: 100%; overflow-wrap: anywhere; }
+.interaction-prompt button > span:nth-child(2),
+.guild-interaction-prompt button > span:nth-child(2) {
+  min-width: 0; font-size: 15px; line-height: 1.4; overflow-wrap: break-word;
+}
+.interaction-prompt small, .guild-interaction-prompt small {
+  font-size: 11px; line-height: 1.4; letter-spacing: .05em;
+}
+.interaction-prompt .guild-event-hint { font-size: 13px; line-height: 1.5; }
+.interaction-prompt kbd, .guild-interaction-prompt kbd { font-size: 12px; flex-shrink: 0; }
+.interior-topbar, .guild-map-header { font-size: 12px; letter-spacing: .03em; }
+.guild-map-title { flex-wrap: wrap; gap: 8px 22px; }
+.guild-map-title p, .guild-map-title span { font-size: 12px; line-height: 1.5; }
+.avatar-style-grid span, .avatar-colors small, .mirror-choices button,
+.library-shelves small, .library-note { font-size: 12px; line-height: 1.5; }
+.avatar-style-grid span { overflow-wrap: normal; hyphens: auto; }
+.mirror-choices button { flex: 1 1 90px; }
+.member-info small, .member-info span, .guild-board-messages time { font-size: 12px; line-height: 1.5; }
+.member-info, .ranking-row strong { min-width: 0; overflow-wrap: anywhere; }
+.credential-card code, .credential-card div span { overflow-wrap: anywhere; }
+.ranking-row > span { color: #526457; }
+.place-wistery .modal-count { color: #b8c4b9; }
+
+@media (min-width: 761px) {
+  .audio-toggle, .guild-audio-toggle { font-size: 12px; }
+  .instructions { max-width: 48%; flex-wrap: wrap; }
+  .game-header { max-width: 45%; }
+}
+@media (max-width: 760px) {
+  .game-header h1 { font-size: 14px; }
+  .game-header .kicker { font-size: 10px; }
+  .guild-map-header a { font-size: 11px; line-height: 1.4; }
+  .guild-map-header { flex-wrap: wrap; }
+  .guild-map-title span::after { font-size: 12px; line-height: 1.5; }
+  .place-modal { max-height: calc(100dvh - 28px); }
+  .modal-count { font-size: 12px; }
+  .modal-footer { font-size: 11px; }
+  .avatar-style-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .avatar-style-grid span { font-size: 13px; }
+}
+@media (pointer: coarse), (max-width: 760px), (max-height: 500px) and (orientation: landscape) {
+  .guild-map-title span { font-size: 0; }
+  .guild-map-title span::after {
+    content: "Muoviti con le frecce a schermo. Avvicinati e tocca il pulsante del luogo.";
+    font-size: 12px;
+    line-height: 1.5;
+  }
 }

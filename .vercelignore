@@ -1,0 +1,15 @@
+.local-data
+.dev.vars
+.env*
+!.env.example
+.wrangler
+.openai
+drizzle
+worker
+build
+examples
+vite.config.ts
+cloudflare-env.d.ts
+work
+backups
+tests

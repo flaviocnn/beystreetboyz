@@ -1,0 +1,296 @@
+{
+  "status": "verified",
+  "source": "https://challonge.com/it/psmc5x5/standings",
+  "tournamentSlug": "psmc5x5",
+  "name": "Tappa #1 Ranked BSB",
+  "date": "2026-10-14",
+  "listedParticipants": 24,
+  "confirmedAttendance": 24,
+  "proposedCoefficient": 1,
+  "participantOverrides": [
+    {
+      "sourceChallongeUsername": "nika37",
+      "creditedPlayerName": "__Grizzly__",
+      "scope": "all matches and standings of psmc5x5",
+      "reason": "organizer correction"
+    }
+  ],
+  "results": [
+    {
+      "challongeUsername": "ryota_miyagi",
+      "displayName": "Ryota_Miyagi",
+      "group": "A",
+      "wins": 4,
+      "losses": 1,
+      "ties": 0,
+      "finalRank": 7,
+      "basePoints": 50,
+      "memberId": "ba88d14e-729f-4a64-958d-1fd88de1d5f6"
+    },
+    {
+      "challongeUsername": "sovrano_supremo",
+      "displayName": "sovrano_supremo",
+      "group": "A",
+      "wins": 4,
+      "losses": 1,
+      "ties": 0,
+      "finalRank": 3,
+      "basePoints": 75,
+      "memberId": "e6370278-fa2a-4625-87fe-14e426d07897"
+    },
+    {
+      "challongeUsername": "pa_ste_llo",
+      "displayName": "pa_Ste_llo",
+      "group": "A",
+      "wins": 3,
+      "losses": 2,
+      "ties": 0,
+      "finalRank": 2,
+      "basePoints": 85,
+      "memberId": "f0c7d4e8-2da4-4142-8a44-5fde925dba44"
+    },
+    {
+      "challongeUsername": "dark_vortex",
+      "displayName": "Dark_Vortex",
+      "group": "A",
+      "wins": 3,
+      "losses": 2,
+      "ties": 0,
+      "finalRank": 1,
+      "basePoints": 100,
+      "memberId": "97a3fcba-26a1-461a-a3e4-5b50c0b320c4"
+    },
+    {
+      "challongeUsername": "noviga",
+      "displayName": "noviga",
+      "group": "A",
+      "wins": 3,
+      "losses": 2,
+      "ties": 0,
+      "finalRank": null,
+      "basePoints": 25,
+      "memberId": "f2e40b7a-9405-479d-b6cc-82936c25e67f"
+    },
+    {
+      "challongeUsername": "ilbrome",
+      "displayName": "ilbrome",
+      "group": "A",
+      "wins": 3,
+      "losses": 2,
+      "ties": 0,
+      "finalRank": null,
+      "basePoints": 25,
+      "memberId": "b3a9981d-b165-40ba-bb67-d748374b0a43"
+    },
+    {
+      "challongeUsername": "_sensei__",
+      "displayName": "_sensei__",
+      "group": "A",
+      "wins": 3,
+      "losses": 2,
+      "ties": 0,
+      "finalRank": null,
+      "basePoints": 25,
+      "memberId": "8d00c7c3-6956-4a11-afb9-813acee39464"
+    },
+    {
+      "challongeUsername": "_elliot_",
+      "displayName": "_elliot_",
+      "group": "A",
+      "wins": 2,
+      "losses": 3,
+      "ties": 0,
+      "finalRank": null,
+      "basePoints": 15,
+      "memberId": "cd368643-2d3f-4911-a6c6-5f08120d878b"
+    },
+    {
+      "challongeUsername": null,
+      "displayName": "maton11 (invitation pending)",
+      "group": "A",
+      "wins": 2,
+      "losses": 3,
+      "ties": 0,
+      "finalRank": null,
+      "basePoints": 15,
+      "memberId": "ffd32c38-1fd6-44e2-a195-84971aa1e545"
+    },
+    {
+      "challongeUsername": "isabey",
+      "displayName": "isabey",
+      "group": "A",
+      "wins": 1,
+      "losses": 4,
+      "ties": 0,
+      "finalRank": null,
+      "basePoints": 8,
+      "memberId": "5032f9b4-c64e-4066-a54c-ceb5c2ee0e3f"
+    },
+    {
+      "challongeUsername": "_kaneki_",
+      "displayName": "_kaneki_",
+      "group": "A",
+      "wins": 1,
+      "losses": 4,
+      "ties": 0,
+      "finalRank": null,
+      "basePoints": 8,
+      "memberId": "30e624e7-11ca-4c1f-8026-eed68e48900c"
+    },
+    {
+      "challongeUsername": "martin_luther_spin",
+      "displayName": "Bruno Barbieri",
+      "group": "A",
+      "wins": 1,
+      "losses": 4,
+      "ties": 0,
+      "finalRank": null,
+      "basePoints": 8,
+      "memberId": "028d1132-e7f5-4a3e-9510-e17777bd2ec2"
+    },
+    {
+      "challongeUsername": "bey_sabbath",
+      "displayName": "Bey_Sabbath",
+      "group": "B",
+      "wins": 4,
+      "losses": 1,
+      "ties": 0,
+      "finalRank": 5,
+      "basePoints": 60,
+      "memberId": "0e52dc89-c900-45a1-b722-c7f621cfa0e0"
+    },
+    {
+      "challongeUsername": "bsb_hammer_savio",
+      "displayName": "BSB_Hammer_Savio",
+      "group": "B",
+      "wins": 4,
+      "losses": 1,
+      "ties": 0,
+      "finalRank": 6,
+      "basePoints": 55,
+      "memberId": "dc76f297-1a71-4e66-bf92-74a6bca25177"
+    },
+    {
+      "challongeUsername": "burstatisenzagloria",
+      "displayName": "BSB_BurstatiSenzaGloria",
+      "group": "B",
+      "wins": 4,
+      "losses": 1,
+      "ties": 0,
+      "finalRank": 8,
+      "basePoints": 45,
+      "memberId": "f896df6b-ee43-482b-82eb-26e9cbc25650"
+    },
+    {
+      "challongeUsername": "alfiere",
+      "displayName": "Alfiere",
+      "group": "B",
+      "wins": 3,
+      "losses": 2,
+      "ties": 0,
+      "finalRank": 4,
+      "basePoints": 68,
+      "memberId": "ef42a9da-f3fc-45f1-bb8f-2e02c57d94e4"
+    },
+    {
+      "challongeUsername": "calamarino5",
+      "displayName": "calamarino5",
+      "group": "B",
+      "wins": 3,
+      "losses": 2,
+      "ties": 0,
+      "finalRank": null,
+      "basePoints": 25,
+      "memberId": "59e8d810-0ca1-416d-9fc9-03ed87f6a164"
+    },
+    {
+      "challongeUsername": "bsb_pay2spin",
+      "displayName": "bsb_pay2spin",
+      "group": "B",
+      "wins": 3,
+      "losses": 2,
+      "ties": 0,
+      "finalRank": null,
+      "basePoints": 25,
+      "memberId": "3a540c99-9af6-437e-a756-73a3f8a942d9"
+    },
+    {
+      "challongeUsername": null,
+      "sourceChallongeUsername": "nika37",
+      "displayName": "__Grizzly__",
+      "sourceDisplayName": "nika37",
+      "group": "B",
+      "wins": 2,
+      "losses": 3,
+      "ties": 0,
+      "finalRank": null,
+      "basePoints": 15,
+      "memberId": "22550997-d3a1-4a0c-9ac0-94fa3d6ace32"
+    },
+    {
+      "challongeUsername": "goldenmeg",
+      "displayName": "goldenmeg",
+      "group": "B",
+      "wins": 2,
+      "losses": 3,
+      "ties": 0,
+      "finalRank": null,
+      "basePoints": 15,
+      "memberId": "a7785115-c0b8-4cbb-9d8e-701c71fc9421"
+    },
+    {
+      "challongeUsername": "granburstone",
+      "displayName": "granburstone",
+      "group": "B",
+      "wins": 2,
+      "losses": 3,
+      "ties": 0,
+      "finalRank": null,
+      "basePoints": 15,
+      "memberId": "a788965e-883e-4bda-bb9c-d8b97c0c761d"
+    },
+    {
+      "challongeUsername": "alebuck",
+      "displayName": "Oscar Carogna",
+      "group": "B",
+      "wins": 1,
+      "losses": 4,
+      "ties": 0,
+      "finalRank": null,
+      "basePoints": 8,
+      "memberId": "d83734f9-8321-48b3-b987-f61a562d9cdd"
+    },
+    {
+      "challongeUsername": "soar_ale",
+      "displayName": "soar_ale",
+      "group": "B",
+      "wins": 1,
+      "losses": 4,
+      "ties": 0,
+      "finalRank": null,
+      "basePoints": 8,
+      "memberId": "581c5114-340c-499d-a64a-aaee4476e438"
+    },
+    {
+      "challongeUsername": "mikemorz",
+      "displayName": "MikeMorzzzz",
+      "group": "B",
+      "wins": 1,
+      "losses": 4,
+      "ties": 0,
+      "finalRank": null,
+      "basePoints": 8,
+      "memberId": "af9db7e8-7a90-4e0d-acf7-aaf41626a47d"
+    }
+  ],
+  "memberProfileOwnerExceptions": [
+    {
+      "challongeUsername": "nika37",
+      "memberId": "f10fd647-d90e-44ac-851d-a1625cdb4856",
+      "reason": "Le partite di questa tappa sono attribuite a __Grizzly__ (Marco Pellegatta)"
+    }
+  ],
+  "attendanceEvidence": "All 24 listed players have a five-match group record in Challonge standings.",
+  "excludedFromMemberRanking": [],
+  "unassignedParticipant": null
+}

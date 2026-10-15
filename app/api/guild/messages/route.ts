@@ -4,6 +4,7 @@ import { guildMessages, members } from "../../../../db/schema";
 import { sameOrigin } from "../../../lib/auth";
 import { currentMember } from "../../../lib/member-access";
 import { apiError } from "../../../lib/members";
+import { isUniqueViolation } from "../../../lib/database-errors";
 
 function torinoDay(date: Date) {
   const parts = new Intl.DateTimeFormat("en-GB", {
@@ -30,7 +31,7 @@ export async function GET(request: Request) {
     db.select({
       id: guildMessages.id, memberId: guildMessages.memberId, day: guildMessages.day,
       body: guildMessages.body, createdAt: guildMessages.createdAt,
-      firstName: members.firstName, lastName: members.lastName,
+      firstName: members.firstName, lastName: members.lastName, challongeUsername: members.challongeUsername,
     }).from(guildMessages).innerJoin(members, eq(guildMessages.memberId, members.id))
       .orderBy(desc(guildMessages.createdAt), desc(guildMessages.id)).limit(50),
     db.select({ id: guildMessages.id }).from(guildMessages)
@@ -55,8 +56,7 @@ export async function POST(request: Request) {
     }).returning();
     return Response.json({ message }, { status: 201, headers: { "Cache-Control": "no-store" } });
   } catch (cause) {
-    const databaseError = cause instanceof Error && cause.cause ? String(cause.cause) : String(cause);
-    if (databaseError.includes("UNIQUE")) return apiError("Hai già scritto sulla bacheca oggi. Torna domani!", 409);
+    if (isUniqueViolation(cause)) return apiError("Hai già scritto sulla bacheca oggi. Torna domani!", 409);
     throw cause;
   }
 }
