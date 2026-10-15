@@ -1,0 +1,1034 @@
+{
+  "source": "Beyblade_X_componenti_torneo_POOL_TIER_DISTRIBUZIONE.xlsx",
+  "sheets": {
+    "bits": "Bit!A5:B56",
+    "ratchets": "Ratchet!A5:A41",
+    "blades": "Lame!A5:C159"
+  },
+  "bits": [
+    {
+      "value": "Accel",
+      "label": "Accel (A)"
+    },
+    {
+      "value": "Ball",
+      "label": "Ball (B)"
+    },
+    {
+      "value": "Bound Spike",
+      "label": "Bound Spike (BS)"
+    },
+    {
+      "value": "Cyclone",
+      "label": "Cyclone (C)"
+    },
+    {
+      "value": "Dot",
+      "label": "Dot (D)"
+    },
+    {
+      "value": "Disk Ball",
+      "label": "Disk Ball (DB)"
+    },
+    {
+      "value": "Disk Spike",
+      "label": "Disk Spike (DS)"
+    },
+    {
+      "value": "Elevate",
+      "label": "Elevate (E)"
+    },
+    {
+      "value": "Flat",
+      "label": "Flat (F)"
+    },
+    {
+      "value": "Free Ball",
+      "label": "Free Ball (FB)"
+    },
+    {
+      "value": "Free Flat",
+      "label": "Free Flat (FF)"
+    },
+    {
+      "value": "Glide",
+      "label": "Glide (G)"
+    },
+    {
+      "value": "Gear Ball",
+      "label": "Gear Ball (GB)"
+    },
+    {
+      "value": "Gear Flat",
+      "label": "Gear Flat (GF)"
+    },
+    {
+      "value": "Gear Needle",
+      "label": "Gear Needle (GN)"
+    },
+    {
+      "value": "Gear Point",
+      "label": "Gear Point (GP)"
+    },
+    {
+      "value": "Gear Rush",
+      "label": "Gear Rush (GR)"
+    },
+    {
+      "value": "Gear Unite",
+      "label": "Gear Unite (GU)"
+    },
+    {
+      "value": "Hexa",
+      "label": "Hexa (H)"
+    },
+    {
+      "value": "High Needle",
+      "label": "High Needle (HN)"
+    },
+    {
+      "value": "High Taper",
+      "label": "High Taper (HT)"
+    },
+    {
+      "value": "Ignition",
+      "label": "Ignition (I)"
+    },
+    {
+      "value": "Jolt",
+      "label": "Jolt (J)"
+    },
+    {
+      "value": "Kick",
+      "label": "Kick (K)"
+    },
+    {
+      "value": "Level",
+      "label": "Level (L)"
+    },
+    {
+      "value": "Low Flat",
+      "label": "Low Flat (LF)"
+    },
+    {
+      "value": "Low Orb",
+      "label": "Low Orb (LO)"
+    },
+    {
+      "value": "Low Rush",
+      "label": "Low Rush (LR)"
+    },
+    {
+      "value": "Merge",
+      "label": "Merge (M)"
+    },
+    {
+      "value": "Metal Needle",
+      "label": "Metal Needle (MN)"
+    },
+    {
+      "value": "Needle",
+      "label": "Needle (N)"
+    },
+    {
+      "value": "Narrow",
+      "label": "Narrow (Nr)"
+    },
+    {
+      "value": "Orb",
+      "label": "Orb (O)"
+    },
+    {
+      "value": "Operate",
+      "label": "Operate (Op)"
+    },
+    {
+      "value": "Point",
+      "label": "Point (P)"
+    },
+    {
+      "value": "Quake",
+      "label": "Quake (Q)"
+    },
+    {
+      "value": "Rush",
+      "label": "Rush (R)"
+    },
+    {
+      "value": "Rubber Accel",
+      "label": "Rubber Accel (RA)"
+    },
+    {
+      "value": "Spike",
+      "label": "Spike (S)"
+    },
+    {
+      "value": "Taper",
+      "label": "Taper (T)"
+    },
+    {
+      "value": "Trans Kick",
+      "label": "Trans Kick (TK)"
+    },
+    {
+      "value": "Trans Point",
+      "label": "Trans Point (TP)"
+    },
+    {
+      "value": "Turbo",
+      "label": "Turbo (Tr)"
+    },
+    {
+      "value": "Unite",
+      "label": "Unite (U)"
+    },
+    {
+      "value": "Under Flat",
+      "label": "Under Flat (UF)"
+    },
+    {
+      "value": "Under Needle",
+      "label": "Under Needle (UN)"
+    },
+    {
+      "value": "Vortex",
+      "label": "Vortex (V)"
+    },
+    {
+      "value": "Wedge",
+      "label": "Wedge (W)"
+    },
+    {
+      "value": "Wall Ball",
+      "label": "Wall Ball (WB)"
+    },
+    {
+      "value": "Wall Wedge",
+      "label": "Wall Wedge (WW)"
+    },
+    {
+      "value": "Yielding",
+      "label": "Yielding (Y)"
+    },
+    {
+      "value": "Zap",
+      "label": "Zap (Z)"
+    }
+  ],
+  "ratchets": [
+    "0-60",
+    "0-70",
+    "0-80",
+    "1-50",
+    "1-60",
+    "1-70",
+    "1-80",
+    "2-60",
+    "2-70",
+    "2-80",
+    "3-60",
+    "3-70",
+    "3-80",
+    "3-85",
+    "4-50",
+    "4-55",
+    "4-60",
+    "4-70",
+    "4-80",
+    "5-50",
+    "5-60",
+    "5-70",
+    "5-80",
+    "6-60",
+    "6-70",
+    "6-80",
+    "7-55",
+    "7-60",
+    "7-70",
+    "7-80",
+    "8-70",
+    "8-80",
+    "9-60",
+    "9-65",
+    "9-70",
+    "9-80",
+    "M-85"
+  ],
+  "blades": [
+    {
+      "value": "Dranzer Spiral",
+      "category": "Blade completa",
+      "system": "X-Over Project"
+    },
+    {
+      "value": "Cobalt Drake",
+      "category": "Blade completa",
+      "system": "Basic Line"
+    },
+    {
+      "value": "Phoenix Feather",
+      "category": "Blade completa",
+      "system": "Basic Line"
+    },
+    {
+      "value": "Samurai Steel",
+      "category": "Blade completa",
+      "system": "Basic Line"
+    },
+    {
+      "value": "Mammoth Tusk",
+      "category": "Blade completa",
+      "system": "Basic Line"
+    },
+    {
+      "value": "Dran Sword",
+      "category": "Blade completa",
+      "system": "Basic Line"
+    },
+    {
+      "value": "Hells Scythe",
+      "category": "Blade completa",
+      "system": "Basic Line"
+    },
+    {
+      "value": "Wizard Arrow",
+      "category": "Blade completa",
+      "system": "Basic Line"
+    },
+    {
+      "value": "Knight Shield",
+      "category": "Blade completa",
+      "system": "Basic Line"
+    },
+    {
+      "value": "Knight Lance",
+      "category": "Blade completa",
+      "system": "Basic Line"
+    },
+    {
+      "value": "Shark Edge",
+      "category": "Blade completa",
+      "system": "Basic Line"
+    },
+    {
+      "value": "Leon Claw",
+      "category": "Blade completa",
+      "system": "Basic Line"
+    },
+    {
+      "value": "Viper Tail",
+      "category": "Blade completa",
+      "system": "Basic Line"
+    },
+    {
+      "value": "Rhino Horn",
+      "category": "Blade completa",
+      "system": "Basic Line"
+    },
+    {
+      "value": "Dran Dagger",
+      "category": "Blade completa",
+      "system": "Basic Line"
+    },
+    {
+      "value": "Hells Chain",
+      "category": "Blade completa",
+      "system": "Basic Line"
+    },
+    {
+      "value": "Phoenix Wing",
+      "category": "Blade completa",
+      "system": "Basic Line"
+    },
+    {
+      "value": "Wyvern Gale",
+      "category": "Blade completa",
+      "system": "Basic Line"
+    },
+    {
+      "value": "Unicorn Sting",
+      "category": "Blade completa",
+      "system": "Basic Line"
+    },
+    {
+      "value": "Sphinx Cowl",
+      "category": "Blade completa",
+      "system": "Basic Line"
+    },
+    {
+      "value": "Tyranno Beat",
+      "category": "Blade completa",
+      "system": "Basic Line"
+    },
+    {
+      "value": "Weiss Tiger",
+      "category": "Blade completa",
+      "system": "Basic Line"
+    },
+    {
+      "value": "Cobalt Dragoon",
+      "category": "Blade completa",
+      "system": "Basic Line"
+    },
+    {
+      "value": "Black Shell",
+      "category": "Blade completa",
+      "system": "Basic Line"
+    },
+    {
+      "value": "Whale Wave",
+      "category": "Blade completa",
+      "system": "Basic Line"
+    },
+    {
+      "value": "Crimson Garuda",
+      "category": "Blade completa",
+      "system": "Basic Line"
+    },
+    {
+      "value": "Tricera Press",
+      "category": "Blade completa",
+      "system": "Basic Line"
+    },
+    {
+      "value": "Samurai Calibur",
+      "category": "Blade completa",
+      "system": "Basic Line"
+    },
+    {
+      "value": "Tyranno Roar",
+      "category": "Blade completa",
+      "system": "Basic Line"
+    },
+    {
+      "value": "Aero Pegasus",
+      "category": "Blade completa",
+      "system": "Unique Line"
+    },
+    {
+      "value": "Wyvern Hover",
+      "category": "Blade completa",
+      "system": "Unique Line"
+    },
+    {
+      "value": "Orochi Cluster",
+      "category": "Blade completa",
+      "system": "Unique Line"
+    },
+    {
+      "value": "Dran Buster",
+      "category": "Blade completa",
+      "system": "Unique Line"
+    },
+    {
+      "value": "Hells Hammer",
+      "category": "Blade completa",
+      "system": "Unique Line"
+    },
+    {
+      "value": "Wizard Rod",
+      "category": "Blade completa",
+      "system": "Unique Line"
+    },
+    {
+      "value": "Shinobi Shadow",
+      "category": "Blade completa",
+      "system": "Unique Line"
+    },
+    {
+      "value": "Leon Crest",
+      "category": "Blade completa",
+      "system": "Unique Line"
+    },
+    {
+      "value": "Phoenix Rudder",
+      "category": "Blade completa",
+      "system": "Unique Line"
+    },
+    {
+      "value": "Silver Wolf",
+      "category": "Blade completa",
+      "system": "Unique Line"
+    },
+    {
+      "value": "Samurai Saber",
+      "category": "Blade completa",
+      "system": "Unique Line"
+    },
+    {
+      "value": "Knight Mail",
+      "category": "Blade completa",
+      "system": "Unique Line"
+    },
+    {
+      "value": "Impact Drake",
+      "category": "Blade completa",
+      "system": "Unique Line"
+    },
+    {
+      "value": "Ghost Circle",
+      "category": "Blade completa",
+      "system": "Unique Line"
+    },
+    {
+      "value": "Golem Rock",
+      "category": "Blade completa",
+      "system": "Unique Line"
+    },
+    {
+      "value": "Scorpio Spear",
+      "category": "Blade completa",
+      "system": "Unique Line"
+    },
+    {
+      "value": "Shark Scale",
+      "category": "Blade completa",
+      "system": "Unique Line"
+    },
+    {
+      "value": "Clock Mirage",
+      "category": "Blade completa",
+      "system": "Unique Line"
+    },
+    {
+      "value": "Meteor Dragoon",
+      "category": "Blade completa",
+      "system": "Unique Line"
+    },
+    {
+      "value": "Mummy Curse",
+      "category": "Blade completa",
+      "system": "Unique Line"
+    },
+    {
+      "value": "Dran Strike",
+      "category": "Blade completa",
+      "system": "Basic Line"
+    },
+    {
+      "value": "Heavens Ring",
+      "category": "Blade completa",
+      "system": "Basic Line Expand"
+    },
+    {
+      "value": "Driger Slash",
+      "category": "Blade completa",
+      "system": "X-Over Project"
+    },
+    {
+      "value": "Dragoon Storm",
+      "category": "Blade completa",
+      "system": "X-Over Project"
+    },
+    {
+      "value": "Draciel Shield",
+      "category": "Blade completa",
+      "system": "X-Over Project"
+    },
+    {
+      "value": "Lightning L-Drago (Upper Type)",
+      "category": "Blade completa",
+      "system": "X-Over Project"
+    },
+    {
+      "value": "Lightning L-Drago (Rapid-Hit Type)",
+      "category": "Blade completa",
+      "system": "X-Over Project"
+    },
+    {
+      "value": "Rock Leone",
+      "category": "Blade completa",
+      "system": "X-Over Project"
+    },
+    {
+      "value": "Victory Valkyrie",
+      "category": "Blade completa",
+      "system": "X-Over Project"
+    },
+    {
+      "value": "Xeno Xcalibur",
+      "category": "Blade completa",
+      "system": "X-Over Project"
+    },
+    {
+      "value": "Storm Spriggan",
+      "category": "Blade completa",
+      "system": "X-Over Project"
+    },
+    {
+      "value": "Storm Pegasis",
+      "category": "Blade completa",
+      "system": "X-Over Project"
+    },
+    {
+      "value": "Trypio",
+      "category": "Blade completa",
+      "system": "X-Over Project"
+    },
+    {
+      "value": "Bite Croc",
+      "category": "Blade completa",
+      "system": "Basic Line — Hasbro debut"
+    },
+    {
+      "value": "Clamp Crab",
+      "category": "Blade completa",
+      "system": "Basic Line — Hasbro debut"
+    },
+    {
+      "value": "Gill Shark",
+      "category": "Blade completa",
+      "system": "Basic Line — Hasbro debut"
+    },
+    {
+      "value": "Gust Bat",
+      "category": "Blade completa",
+      "system": "Basic Line — Hasbro debut"
+    },
+    {
+      "value": "Knife Shinobi",
+      "category": "Blade completa",
+      "system": "Basic Line — Hasbro debut"
+    },
+    {
+      "value": "Ridge Triceratops",
+      "category": "Blade completa",
+      "system": "Basic Line — Hasbro debut"
+    },
+    {
+      "value": "Savage Bear / Bear Scratch",
+      "category": "Blade completa",
+      "system": "Basic Line — Hasbro debut"
+    },
+    {
+      "value": "Tackle Goat",
+      "category": "Blade completa",
+      "system": "Basic Line — Hasbro debut"
+    },
+    {
+      "value": "Talon Ptera / Ptera Swing",
+      "category": "Blade completa",
+      "system": "Basic Line — Hasbro debut"
+    },
+    {
+      "value": "Yell Kong",
+      "category": "Blade completa",
+      "system": "Basic Line — Hasbro debut"
+    },
+    {
+      "value": "Shatter Horus",
+      "category": "Blade completa",
+      "system": "Basic Line — Hasbro debut"
+    },
+    {
+      "value": "Hack Viking",
+      "category": "Blade completa",
+      "system": "Unique Line — Hasbro debut"
+    },
+    {
+      "value": "Hover Wyvern",
+      "category": "Blade completa",
+      "system": "Unique Line — Hasbro debut"
+    },
+    {
+      "value": "Stun Medusa",
+      "category": "Blade completa",
+      "system": "Unique Line — Hasbro debut"
+    },
+    {
+      "value": "Bullet Griffon",
+      "category": "Blade con Ratchet integrato",
+      "system": "Unique Line Expand"
+    },
+    {
+      "value": "Glory Valkyrie",
+      "category": "Blade con Ratchet integrato",
+      "system": "Unique Line Expand"
+    },
+    {
+      "value": "Hells Nether",
+      "category": "Blade con Ratchet integrato",
+      "system": "Unique Line Expand"
+    },
+    {
+      "value": "Cutter Shinobi",
+      "category": "Blade con Ratchet integrato",
+      "system": "Unique Line Expand — Hasbro debut"
+    },
+    {
+      "value": "Rampart Aegis",
+      "category": "Blade con Ratchet integrato",
+      "system": "Unique Line Expand — Hasbro debut"
+    },
+    {
+      "value": "Valor Bison",
+      "category": "Blade con Ratchet integrato",
+      "system": "Unique Line Expand — Hasbro debut"
+    },
+    {
+      "value": "Valkyrie",
+      "category": "Lock Chip",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Dran",
+      "category": "Lock Chip",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Wizard",
+      "category": "Lock Chip",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Perseus",
+      "category": "Lock Chip",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Hells",
+      "category": "Lock Chip",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Rhino",
+      "category": "Lock Chip",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Fox",
+      "category": "Lock Chip",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Pegasus",
+      "category": "Lock Chip",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Cerberus",
+      "category": "Lock Chip",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Sol",
+      "category": "Lock Chip",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Wolf",
+      "category": "Lock Chip",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Emperor",
+      "category": "Lock Chip",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Phoenix",
+      "category": "Lock Chip",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Bahamut",
+      "category": "Lock Chip",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Knight",
+      "category": "Lock Chip",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Ragna",
+      "category": "Lock Chip",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Unicorn",
+      "category": "Lock Chip",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Brachio",
+      "category": "Lock Chip",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Bucks",
+      "category": "Lock Chip",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Kraken",
+      "category": "Lock Chip",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Hornet",
+      "category": "Lock Chip",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Drake",
+      "category": "Lock Chip",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Croc",
+      "category": "Lock Chip",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Enlil",
+      "category": "Lock Chip",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Antler / Antlers",
+      "category": "Main Blade",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Arc",
+      "category": "Main Blade",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Blast",
+      "category": "Main Blade",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Brave",
+      "category": "Main Blade",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Brush",
+      "category": "Main Blade",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Dark",
+      "category": "Main Blade",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Eclipse",
+      "category": "Main Blade",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Fang",
+      "category": "Main Blade",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Flame",
+      "category": "Main Blade",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Flare",
+      "category": "Main Blade",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Fort",
+      "category": "Main Blade",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Hunt",
+      "category": "Main Blade",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Might",
+      "category": "Main Blade",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Reaper",
+      "category": "Main Blade",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Volt",
+      "category": "Main Blade",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Wriggle",
+      "category": "Main Blade",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Assault",
+      "category": "Assist Blade",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Bumper",
+      "category": "Assist Blade",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Charge",
+      "category": "Assist Blade",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Dual",
+      "category": "Assist Blade",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Erase",
+      "category": "Assist Blade",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Free",
+      "category": "Assist Blade",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Gravity",
+      "category": "Assist Blade",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Heavy",
+      "category": "Assist Blade",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Jaggy",
+      "category": "Assist Blade",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Knuckle",
+      "category": "Assist Blade",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Massive",
+      "category": "Assist Blade",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Odd",
+      "category": "Assist Blade",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Quell",
+      "category": "Assist Blade",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Round",
+      "category": "Assist Blade",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Slash",
+      "category": "Assist Blade",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Turn",
+      "category": "Assist Blade",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Vertical",
+      "category": "Assist Blade",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Wheel",
+      "category": "Assist Blade",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Zillion",
+      "category": "Assist Blade",
+      "system": "Custom Line"
+    },
+    {
+      "value": "Blitz",
+      "category": "Metal Blade",
+      "system": "Custom Line Expand"
+    },
+    {
+      "value": "Delta",
+      "category": "Metal Blade",
+      "system": "Custom Line Expand"
+    },
+    {
+      "value": "Fortress",
+      "category": "Metal Blade",
+      "system": "Custom Line Expand"
+    },
+    {
+      "value": "Hurricane",
+      "category": "Metal Blade",
+      "system": "Custom Line Expand"
+    },
+    {
+      "value": "Rage",
+      "category": "Metal Blade",
+      "system": "Custom Line Expand"
+    },
+    {
+      "value": "Tread",
+      "category": "Metal Blade",
+      "system": "Custom Line Expand"
+    },
+    {
+      "value": "Whip",
+      "category": "Metal Blade",
+      "system": "Custom Line Expand"
+    },
+    {
+      "value": "Break",
+      "category": "Over Blade",
+      "system": "Custom Line Expand"
+    },
+    {
+      "value": "Flow",
+      "category": "Over Blade",
+      "system": "Custom Line Expand"
+    },
+    {
+      "value": "Guard",
+      "category": "Over Blade",
+      "system": "Custom Line Expand"
+    },
+    {
+      "value": "I",
+      "category": "Over Blade",
+      "system": "Custom Line Expand"
+    },
+    {
+      "value": "Outer",
+      "category": "Over Blade",
+      "system": "Custom Line Expand"
+    },
+    {
+      "value": "Peak",
+      "category": "Over Blade",
+      "system": "Custom Line Expand"
+    },
+    {
+      "value": "Tough",
+      "category": "Over Blade",
+      "system": "Custom Line Expand"
+    }
+  ]
+}

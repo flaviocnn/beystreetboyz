@@ -1,4 +1,5 @@
 import { sql } from "drizzle-orm";
+import type { Deck } from "../app/lib/decks";
 import { boolean, check, date, integer, jsonb, pgTable, primaryKey, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 
 export const members = pgTable("members", {
@@ -92,3 +93,11 @@ export const tournamentResults = pgTable("tournament_results", {
   basePoints: integer("base_points").notNull(),
   stagePoints: integer("stage_points").notNull(),
 }, table => [primaryKey({ columns: [table.stageSlug, table.sourceKey] }), uniqueIndex("tournament_results_member_stage").on(table.stageSlug, table.memberId)]);
+
+export const stageDecks = pgTable("stage_decks", {
+  stageSlug: text("stage_slug").notNull().references(() => tournamentStages.slug, { onDelete: "cascade" }),
+  memberId: text("member_id").notNull().references(() => members.id, { onDelete: "cascade" }),
+  beys: jsonb("beys").$type<Deck>().notNull(),
+  version: integer("version").notNull().default(1),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+}, table => [primaryKey({ columns: [table.stageSlug, table.memberId] })]);

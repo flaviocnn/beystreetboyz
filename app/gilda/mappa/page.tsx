@@ -8,6 +8,7 @@ import { useDialogFocus } from "../../lib/dialog-focus";
 import { WORLD, START, PLACES, GAMES, canWalk, nearbyPlace, drawGuildWorld, drawRoomDetails, drawMinimap, drawChampion, type PlaceId } from "./guild-world";
 import MirrorPhoto from "./mirror-photo";
 import GuildBoard from "./guild-board";
+import StageArchive from "./stage-archive";
 
 type RankingRow = { id: string; firstName: string; lastName: string | null; challongeUsername: string | null; score: number; rank: number };
 const KEY_DIRECTIONS: Record<string, Direction> = { ArrowUp: "up", w: "up", ArrowDown: "down", s: "down", ArrowLeft: "left", a: "left", ArrowRight: "right", d: "right" };
@@ -76,8 +77,8 @@ function GuildRoom({ onOpen, onNear, onStep, paused, member }: {
     return () => { cancelAnimationFrame(frame); observer.disconnect(); window.removeEventListener("keydown", keydown); window.removeEventListener("keyup", keyup); window.removeEventListener("blur", blur); document.removeEventListener("visibilitychange", blur); };
   }, [onOpen, onNear, onStep, member]);
   return <>
-    <canvas ref={canvasRef} className="guild-canvas" aria-label="Mappa della Gilda: bacheca a nord, classifica a est, specchio a nord-ovest, statua del campione a nord-est e libreria a sud-ovest. Muoviti con le frecce o i pulsanti touch e interagisci vicino agli oggetti." />
-    <div className="guild-map-legend" aria-label="Legenda mappa"><span>S · Specchio</span><span>C · Campione</span><span>L · Libreria</span><span>B · Bacheca</span><span>R · Classifica</span></div>
+    <canvas ref={canvasRef} className="guild-canvas" aria-label="Mappa della Gilda: bacheca a nord, classifica a est, specchio a nord-ovest, statua del campione a nord-est, libreria a sud-ovest e Archivio delle Tappe a sud. Muoviti con le frecce o i pulsanti touch e interagisci vicino agli oggetti." />
+    <div className="guild-map-legend" aria-label="Legenda mappa"><span>S · Specchio</span><span>C · Campione</span><span>L · Libreria</span><span>B · Bacheca</span><span>R · Classifica</span><span>A · Tappe e deck</span></div>
     <div className="guild-dpad" aria-label="Controlli movimento">{(["up", "left", "down", "right"] as Direction[]).map((direction) => <button key={direction} className={`guild-${direction}`} aria-label={`Vai ${DIRECTION_NAMES[direction]}`} disabled={paused}
       onPointerDown={(event) => { if (!pausedRef.current) { event.currentTarget.setPointerCapture(event.pointerId); beginWalk(keysRef.current, playerRef.current, direction); } }}
       onPointerUp={() => keysRef.current.delete(direction)} onPointerCancel={() => keysRef.current.delete(direction)} onLostPointerCapture={() => keysRef.current.delete(direction)}>
@@ -138,12 +139,13 @@ export default function GuildMapPage() {
       </div>
       {opened && selected && <div className="guild-overlay" onMouseDown={close}><section className={`ranking-card guild-object-card guild-object-${opened}`} role="dialog" aria-modal="true" aria-labelledby="guild-object-title" onMouseDown={(event) => event.stopPropagation()}>
         <button className="close-button" onClick={close} aria-label="Chiudi">×</button>
-        <p className="section-kicker">RANKED BEYSTREETBOYZ / {opened === "mirror" ? "IL TUO RITRATTO" : opened === "champion" ? "ALBO D’ORO" : opened === "library" ? "UN ALTRO TURNO" : opened === "ranking" ? "CLASSIFICA" : "BACHECA"}</p>
+        <p className="section-kicker">RANKED BEYSTREETBOYZ / {opened === "mirror" ? "IL TUO RITRATTO" : opened === "champion" ? "ALBO D’ORO" : opened === "library" ? "UN ALTRO TURNO" : opened === "ranking" ? "CLASSIFICA" : opened === "archive" ? "LE TUE TAPPE E I TUOI DECK" : "BACHECA"}</p>
         <h2 id="guild-object-title">{selected.name}</h2>
         {opened === "mirror" && <MirrorPhoto member={member} onClick={playClick} />}
         {opened === "champion" && <div className="champion-memorial"><div className="champion-sprite"><ChampionPortrait /></div><p className="champion-year">CAMPIONE RANKED · 2025</p><h3>GranBurstone</h3><p>Al campione della ranked dell’anno scorso.<br />Il suo nome resta scolpito nella storia della Gilda.</p><blockquote>Un trofeo passa di mano.<br />Una leggenda resta.</blockquote></div>}
         {opened === "library" && <Library onClick={playClick} />}
         {opened === "board" && <GuildBoard member={member} onClick={playClick} />}
+        {opened === "archive" && <StageArchive onClick={playClick} />}
         {opened === "ranking" && <><p className="ranking-note">Le prestazioni dei membri, tappa dopo tappa. A pari punti contano vittorie di tappa e migliori prestazioni.</p>{error ? <p className="form-error" role="alert">{error}</p> : <div className="ranking-list">{ranking.map(row => <div className={`ranking-row ${row.id === member.id ? "is-you" : ""}`} key={row.id}><span>{String(row.rank).padStart(2, "0")}</span><strong>{memberDisplayName(row)}{row.id === member.id ? " · TU" : ""}</strong><b>{row.score} PT</b></div>)}</div>}</>}
       </section></div>}
     </>}

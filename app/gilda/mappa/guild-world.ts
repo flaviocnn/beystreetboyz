@@ -1,6 +1,6 @@
 import { drawPixelPlayer, type Avatar } from "../../lib/pixel-player";
 
-export type PlaceId = "board" | "ranking" | "mirror" | "champion" | "library";
+export type PlaceId = "board" | "ranking" | "mirror" | "champion" | "library" | "archive";
 export const WORLD = { width: 1450, height: 1080 };
 export const START = { x: 725, y: 700 };
 export const PLACES: { id: PlaceId; name: string; x: number; y: number; symbol: string }[] = [
@@ -9,6 +9,7 @@ export const PLACES: { id: PlaceId; name: string; x: number; y: number; symbol: 
   { id: "mirror", name: "Specchio dei blader", x: 310, y: 535, symbol: "S" },
   { id: "champion", name: "Statua di GranBurstone", x: 1120, y: 535, symbol: "C" },
   { id: "library", name: "Libreria dei giochi", x: 360, y: 875, symbol: "L" },
+  { id: "archive", name: "Archivio delle Tappe", x: 725, y: 895, symbol: "A" },
 ];
 const SOLIDS = [
   { x: 588, y: 305, w: 274, h: 151 },
@@ -19,6 +20,7 @@ const SOLIDS = [
   { x: 987, y: 740, w: 190, h: 95 },
   { x: 92, y: 586, w: 52, h: 70 },
   { x: 1306, y: 586, w: 52, h: 70 },
+  { x: 610, y: 755, w: 230, h: 88 },
 ];
 export function canWalk(x: number, y: number) {
   return x >= 36 && x <= WORLD.width - 36 && y >= 225 && y <= WORLD.height - 40
@@ -138,9 +140,16 @@ export function drawGuildWorld(ctx: CanvasRenderingContext2D) {
   rect(ctx, "#edf0de", 1118, 771, 18, 18); rect(ctx, "#33432f", 1123, 776, 4, 4); rect(ctx, "#33432f", 1128, 781, 4, 4);
   rect(ctx, "#617251", 1020, 851, 38, 25); rect(ctx, "#617251", 1110, 851, 38, 25);
   label(ctx, "UN ALTRO TURNO?", 1082, 906, "#52664b", 12);
+  // A personal tournament ledger with three Beyblade display slots.
+  rect(ctx, "#283a2e", 610, 755, 230, 88); rect(ctx, "#8d9e78", 618, 763, 214, 72);
+  rect(ctx, "#dce5c5", 628, 770, 88, 52); rect(ctx, "#f0ecd2", 632, 774, 38, 44);
+  rect(ctx, "#e2d9ae", 674, 774, 38, 44); rect(ctx, "#4c6046", 669, 774, 5, 44);
+  for (let i = 0; i < 4; i++) { rect(ctx, "#7b8f6b", 638, 781 + i * 9, 26, 3); rect(ctx, "#7b8f6b", 680, 781 + i * 9, 25, 3); }
+  for (let i = 0; i < 3; i++) { const x = 733 + i * 30; rect(ctx, "#354b38", x, 788, 24, 24); rect(ctx, ["#b8ced2", "#d6bd7d", "#c19a8c"][i], x + 3, 791, 18, 18); rect(ctx, "#f1ecd5", x + 9, 797, 6, 6); }
+  label(ctx, "ARCHIVIO DELLE TAPPE", 725, 744, "#edf1df", 14);
   label(ctx, "← SPECCHIO     CAMPIONE →", 725, 677, "#e8efdc", 12);
   label(ctx, "CLASSIFICA →", 876, 713, "#e8efdc", 11);
-  label(ctx, "↖ LIBRERIA", 725, 972, "#e8efdc", 12);
+  label(ctx, "↖ LIBRERIA · ARCHIVIO ↑", 725, 990, "#e8efdc", 12);
 }
 export function drawRoomDetails(ctx: CanvasRenderingContext2D, near: PlaceId | null, now: number, avatar: Avatar) {
   // A live reflection of the member's saved avatar.
