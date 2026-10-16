@@ -143,7 +143,6 @@ export function drawPortrait(canvas: HTMLCanvasElement, avatar: Avatar, name: st
 
 export default function MirrorPhoto({ member, onClick, championState }: { member: PlayerMember; onClick: () => void; championState: ChampionState }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [name, setName] = useState(memberDisplayName(member));
   const [background, setBackground] = useState(0), [pose, setPose] = useState(0);
   const [mottoId, setMottoId] = useState("guild-seal");
   const [photo, setPhoto] = useState<{ url: string; blob: Blob; width: number; height: number; throneStage: string | null } | null>(null);
@@ -171,7 +170,7 @@ export default function MirrorPhoto({ member, onClick, championState }: { member
     return () => { controller.abort(); window.clearInterval(interval); };
   }, [member.id]);
   const throne = throneSelected && championState.canUseThrone && championState.champion?.memberId === member.id;
-  const portraitName = throne ? championState.champion!.displayName : name;
+  const portraitName = memberDisplayName(member);
   const achievement = useMemo(() => throne && championState.champion
     ? { name: championState.champion.stage.name, finalRank: 1, deck: championState.champion.deck }
     : stages.find(stage => stage.slug === stageSlug) ?? null, [throne, championState.champion, stages, stageSlug]);
@@ -238,13 +237,8 @@ export default function MirrorPhoto({ member, onClick, championState }: { member
   return <div className="mirror-workshop">
     <div className="mirror-photo-preview"><canvas ref={canvasRef} hidden />{photo && <img src={photo.url} width={photo.width} height={photo.height} alt={`Ritratto pixel art di ${portraitName || "un membro"}${throne ? ", campione in carica incoronato sul trono" : ""}, con il brand Ranked BeyStreetBoyz${achievement ? `, ${achievement.name}, ${achievement.finalRank}° posto${achievement.deck ? ", con deck registrato" : ""}` : ""}`} />}</div>
     <div className="mirror-photo-options"><p>Uno specchio, il tuo avatar, il tuo sigillo. Crea una cartolina da portare con te.</p>
-      <fieldset><legend>RITRATTO DEL CAMPIONE</legend>
-        {championState.canUseThrone && championState.champion?.memberId === member.id ? <label className="mirror-throne-choice"><input type="checkbox" checked={throne} onChange={event => { setThroneSelected(event.target.checked); setThroneNotice(""); onClick(); }} /> Sul trono · Campione di {championState.champion.stage.name}</label>
-          : <p>{championState.loading ? "Verifico il campione in carica…" : "Il ritratto sul trono è riservato al vincitore in carica, fino ai risultati della tappa successiva."}</p>}
-        {throne && <p>Ritratto esclusivo: avatar incoronato, username ufficiale, tappa vinta e deck, se registrato. Il titolo viene riverificato prima dell’esportazione.</p>}
-        {throneNotice && <p role="status">{throneNotice}</p>}
-      </fieldset>
-      <label className="mirror-name">NOME SULLA FOTO<input value={portraitName} disabled={throne} maxLength={80} onChange={(e) => setName(e.target.value)} placeholder="Il tuo nome o nickname" /></label>
+      {championState.canUseThrone && championState.champion?.memberId === member.id && <label className="mirror-throne-choice"><input type="checkbox" checked={throne} onChange={event => { setThroneSelected(event.target.checked); setThroneNotice(""); onClick(); }} /> Sul trono · Campione di {championState.champion.stage.name}</label>}
+      {throneNotice && <p role="status">{throneNotice}</p>}
       <label className="mirror-name">FRASE SULLA FOTO<select value={effectiveMotto} onChange={event => { setMottoId(event.target.value); onClick(); }}>
         <option value="">Nessuna · nascondi la scritta</option>
         {MIRROR_MOTTOS.map(motto => <option key={motto.id} value={motto.id}>{motto.text}</option>)}

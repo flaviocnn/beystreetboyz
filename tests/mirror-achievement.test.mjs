@@ -1,10 +1,19 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { memberDisplayName } from '../app/lib/member-name.ts';
 import {achievementCaption,topEightStages,wrapPortraitText} from '../app/lib/mirror-achievement.ts';
 import { MIRROR_MOTTOS, mirrorMotto } from '../app/lib/mirror-mottos.ts';
 const measure=(text,size)=>Array.from(text).length*size*.61;
 const part=value=>({value,custom:false});
 const bey={blades:[part('Delta'),part('Unicorn'),part('Heavy')],ratchet:part('9-60'),bit:part('Free Ball')};
+test('portrait name follows the member Challonge username and cannot be edited',()=>{
+  assert.equal(memberDisplayName({challongeUsername:' GranBurstone ',firstName:'Flavio'}),'GranBurstone');
+  const source=readFileSync(new URL('../app/gilda/mappa/mirror-photo.tsx',import.meta.url),'utf8');
+  assert.match(source,/const portraitName = memberDisplayName\(member\);/);
+  assert.doesNotMatch(source,/NOME SULLA FOTO|setName|RITRATTO DEL CAMPIONE|Il ritratto sul trono è riservato/);
+  assert.match(source,/championState\.canUseThrone && championState\.champion\?\.memberId === member\.id && <label/);
+});
 test('mirror offers only numeric top-eight placements, not arbitrary eligible flags',()=>{
   const stages=[{name:'Win',finalRank:1},{name:'Eighth',finalRank:8},{finalRank:9,eligible:true},{finalRank:null,eligible:true}];
   assert.deepEqual(topEightStages(stages).map(s=>s.name),['Win','Eighth']);
