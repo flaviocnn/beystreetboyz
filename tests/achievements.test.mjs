@@ -21,7 +21,7 @@ test('all 52 bit types match the Excel categories; full attack ignores blade typ
   assert.equal(isFullAttackDeck(deck().slice(0,2)),false);
 });
 test('ten deterministic achievements use final results, one stage each, and calendar-year seasons',()=>{
-  assert.equal(ACHIEVEMENTS.length,10);assert.equal(new Set(ACHIEVEMENTS.map(a=>a.id)).size,10);
+  assert.equal(ACHIEVEMENTS.length,11);assert.equal(new Set(ACHIEVEMENTS.map(a=>a.id)).size,11);
   let result=evaluateAchievements(facts([]));assert.deepEqual(result.filter(a=>a.qualified).map(a=>a.id),['welcome']);
   const rows=[stage('a',1,'2026-10-01',deck()),stage('b',2),stage('c',3),stage('c',3)];
   result=evaluateAchievements({...facts(rows),hasMessage:true,avatarChanged:true});

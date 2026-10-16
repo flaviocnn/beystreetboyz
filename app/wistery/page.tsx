@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
-import { getGameSession } from "../lib/game-data";
+import { getGameSession, getGameData } from "../lib/game-data";
+import { isDemonicStyle, unlockedAvatarStyle } from "../lib/avatar-unlocks";
 import { memberDisplayName } from "../lib/member-name";
 import { useEffect, useRef, useState } from "react";
 import { AVATAR_COLORS, AVATAR_STYLES, BASE_STYLE_COUNT, drawPixelPlayer, type Direction } from "../lib/pixel-player";
@@ -32,12 +33,18 @@ export default function Wistery() {
   const [loading, setLoading] = useState(true);
   const [style, setStyle] = useState(0), [color, setColor] = useState(0);
   const [direction, setDirection] = useState<Direction>("down");
+  const [demonUnlocked, setDemonUnlocked] = useState(false);
   const variantOffset = style >= BASE_STYLE_COUNT ? BASE_STYLE_COUNT : 0;
   const [busy, setBusy] = useState(false), [error, setError] = useState(""), [saved, setSaved] = useState(false);
   const { enabled, toggle, playClick } = useGameAudio("wistery");
   useEffect(() => {
-    void getGameSession().then(({ member: current }) => {
-      setMember(current); if (current) { setStyle(current.avatarStyle); setColor(current.avatarColor); }
+    void getGameSession().then(async ({ member: current }) => {
+      setMember(current);
+      if (current && !current.mustChangePassword) {
+        setStyle(unlockedAvatarStyle(current.avatarStyle, false)); setColor(current.avatarColor);
+        const access = await getGameData<{ demonUnlocked: boolean }>("/api/member/avatar", current.id);
+        setDemonUnlocked(access.demonUnlocked); setStyle(unlockedAvatarStyle(current.avatarStyle, access.demonUnlocked)); setColor(current.avatarColor);
+      }
     }).catch((cause) => setError(cause.message)).finally(() => setLoading(false));
   }, []);
   async function save() {
@@ -52,8 +59,8 @@ export default function Wistery() {
       <section className="avatar-preview-panel"><span className="section-kicker">IL TUO ALTER EGO</span><div className="avatar-stage"><Preview style={style} color={color} large direction={direction} /></div><h2>{AVATAR_STYLES[style]}</h2><p>{AVATAR_COLORS[color].name} · {memberDisplayName(member)}</p><div className="avatar-directions" aria-label="Ruota anteprima">{(["left", "up", "down", "right"] as Direction[]).map((d) => <button key={d} aria-pressed={direction === d} aria-label={`Vista ${d}`} onClick={() => setDirection(d)}>{d === "left" ? "←" : d === "up" ? "↑" : d === "down" ? "↓" : "→"}</button>)}</div></section>
       <section className="avatar-options"><h2>01 / Scegli la tua forma</h2>
         <div className="avatar-variants" role="group" aria-label="Variante della skin">{["Classica", "Femminile"].map((label, index) => <button key={label} aria-pressed={variantOffset === index * BASE_STYLE_COUNT} onClick={() => { setStyle(style % BASE_STYLE_COUNT + index * BASE_STYLE_COUNT); setSaved(false); playClick(); }}>{label}</button>)}</div>
-        <div className="avatar-style-grid">{AVATAR_STYLES.slice(variantOffset, variantOffset + BASE_STYLE_COUNT).map((name, index) => { const i = variantOffset + index; return <button key={i} aria-pressed={style === i} onClick={() => { setStyle(i); setSaved(false); playClick(); }}><Preview style={i} color={color} /><span>{name}</span></button>; })}</div>
-        <h2>02 / Accendi il tuo colore</h2><div className="avatar-colors">{AVATAR_COLORS.map((c, i) => <button key={c.name} style={{ "--swatch": c.hex } as React.CSSProperties} aria-label={c.name} aria-pressed={color === i} onClick={() => { setColor(i); setSaved(false); playClick(); }}><span>{color === i ? "✓" : ""}</span><small>{c.name}</small></button>)}</div><p className="avatar-save-note">Il tuo avatar ti seguirà nella città e dentro la Gilda, anche quando accedi da un altro dispositivo.</p><button className="solid-button" onClick={save} disabled={busy}>{busy ? "SALVATAGGIO…" : "SALVA IL MIO AVATAR →"}</button>{saved && <p className="success-message" role="status">Avatar salvato. Il tuo nuovo volto ti aspetta sulla mappa.</p>}<a className="outline-button" href="/">TORNA ALLA CITTÀ ↗</a></section>
+        <div className="avatar-style-grid">{AVATAR_STYLES.slice(variantOffset, variantOffset + BASE_STYLE_COUNT).map((name, index) => { const i = variantOffset + index, locked = isDemonicStyle(i) && !demonUnlocked; return <button key={i} disabled={locked} aria-pressed={style === i} onClick={() => { setStyle(i); setSaved(false); playClick(); }}><Preview style={i} color={color} /><span>{name}</span>{locked && <small>🔒 Sconfiggi il Demone!</small>}</button>; })}</div>
+        <h2>02 / Accendi il tuo colore</h2><div className="avatar-colors">{AVATAR_COLORS.map((c, i) => <button key={c.name} style={{ "--swatch": c.hex } as React.CSSProperties} aria-label={c.name} aria-pressed={color === i} onClick={() => { setColor(i); setSaved(false); playClick(); }}><span>{color === i ? "✓" : ""}</span><small>{c.name}</small></button>)}</div><p className="avatar-save-note">Il tuo avatar ti seguirà nella città e dentro la Gilda, anche quando accedi da un altro dispositivo.</p><button className="solid-button" onClick={save} disabled={busy}>{busy ? "SALVATAGGIO…" : "SALVA IL MIO AVATAR →"}</button>{saved && <p className="success-message" role="status">Avatar salvato. Il tuo nuovo volto ti aspetta sulla mappa.</p>}<Link className="outline-button" href="/">TORNA ALLA CITTÀ ↗</Link></section>
     </div>}{error && <p className="form-error" role="alert">{error}</p>}
   </div></main>;
 }

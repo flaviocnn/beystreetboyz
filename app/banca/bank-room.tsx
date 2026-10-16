@@ -4,6 +4,7 @@ import { drawBankRoom } from "../lib/bank-art";
 import type { Avatar, Direction } from "../lib/pixel-player";
 import { useWorldWeather, WorldWeatherBadge } from "../components/world-weather";
 import { createAtmospherePaint, drawWorldAtmosphere } from "../lib/world-atmosphere";
+import { WorldDpad } from "../components/world-controls";
 
 export type BankDesk = "ratilde" | "ledger" | "rodi";
 const desks = [{ id: "ratilde", x: 240, name: "RATILDE" }, { id: "ledger", x: 500, name: "REGISTRO INTROITI" }, { id: "rodi", x: 760, name: "MASTRO RODI" }] as const;
@@ -57,7 +58,8 @@ export default function BankRoom({ avatar = defaultAvatar, paused, onOpen, onSte
     <canvas ref={canvas} width={1000} height={540} aria-label="Sala della banca: tre contabili con orecchie, baffi e muso da ratto lavorano ai banconi davanti al caveau. Muoviti con frecce o WASD. Avvicinati a un banco e premi Invio, oppure usa i pulsanti sotto." />
     <div className="bank-room-controls"><div className="bank-dpad" aria-label="Muovi il tuo avatar">{(["left", "up", "down", "right"] as Direction[]).map(dir => <button key={dir} disabled={paused} aria-label={`Vai ${dir === "left" ? "a sinistra" : dir === "right" ? "a destra" : dir === "up" ? "su" : "giù"}`}
       onPointerDown={event => { event.currentTarget.setPointerCapture(event.pointerId); step(dir, 8); keys.current.add(dir); }} onPointerUp={() => keys.current.delete(dir)} onPointerCancel={() => keys.current.delete(dir)} onLostPointerCapture={() => keys.current.delete(dir)} onClick={event => { if (event.detail === 0) step(dir, 8); }}>{dir === "up" ? "↑" : dir === "down" ? "↓" : dir === "left" ? "←" : "→"}</button>)}</div>
-      <p>Frecce / WASD per camminare · Invio vicino ai banconi</p>
+      <WorldDpad paused={paused} onDirection={(dir, active) => { if (active && !pausedRef.current) { if (!keys.current.has(dir)) step(dir, 8); keys.current.add(dir); } else keys.current.delete(dir); }} />
+      <p>Joystick o frecce per camminare · Avvicinati ai banconi per parlare</p>
       {nearby && <button className="solid-button" disabled={paused} onClick={() => onOpen(nearby)}>PARLA / {desks.find(desk => desk.id === nearby)?.name} ↵</button>}
     </div>
   </div>;

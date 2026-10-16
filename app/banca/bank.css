@@ -44,3 +44,8 @@
   .bank-totals strong { font-size: 30px; }
   .bank-event-list button { padding: 12px; gap: 8px; }
 }
+@media(pointer:coarse),(max-width:760px),(max-height:500px) {
+  .bank-dpad { display:none; }
+  .bank-room-controls .world-touch-controls { position:static; }
+  .bank-room-controls p { font-size:14px; line-height:1.6; }
+}

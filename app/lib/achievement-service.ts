@@ -18,13 +18,15 @@ async function reconcile(tx: Tx, memberId: string): Promise<AchievementAlbum> {
   }).from(tournamentResults).innerJoin(tournamentStages, eq(tournamentStages.slug, tournamentResults.stageSlug))
     .leftJoin(stageDecks, and(eq(stageDecks.stageSlug, tournamentResults.stageSlug), eq(stageDecks.memberId, tournamentResults.memberId)))
     .where(eq(tournamentResults.memberId, memberId));
-  const progress = evaluateAchievements({ loggedIn: activities.some(a => a.kind === "login"), avatarChanged: activities.some(a => a.kind === "avatar"), hasMessage: messages.length > 0, stages });
   const earned = await tx.select().from(memberAchievements).where(eq(memberAchievements.memberId, memberId));
+  const progress = evaluateAchievements({ loggedIn: activities.some(a => a.kind === "login"), avatarChanged: activities.some(a => a.kind === "avatar"), hasMessage: messages.length > 0, stages,
+    manualAchievements: earned.filter(a => a.achievementId === "demon-slayer" && a.active).map(a => a.achievementId) });
   const newlyUnlocked: AchievementId[] = [], now = new Date();
   const achievements = [];
   let coinDelta = 0;
   for (const entry of progress) {
     const existing = earned.find(a => a.achievementId === entry.id);
+    if (entry.id === "demon-slayer") entry.evidence = existing?.evidence ?? {};
     if (entry.qualified && !existing?.active) {
       newlyUnlocked.push(entry.id);
       await tx.insert(memberAchievements).values({ memberId, achievementId: entry.id, earnedAt: now, active: true, evidence: entry.evidence })
@@ -46,7 +48,8 @@ async function reconcile(tx: Tx, memberId: string): Promise<AchievementAlbum> {
         .where(and(eq(memberAchievements.memberId, memberId), eq(memberAchievements.achievementId, entry.id)));
       coinDelta += amount;
     }
-    achievements.push({ ...entry, earnedAt: entry.qualified ? (existing?.earnedAt ?? now).toISOString() : null, coinReward });
+    achievements.push({ ...entry, evidence: entry.id === "demon-slayer" ? existing?.evidence ?? {} : entry.evidence,
+      earnedAt: entry.qualified ? (existing?.earnedAt ?? now).toISOString() : null, coinReward });
   }
   const activeIds = new Set(achievements.filter(a => a.qualified).map(a => a.id));
   const [profile] = await tx.select().from(achievementProfiles).where(eq(achievementProfiles.memberId, memberId));
@@ -84,6 +87,7 @@ export async function publicAchievementShowcases() {
     loggedIn: sql<boolean>`EXISTS(SELECT 1 FROM member_achievement_activity a WHERE a.member_id = member_achievement_profiles.member_id AND a.kind = 'login')`,
     avatarChanged: sql<boolean>`EXISTS(SELECT 1 FROM member_achievement_activity a WHERE a.member_id = member_achievement_profiles.member_id AND a.kind = 'avatar')`,
     hasMessage: sql<boolean>`EXISTS(SELECT 1 FROM guild_messages m WHERE m.member_id = member_achievement_profiles.member_id)`,
+    demonSlayer: sql<boolean>`EXISTS(SELECT 1 FROM member_achievements a WHERE a.member_id = member_achievement_profiles.member_id AND a.achievement_id = 'demon-slayer' AND a.active)`,
     stages: sql<AchievementStage[]>`coalesce((SELECT jsonb_agg(jsonb_build_object(
       'slug', s.slug, 'name', s.name, 'eventDate', s.event_date,
       'finalRank', r.final_rank, 'deck', d.beys, 'version', d.version))
@@ -95,6 +99,7 @@ export async function publicAchievementShowcases() {
   for (const profile of profiles) {
     const owned = new Set(evaluateAchievements({
       loggedIn: profile.loggedIn, avatarChanged: profile.avatarChanged, hasMessage: profile.hasMessage, stages: profile.stages,
+      manualAchievements: profile.demonSlayer ? ["demon-slayer"] : [],
     }).filter(a => a.qualified).map(a => a.id));
     result.set(profile.memberId, { badgeIds: profile.showcase.filter(id => owned.has(id)), title: profile.titleId && owned.has(profile.titleId) ? achievementTitle(profile.titleId) : null });
   }

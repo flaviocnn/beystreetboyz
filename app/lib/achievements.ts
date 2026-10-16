@@ -11,15 +11,16 @@ export const ACHIEVEMENTS = [
   { id: "podiums", name: "Abituato al podio", icon: "▥", category: "Campionato", target: 3, rule: "Ottieni tre piazzamenti nei primi tre in tappe distinte della stessa stagione (anno solare).", reward: "Cornice “Bronzo vivo” per lo specchio.", frame: "bronze" },
   { id: "winner", name: "Sul gradino più alto", icon: "♜", category: "Campionato", target: 1, rule: "Vinci una tappa ufficiale. Il distintivo rimane anche quando il trono cambia campione.", reward: "Titolo “Vincitore di tappa”.", title: "Vincitore di tappa" },
   { id: "attack", name: "Nessuna difesa", icon: "✷", category: "Deck", target: 3, rule: "Vinci una tappa con tre bit Attacco e registra il tuo deck.", reward: "Cornice “Scintille” e motto “Tre Bey. Una sola direzione.”", frame: "sparks" },
+  { id: "demon-slayer", name: "Sconfiggi il Demone!", icon: "♆", category: "Speciali", target: 1, rule: "Sconfiggi il Demone e ricevi il riconoscimento della Gilda.", reward: "Skin Demoniaco e Demoniaca.", manual: true },
 ] as const;
 export type AchievementId = typeof ACHIEVEMENTS[number]["id"];
 export const BEYCOIN_REWARDS: Record<AchievementId, number> = {
   welcome: 10, identity: 15, voice: 15, "first-stage": 25, regular: 40,
-  "top-eight": 50, deck: 30, podiums: 100, winner: 150, attack: 200,
+  "top-eight": 50, deck: 30, podiums: 100, winner: 150, attack: 200, "demon-slayer": 50,
 };
 export type AchievementStage = { slug: string; name: string; eventDate: string; finalRank: number | null; deck: unknown; version: number | null };
-export type AchievementFacts = { loggedIn: boolean; avatarChanged: boolean; hasMessage: boolean; stages: AchievementStage[] };
-export type AchievementEvidence = { stageSlug?: string; stageName?: string; eventDate?: string; season?: string; deckVersion?: number; bits?: string[] };
+export type AchievementFacts = { loggedIn: boolean; avatarChanged: boolean; hasMessage: boolean; stages: AchievementStage[]; manualAchievements?: AchievementId[] };
+export type AchievementEvidence = { stageSlug?: string; stageName?: string; eventDate?: string; season?: string; deckVersion?: number; bits?: string[]; manual?: boolean; grantedBy?: string };
 export type AchievementProgress = { id: AchievementId; progress: number; target: number; qualified: boolean; evidence: AchievementEvidence };
 export type PersonalAchievement = AchievementProgress & { earnedAt: string | null; coinReward: number };
 export type BeycoinMovement = { id: string; achievementId: AchievementId | null; amount: number; reason: string; createdAt: string };
@@ -55,6 +56,7 @@ export function evaluateAchievements(facts: AchievementFacts): AchievementProgre
     "first-stage": Math.min(1, stages.length), regular: regularCount,
     "top-eight": Number(!!sources["top-eight"]), deck: Number(!!deckStage), podiums: podiumCount,
     winner: Number(winners.length > 0), attack: attackProgressStage ? attackBitCount(attackProgressStage.deck) : 0,
+    "demon-slayer": Number(facts.manualAchievements?.includes("demon-slayer") ?? false),
   };
   return ACHIEVEMENTS.map(definition => {
     const stage = sources[definition.id], evidence: AchievementEvidence = {};

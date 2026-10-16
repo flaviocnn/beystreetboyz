@@ -444,6 +444,9 @@ button:disabled { cursor: wait; opacity: .55; }
 .avatar-style-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; }
 .avatar-style-grid button { display: grid; justify-items: center; align-content: start; padding: 8px 3px 12px; color: #c6d1ee; border: 2px solid #495979; background: #262f48; cursor: pointer; min-width: 0; }
 .avatar-style-grid button[aria-pressed="true"] { border-color: #adcbff; background: #364e78; box-shadow: 0 0 0 2px #adcbff; color: white; }
+.avatar-style-grid button:disabled { cursor: not-allowed; border-style: dashed; }
+.avatar-style-grid button:disabled canvas { opacity: .45; filter: grayscale(1); }
+.avatar-style-grid button small { margin-top: 8px; padding-inline: 5px; font: 12px/1.5 var(--font-geist-sans), sans-serif; color: #e0d2f7; }
 .avatar-style-grid canvas { width: 100%; max-width: 96px; height: auto; image-rendering: pixelated; }
 .avatar-style-grid span { font-size: 9px; overflow-wrap: anywhere; }
 .avatar-colors { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
