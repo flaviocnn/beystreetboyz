@@ -49,6 +49,12 @@ Per fermare PostgreSQL senza cancellare i dati:
 docker compose --env-file .env.local stop
 ```
 
+Con `npm run dev`, il pulsante **TEST LOCALE** in basso a destra permette di
+impersonare qualsiasi membro della copia locale senza password. Le azioni
+restano nel PostgreSQL locale; in sviluppo le connessioni database remote sono
+bloccate. La funzione è disabilitata in produzione.
+Istruzioni e garanzie: [test locali](docs/local-testing.md).
+
 ## Deploy
 
 1. Crea un progetto Supabase dedicato e vuoto. Da **Connect** copia le stringhe

@@ -1,5 +1,7 @@
+import { localDevelopmentRequest } from "./local-development";
+
 type Role = "staff" | "member";
-type Session = { role: Role; id: string; expires: number; version: number; method: "password" | "challonge" };
+type Session = { role: Role; id: string; expires: number; version: number; method: "password" | "challonge" | "local" };
 const encoder = new TextEncoder();
 
 function secret(name: "STAFF_PASSPHRASE" | "SESSION_SECRET") {
@@ -32,8 +34,9 @@ async function sign(data: string) {
   return bytesToHex(new Uint8Array(await crypto.subtle.sign("HMAC", key, encoder.encode(data))));
 }
 
-export async function sessionCookie(role: Role, id: string, request: Request, version = 0, method: "password" | "challonge" = "password") {
-  const expires = Date.now() + (role === "staff" ? 8 * 60 * 60 * 1000 : 30 * 24 * 60 * 60 * 1000);
+export async function sessionCookie(role: Role, id: string, request: Request, version = 0, method: Session["method"] = "password") {
+  if (method === "local" && (role !== "member" || !localDevelopmentRequest(request))) throw new Error("Impersonificazione disponibile solo in sviluppo locale.");
+  const expires = Date.now() + (method === "local" ? 60 * 60 * 1000 : role === "staff" ? 8 * 60 * 60 * 1000 : 30 * 24 * 60 * 60 * 1000);
   const payload = `${role}.${id}.${expires}.${version}.${method}`;
   const value = `${payload}.${await sign(payload)}`;
   const maxAge = Math.floor((expires - Date.now()) / 1000);
@@ -55,7 +58,8 @@ export async function getSession(request: Request): Promise<Session | null> {
   const signature = parts[parts.length - 1];
   const version = parts.length >= 5 ? Number(parts[3]) : 0;
   const method = parts.length === 6 ? parts[4] : "password";
-  if (method !== "password" && method !== "challonge") return null;
+  if (method !== "password" && method !== "challonge" && method !== "local") return null;
+  if (method === "local" && (role !== "member" || !localDevelopmentRequest(request))) return null;
   const expires = Number(expiryText);
   if ((role !== "staff" && role !== "member") || !id || !Number.isFinite(expires) || expires < Date.now()) return null;
   if (!Number.isSafeInteger(version) || !equal(signature, await sign(parts.slice(0, -1).join(".")))) return null;

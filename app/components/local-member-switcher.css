@@ -1,0 +1,12 @@
+.local-switcher { position: fixed; right: 12px; bottom: max(12px, env(safe-area-inset-bottom)); z-index: 10000; width: min(350px, calc(100vw - 24px)); font: 14px/1.45 Arial, sans-serif; color: #1d2d26; text-align: left; }
+.local-switcher-toggle, .local-switcher-panel button { min-height: 44px; border: 2px solid #263a30; border-radius: 8px; padding: 9px 12px; cursor: pointer; font: inherit; font-weight: 700; background: #f2cf65; color: #1d2d26; }
+.local-switcher-toggle { display: block; max-width: 100%; margin-left: auto; overflow-wrap: anywhere; box-shadow: 0 3px 12px #0004; }
+.local-switcher-panel { background: #fff9e9; border: 2px solid #263a30; border-radius: 12px; box-shadow: 0 5px 30px #0005; padding: 16px; margin-bottom: 8px; max-height: min(650px, calc(100dvh - 100px)); overflow: auto; }
+.local-switcher-panel h2 { font: 700 19px/1.3 Arial, sans-serif; margin: 0 0 8px; }
+.local-switcher-panel p { margin: 8px 0 12px; }
+.local-switcher-panel form { display: grid; gap: 9px; }
+.local-switcher-panel label { font-weight: 700; }
+.local-switcher-panel input, .local-switcher-panel select { width: 100%; min-width: 0; min-height: 44px; border: 1px solid #536b5e; border-radius: 5px; padding: 8px; background: white; color: #1d2d26; font: inherit; }
+.local-switcher-panel small { font-size: 12px; }
+.local-switcher button:disabled { opacity: .6; cursor: wait; }
+.local-switcher :focus-visible { outline: 3px solid #126eb0; outline-offset: 3px; }

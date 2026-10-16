@@ -3,7 +3,11 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 import ts from "typescript";
 async function load(path) {
-  const source = await readFile(new URL(path, import.meta.url), "utf8");
+  let source = await readFile(new URL(path, import.meta.url), "utf8");
+  if (source.includes('"./local-development"')) {
+    const local = ts.transpileModule(await readFile(new URL('../app/lib/local-development.ts', import.meta.url), 'utf8'), { compilerOptions: { module: ts.ModuleKind.ESNext } }).outputText;
+    source = source.replace('"./local-development"', JSON.stringify(`data:text/javascript;base64,${Buffer.from(local).toString('base64')}`));
+  }
   const js = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText;
   return import(`data:text/javascript;base64,${Buffer.from(js).toString("base64")}`);
 }

@@ -2,6 +2,7 @@ import "server-only";
 import postgres from "postgres";
 import { drizzle } from "drizzle-orm/postgres-js";
 import * as schema from "./schema";
+import { assertDevelopmentDatabaseIsLocal } from "../app/lib/local-development";
 
 const globalDb = globalThis as unknown as { torinoDb?: ReturnType<typeof createDb> };
 function createDb() {
@@ -12,6 +13,7 @@ function createDb() {
   return drizzle(client, { schema });
 }
 export function getDb() {
+  assertDevelopmentDatabaseIsLocal();
   globalDb.torinoDb ??= createDb();
   return globalDb.torinoDb;
 }

@@ -21,7 +21,8 @@ export async function currentMember(request: Request) {
   if (!member || member.authVersion !== session.version) return null;
   // A temporary local password must still be changed when used for password login.
   // OAuth already proves possession of the member's Challonge account.
-  return session.method === "challonge" ? { ...member, mustChangePassword: false } : member;
+  // Local impersonation only bypasses this view flag, never the stored password.
+  return session.method === "challonge" || session.method === "local" ? { ...member, mustChangePassword: false } : member;
 }
 export function memberView(member: typeof members.$inferSelect) {
   const { id, firstName, lastName, email, challongeUsername, mustChangePassword, avatarStyle, avatarColor } = member;
