@@ -26,11 +26,12 @@ export function deckBeyText(bey: Deck[number]) {
 export function achievementCaption(stage: MirrorAchievement | null, measure: (text: string, size: number) => number) {
   const rank = stage?.finalRank;
   if (!stage || typeof rank !== "number" || !Number.isInteger(rank) || rank < 1 || rank > 8) return null;
-  const lines: { text: string; size: number; y: number; accent: boolean }[] = [];
+  const lines: { text: string; size: number; y: number; accent: boolean; deckEntry: boolean; bullet: boolean }[] = [];
   let y = 22;
-  function add(value: string, size: number, accent = false) {
-    for (const text of wrapPortraitText(value, text => measure(text, size), 284)) {
-      lines.push({ text, size, y, accent }); y += size + 5;
+  function add(value: string, size: number, accent = false, deckEntry = false) {
+    const wrapped = wrapPortraitText(value, text => measure(text, size), deckEntry ? 262 : 284);
+    for (const [index, text] of wrapped.entries()) {
+      lines.push({ text, size, y, accent, deckEntry, bullet: deckEntry && index === 0 }); y += size + 5;
     }
     y += 6;
   }
@@ -38,7 +39,7 @@ export function achievementCaption(stage: MirrorAchievement | null, measure: (te
   add(stage.name, 14);
   if (stage.deck) {
     add("IL DECK DELLA TAPPA", 10, true);
-    stage.deck.forEach((bey, index) => add(`BEY ${index + 1}: ${deckBeyText(bey)}`, 12));
+    stage.deck.forEach(bey => add(deckBeyText(bey), 12, false, true));
   }
   return { lines, height: y + 6 };
 }

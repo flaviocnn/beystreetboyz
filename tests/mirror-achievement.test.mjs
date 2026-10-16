@@ -18,7 +18,9 @@ test('photo includes stage name, placement and every beyblade component when pre
   const caption=achievementCaption({name:'Tappa #2 Ranked BSB',finalRank:1,deck:[bey,bey,bey]},measure);
   const text=caption.lines.map(l=>l.text).join(' ');
   assert.match(text,/1° POSTO · VINCITORE/);
-  for(const n of [1,2,3])assert.ok(text.includes(`BEY ${n}: Delta + Unicorn + Heavy / 9-60 / Free Ball`));
+  assert.equal(text.includes('BEY 1'),false);assert.equal(text.includes('BEY 2'),false);assert.equal(text.includes('BEY 3'),false);
+  assert.equal(caption.lines.filter(line=>line.bullet).length,3);
+  assert.equal(caption.lines.filter(line=>line.deckEntry).map(line=>line.text).join(' ').split('Delta + Unicorn + Heavy / 9-60 / Free Ball').length-1,3);
   assert.ok(caption.height>noDeck.height);
   for(const line of caption.lines)assert.ok(measure(line.text,line.size)<=284);
 });
@@ -29,6 +31,8 @@ test('long custom names wrap without clipping or dropping any characters',()=>{
   const longBey={...bey,blades:Array.from({length:5},()=>part(name))};
   const caption=achievementCaption({name:'Tappa molto lunga '.repeat(8),finalRank:5,deck:[longBey,longBey,longBey]},measure);
   assert.ok(caption.lines.every(l=>measure(l.text,l.size)<=284));
+  assert.ok(caption.lines.filter(l=>l.deckEntry).every(l=>measure(l.text,l.size)<=262));
+  assert.equal(caption.lines.filter(l=>l.bullet).length,3,'Wrapped deck entries have only one Beyblade bullet each');
   assert.ok(caption.height>caption.lines.at(-1).y);
 });
 test('mirror offers the five new phrases, original motto and a genuinely hidden choice',()=>{

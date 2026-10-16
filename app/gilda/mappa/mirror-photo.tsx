@@ -104,7 +104,19 @@ export function drawPortrait(canvas: HTMLCanvasElement, avatar: Avatar, name: st
   if (caption) {
     box(theme.accent, 25, 430 + mottoExtra, 310, 3);
     box(theme.mid, 25, 435 + mottoExtra, 310, caption.height);
-    for (const line of caption.lines) text(line.text, 435 + mottoExtra + line.y, line.size, line.accent ? theme.accent : theme.paper);
+    for (const line of caption.lines) {
+      const y = 435 + mottoExtra + line.y;
+      if (!line.deckEntry) { text(line.text, y, line.size, line.accent ? theme.accent : theme.paper); continue; }
+      // Minimal top-view Beyblade: stepped blade ring and a contrasting core.
+      // Only the first line gets a bullet; wrapped components stay aligned.
+      if (line.bullet) {
+        box(theme.accent, 38, y - 10, 6, 2); box(theme.accent, 35, y - 8, 12, 6);
+        box(theme.accent, 38, y - 2, 6, 2); box(theme.ink, 39, y - 7, 4, 4);
+        box(theme.paper, 40, y - 6, 2, 2);
+      }
+      ctx.fillStyle = theme.paper; ctx.font = `bold ${line.size}px monospace`; ctx.textAlign = "left";
+      ctx.fillText(line.text, 55, y);
+    }
   }
 }
 
