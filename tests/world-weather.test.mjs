@@ -1,12 +1,20 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {registerHooks} from 'node:module';
-import {existsSync} from 'node:fs';
+import {existsSync,readFileSync} from 'node:fs';
 registerHooks({resolve(specifier,context,next){try{return next(specifier,context);}catch(error){if(specifier.startsWith('.')&&context.parentURL?.startsWith('file:'))for(const suffix of ['.ts','/index.ts']){const url=new URL(specifier+suffix,context.parentURL);if(existsSync(url))return{url:url.href,shortCircuit:true};}throw error;}}});
 const {parseWeather,validWeather,weatherKind,solarLight,environmentTargets,WEATHER_INTERVAL,WEATHER_MAX_AGE}=await import('../app/lib/world-weather.ts');
 const {createWeatherService,weatherUrl}=await import('../app/lib/weather-service.ts');
 const {drawWorldAtmosphere,createAtmospherePaint}=await import('../app/lib/world-atmosphere.ts');
 const start=Date.parse('2026-10-16T12:00:00Z');
+test('indoor rooms hide weather and the guild HUD does not greet members, unlike the city',()=>{
+  const read=path=>readFileSync(new URL(path,import.meta.url),'utf8');
+  assert.match(read('../app/components/world-weather.tsx'),/if \(indoor\) return null;/);
+  for(const path of ['../app/gilda/mappa/page.tsx','../app/banca/bank-room.tsx'])assert.match(read(path),/<WorldWeatherBadge indoor \/>/);
+  assert.match(read('../app/gilda/mappa/page.tsx'),/title="Gilda del Grifone"/);
+  assert.doesNotMatch(read('../app/gilda/mappa/page.tsx'),/Bentornato/);
+  assert.match(read('../app/page.tsx'),/Bentornato/);
+});
 const weather=(overrides={})=>({observedAt:start,temperature:20,code:3,cloud:100,precipitation:0,snow:0,wind:3.4,windDirection:198,...overrides});
 const payload=(now=start)=>({current:{time:now/1000,temperature_2m:20,weather_code:3,cloud_cover:100,precipitation:0,snowfall:0,wind_speed_10m:3.4,wind_direction_10m:198}});
 test('Torino fixed endpoint, numeric observations, weather mapping and unknown-data boundaries',()=>{

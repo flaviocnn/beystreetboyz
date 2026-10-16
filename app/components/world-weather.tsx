@@ -54,6 +54,7 @@ export function WorldWeatherProvider({ children }: { children: ReactNode }) {
 export function useWorldWeather() { return useContext(Context); }
 export function WorldWeatherBadge({ indoor = false }: { indoor?: boolean }) {
   const state = useWorldWeather();
+  if (indoor) return null;
   const light = state.now ? solarLight(state.now) : null;
   const time = state.now ? new Intl.DateTimeFormat("it-IT", { timeZone: "Europe/Rome", hour: "2-digit", minute: "2-digit" }).format(state.now) : "…";
   return <details className={`world-weather-badge ${indoor ? "is-indoor" : ""}`} data-world-weather>
