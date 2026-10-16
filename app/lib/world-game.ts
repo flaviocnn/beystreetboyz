@@ -13,7 +13,7 @@ export function drawInteractionSpot(ctx: CanvasRenderingContext2D, x: number, y:
 }
 export function worldCamera(width: number, height: number, player: { x: number; y: number }, world: { width: number; height: number }) {
   // CSS pixels, not device pixels: identical sprites and walking speed in both rooms.
-  const scale = Math.min(1, Math.max(.5, Math.min(width / 600, height / 480)));
+  const scale = Math.min(1, Math.max(.5, Math.min(width, height) / 600));
   const axis = (size: number, viewport: number, position: number, anchor: number) => viewport > size
     ? (size - viewport) / 2 : Math.max(0, Math.min(size - viewport, position - viewport * anchor));
   return { scale, x: axis(world.width, width / scale, player.x, .5), y: axis(world.height, height / scale, player.y, .78) };

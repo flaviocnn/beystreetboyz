@@ -27,6 +27,7 @@ test('city and guild share camera scale, controls speed and interaction distance
     assert.ok(Number.isFinite(guild.x)&&Number.isFinite(guild.y));
     assert.ok(city.scale>=.5&&city.scale<=1);
   }
+  assert.equal(worldCamera(390,844,{x:800,y:620},WORLD).scale,worldCamera(844,390,{x:800,y:620},WORLD).scale,'Rotating a phone preserves character size');
 });
 test('cache coalesces concurrent requests, scopes identities, expires and never caches failure',async()=>{
   let clock=0,calls=0;const cache=createAsyncCache(4,()=>clock);
