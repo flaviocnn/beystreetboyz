@@ -178,7 +178,7 @@ export default function GuildMapPage() {
   }, [opened, close]);
   const nearby = PLACES.find((p) => p.id === near), selected = PLACES.find((p) => p.id === opened);
   return <main className="game-shell guild-map-shell world-shell">
-    <WorldHud area="GILDA DEL GRIFONE" title="Gilda del Grifone" paused={!!opened}>
+    <WorldHud title="Gilda del Grifone" paused={!!opened}>
       {championState.champion && <button className="world-champion" onClick={() => open("throne")}>♛ Campione in carica: <strong>{championState.champion.displayName}</strong> →</button>}
     </WorldHud>
     {loading ? <div className="guild-map-message" role="status">Verifico il tuo accesso…</div> : !member ? <div className="guild-map-message"><h1>La porta è chiusa.</h1><p>{accessError || "Accedi con le tue credenziali per entrare."}</p><a className="solid-button" href="/gilda">VAI ALL’ACCESSO →</a></div> : <>

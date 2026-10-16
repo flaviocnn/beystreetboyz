@@ -12,6 +12,7 @@ test('indoor rooms hide weather and the guild HUD does not greet members, unlike
   assert.match(read('../app/components/world-weather.tsx'),/if \(indoor\) return null;/);
   for(const path of ['../app/gilda/mappa/page.tsx','../app/banca/bank-room.tsx'])assert.match(read(path),/<WorldWeatherBadge indoor \/>/);
   assert.match(read('../app/gilda/mappa/page.tsx'),/title="Gilda del Grifone"/);
+  assert.doesNotMatch(read('../app/gilda/mappa/page.tsx'),/area="GILDA DEL GRIFONE"/);
   assert.doesNotMatch(read('../app/gilda/mappa/page.tsx'),/Bentornato/);
   assert.match(read('../app/page.tsx'),/Bentornato/);
 });

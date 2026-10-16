@@ -59,10 +59,10 @@ function WorldArrowPad({ paused, onDirection }: { paused: boolean; onDirection: 
     onClick={event => { if (event.detail === 0) { onDirection(direction, true); const timer = setTimeout(() => { onDirection(direction, false); timers.current.delete(timer); }, 80); timers.current.add(timer); } }}>
     {direction === "up" ? "↑" : direction === "down" ? "↓" : direction === "left" ? "←" : "→"}</button>)}</div>;
 }
-export function WorldHud({ title, area, paused = false, children }: { title: string; area: string; paused?: boolean; children?: ReactNode }) {
+export function WorldHud({ title, area, paused = false, children }: { title: string; area?: string; paused?: boolean; children?: ReactNode }) {
   const { enabled, toggle } = useGameAudio();
   return <div className="world-hud" inert={paused}>
-    <header className="world-title"><span className="world-brand" aria-hidden="true">B</span><div><p>{area}</p><h1>{title}</h1>{children}</div></header>
+    <header className="world-title"><span className="world-brand" aria-hidden="true">B</span><div>{area && <p>{area}</p>}<h1>{title}</h1>{children}</div></header>
     <div className="world-tools"><button className="world-audio" data-audio="quiet" onClick={toggle} aria-pressed={enabled} aria-label={enabled ? "Disattiva audio" : "Attiva audio"}>{enabled ? "♫" : "♪"}<span>{enabled ? "Audio on" : "Audio off"}</span></button>
       <details className="world-menu" data-world-menu onKeyDown={event => {
         if (event.key === "Escape") { event.preventDefault(); event.currentTarget.open = false; event.currentTarget.querySelector("summary")?.focus(); }
