@@ -1,0 +1,20 @@
+.blackjack-table { padding: clamp(14px, 4vw, 26px); background: #244d42; color: #f7edca; border: 6px solid #a29163; box-shadow: inset 0 0 0 3px #17382f, 0 5px #29392f; }
+.blackjack-hand-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; font: 700 13px/1.5 var(--font-geist-mono), monospace; }
+.blackjack-hand-heading > span { min-width: 38px; padding: 3px 8px; border: 2px solid #aeb987; text-align: center; font-size: 20px; }
+.blackjack-cards { display: flex; flex-wrap: wrap; gap: 10px; list-style: none; padding: 0; margin: 12px 0; min-height: 102px; }
+.blackjack-card { position: relative; display: grid; place-items: center; flex: 0 0 68px; height: 100px; color: #24342f; background: #faf3db; border: 3px solid #1b3028; box-shadow: 3px 3px #152d25; font-family: monospace; }
+.blackjack-card.is-red { color: #a53139; }
+.blackjack-card > b { font-size: 34px; }
+.card-corner { position: absolute; top: 2px; left: 5px; font-size: 18px; font-weight: 700; line-height: 1; }
+.card-corner small { display: block; font-size: 14px; }
+.card-bottom { position: absolute; bottom: 2px; right: 5px; transform: rotate(180deg); font-size: 18px; font-weight: 700; }
+.blackjack-card.is-hidden { background: repeating-linear-gradient(45deg,#516c61 0 5px,#304c41 5px 10px); box-shadow: inset 0 0 0 4px #d7c896, 3px 3px #152d25; color: #f5df9b; font-size: 32px; }
+.blackjack-table-mark { text-align: center; border-block: 1px solid #789975; padding: 8px 0; margin: 18px 0; color: #d1d3a2; font: 700 12px/1.5 var(--font-geist-mono),monospace; letter-spacing: .06em; }
+.blackjack-controls { display: flex; gap: 12px; margin-top: 20px; }
+.blackjack-controls button { flex: 1; min-height: 52px; padding: 12px; font-size: 14px; line-height: 1.5; }
+.blackjack-controls .outline-button { color: #fff0c7; border-color: #b5c298; }
+.blackjack-controls [aria-disabled="true"] { opacity: .65; cursor: default; }
+.library-playable-shelves { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.library-playable-shelves .game-box-symbol { font: 700 40px/1.3 monospace; }
+.library-playable-shelves strong { font-size: 16px; }
+@media (max-width: 400px) { .blackjack-card { flex-basis: 56px; height: 88px; } .blackjack-cards { gap: 8px; min-height: 90px; } .blackjack-controls { gap: 8px; } }

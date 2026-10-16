@@ -69,14 +69,8 @@ export function drawChampion(ctx: CanvasRenderingContext2D, x: number, y: number
   ctx.restore();
 }
 export const GAMES = [
-  { title: "Scacchi", kind: "Strategia", color: "#a6b6a1", text: "Un re da proteggere, una mossa alla volta. Il tavolo della strategia aspetta il prossimo sfidante." },
-  { title: "Dama", kind: "Duello", color: "#cd9280", text: "Pedine rosse e nere, diagonali e sorprese. Un classico per una sfida tra due membri." },
-  { title: "Domino", kind: "Tessere", color: "#d0bd85", text: "Una scatola piena di tessere e combinazioni. Qualcuno ha già mescolato i pezzi sul tavolo." },
-  { title: "Mancala", kind: "Tattica", color: "#9cbaad", text: "Piccole pietre, tante possibilità. Conta, distribuisci e prepara la tua prossima mossa." },
-  { title: "Backgammon", kind: "Dadi e strategia", color: "#a6a6ce", text: "Dadi e pedine si incontrano sul tabellone. Fortuna e tattica siedono allo stesso tavolo." },
-  { title: "Reversi", kind: "Controllo del territorio", color: "#95b8c4", text: "Una pedina può cambiare tutto: la Gilda custodisce anche il tabellone dei grandi ribaltamenti." },
-  { title: "Scale e serpenti", kind: "Percorso", color: "#c4a3b0", text: "Una salita, una discesa e un lancio di dadi. La scatola più imprevedibile dello scaffale." },
-  { title: "Ludo", kind: "Sfida a colori", color: "#c6c28e", text: "Quattro colori e una corsa verso casa. Il rito perfetto per ritrovarsi dopo la ranked." },
+  { id: "slot", title: "Beycoin Spin", kind: "1 BC a giro", color: "#d0bd85", symbol: "◉" },
+  { id: "blackjack", title: "Blackjack", kind: "2 BC a mano", color: "#9cbaad", symbol: "21" },
 ];
 
 // Clear spatial hierarchy: a central ranked dais, two personal wings, then

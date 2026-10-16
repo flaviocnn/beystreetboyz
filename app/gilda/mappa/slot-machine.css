@@ -19,9 +19,6 @@
 .slot-history ol { list-style: none; padding: 0; }
 .slot-history li { display: flex; justify-content: space-between; gap: 12px; border-bottom: 1px solid #a7b49a; padding: 12px 0; overflow-wrap: anywhere; }
 .slot-history small, .slot-history strong { display: block; font-size: 13px; }
-.library-arcade-choice { display: block; width: 100%; min-height: 64px; padding: 14px; margin-bottom: 20px; text-align: left; color: #fff0b5; background: #2c443a; border: 3px solid #8c9d77; font-size: 16px; cursor: pointer; }
-.library-arcade-choice[aria-pressed="true"] { outline: 3px solid #ba953f; outline-offset: 2px; }
-.library-arcade-choice small { display: block; font: 14px/1.6 var(--font-geist-sans), sans-serif; color: #e4e9d6; }
 @keyframes slot-pulse { to { opacity: .45; transform: translateY(3px); } }
 @media (prefers-reduced-motion: reduce) { .slot-reels.is-spinning > span { animation: none; } }
 @media (max-width: 440px) { .slot-reels > span { font-size: 52px; } .slot-history li { flex-direction: column; gap: 4px; } }

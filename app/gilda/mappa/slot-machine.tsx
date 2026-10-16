@@ -75,7 +75,7 @@ export default function SlotMachine({ memberId }: { memberId: string }) {
     </div>
     <p className="slot-result" role="status" data-sound="manual" aria-atomic="true">{busy ? "Vediamo cosa esce…" : message}</p>
     {error && <p className="form-error" role="alert">{error}</p>}
-    {state && <p>Giri rimasti oggi: {state.remaining}/{SLOT_DAILY_LIMIT}. Si ricaricano a mezzanotte.</p>}
+    {state && <p>Partite rimaste oggi nella libreria: {state.remaining}/{SLOT_DAILY_LIMIT}. Si ricaricano a mezzanotte.</p>}
     {state && state.balance < 1 && !pending && <p>Ti servono Beycoin: completa le imprese della Gilda per guadagnarli.</p>}
     <button className="text-button" disabled={busy} onClick={() => void load()}>AGGIORNA SALDO ↻</button>
     <details className="slot-rules"><summary>REGOLE, PREMI E PROBABILITÀ</summary>

@@ -2,6 +2,7 @@
 import dynamic from "next/dynamic";
 import "./throne.css";
 import "./slot-machine.css";
+import "./blackjack.css";
 import { memberDisplayName } from "../../lib/member-name";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useGameAudio, usePopupSound } from "../../lib/game-audio";
@@ -25,6 +26,7 @@ const MirrorPhoto = dynamic(() => import("./mirror-photo"), { loading: () => <p 
 const GuildBoard = dynamic(() => import("./guild-board"), { loading: () => <p role="status">Apro la bacheca…</p> });
 const StageArchive = dynamic(() => import("./stage-archive"), { loading: () => <p role="status">Sfoglio l’archivio…</p> });
 const SlotMachine = dynamic(() => import("./slot-machine"), { loading: () => <p role="status">Accendo la slot…</p> });
+const Blackjack = dynamic(() => import("./blackjack"), { loading: () => <p role="status">Preparo il tavolo…</p> });
 
 type RankingRow = { id: string; firstName: string; lastName: string | null; challongeUsername: string | null; score: number; rank: number; achievements?: { badgeIds: AchievementId[]; title: string | null } };
 function beginWalk(keys: Set<Direction>, player: { x: number; y: number; dir: Direction }, direction: Direction) {
@@ -115,12 +117,11 @@ function ChampionPortrait() {
   return <canvas ref={ref} width={360} height={350} aria-label="Statua pixel art di GranBurstone con corona, trofeo e lanciatore" />;
 }
 function Library({ onClick, memberId }: { onClick: () => void; memberId: string }) {
-  const [selected, setSelected] = useState(0);
-  const game = GAMES[selected];
-  return <><p className="guild-object-description">Scatole consumate, dadi fortunati e ancora un’ultima partita. Sfoglia la ludoteca virtuale della Gilda.</p>
-    <button className="library-arcade-choice" aria-pressed={selected === -1} onClick={() => { setSelected(selected === -1 ? 0 : -1); onClick(); }}>{selected === -1 ? "← TORNA AI GIOCHI DA TAVOLO" : "◉ BEYCOIN SPIN · SLOT MACHINE"}<small>{selected === -1 ? "Lo scaffale della Gilda" : "Gioca ora · 1 Beycoin a giro · solo valuta virtuale"}</small></button>
-    {selected === -1 ? <SlotMachine memberId={memberId} /> : <><div className="library-shelves" aria-label="Giochi sugli scaffali">{GAMES.map((g, i) => <button key={g.title} style={{ "--box-color": g.color } as React.CSSProperties} aria-pressed={i === selected} onClick={() => { setSelected(i); onClick(); }}><span className="game-box-symbol" aria-hidden="true">{["♟", "◉", "▦", "•••", "◆", "◐", "↗", "✦"][i]}</span><strong>{g.title}</strong><small>{g.kind}</small></button>)}</div>
-    <div className="library-game-detail" aria-live="polite"><span className="section-kicker">SCATOLA {String(selected + 1).padStart(2, "0")} / 08</span><h3>{game.title}</h3><p>{game.text}</p><span className="library-note">Da scoprire sullo scaffale · Questi giochi da tavolo non sono ancora giocabili nell’app.</span></div></>}
+  const [selected, setSelected] = useState<string | null>(null);
+  return <><p className="guild-object-description">Scegli un gioco e porta i tuoi Beycoin al tavolo.</p>
+    <div className="library-shelves library-playable-shelves" aria-label="Giochi della Gilda">{GAMES.map(g => <button key={g.id} style={{ "--box-color": g.color } as React.CSSProperties} aria-pressed={g.id === selected} onClick={() => { setSelected(g.id); onClick(); }}><span className="game-box-symbol" aria-hidden="true">{g.symbol}</span><strong>{g.title}</strong><small>{g.kind}</small></button>)}</div>
+    {selected === "slot" && <SlotMachine memberId={memberId} />}
+    {selected === "blackjack" && <Blackjack memberId={memberId} />}
   </>;
 }
 

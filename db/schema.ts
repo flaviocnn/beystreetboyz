@@ -137,3 +137,17 @@ export const beycoinSlotSpins = pgTable("beycoin_slot_spins", {
   cost: integer("cost").notNull(), payout: integer("payout").notNull(), ruleVersion: integer("rule_version").notNull().default(1),
   gameDay: date("game_day").notNull(), createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 }, t => [uniqueIndex("slot_request_once").on(t.memberId, t.requestKey)]);
+
+export const blackjackHands = pgTable("beycoin_blackjack_hands", {
+  id: text("id").primaryKey(), memberId: text("member_id").notNull().references(() => members.id, { onDelete: "cascade" }),
+  deck: jsonb("deck").$type<number[]>().notNull(), player: jsonb("player").$type<number[]>().notNull(), dealer: jsonb("dealer").$type<number[]>().notNull(),
+  cursor: integer("cursor").notNull(), status: text("status").$type<import("../app/lib/blackjack").BlackjackStatus>().notNull(),
+  cost: integer("cost").notNull(), payout: integer("payout").notNull(), version: integer("version").notNull().default(0),
+  gameDay: date("game_day").notNull(), createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  finishedAt: timestamp("finished_at", { withTimezone: true }),
+}, t => [uniqueIndex("blackjack_one_active_hand").on(t.memberId).where(sql`${t.status} = 'playing'`)]);
+export const blackjackActions = pgTable("beycoin_blackjack_actions", {
+  memberId: text("member_id").notNull().references(() => members.id, { onDelete: "cascade" }), requestKey: text("request_key").notNull(),
+  handId: text("hand_id").notNull().references(() => blackjackHands.id, { onDelete: "cascade" }), action: text("action").notNull(),
+  expectedVersion: integer("expected_version"), createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, t => [primaryKey({ columns: [t.memberId, t.requestKey] })]);
