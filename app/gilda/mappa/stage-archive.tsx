@@ -1,11 +1,11 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { catalog, INTEGRATED_RATCHET, type Bey, type Deck, type DeckPart, type PersonalStage } from "../../lib/decks";
+import { bladeOptions } from "../../lib/blade-options";
 
 const emptyPart = (): DeckPart => ({ value: "", custom: false });
 const emptyBey = (): Bey => ({ blades: [emptyPart()], ratchet: emptyPart(), bit: emptyPart() });
 const emptyDeck = (): Deck => [emptyBey(), emptyBey(), emptyBey()];
-const categories = [...new Set(catalog.blades.map(p => p.category))];
 type PartKind = "blade" | "ratchet" | "bit";
 async function request(url: string, init?: RequestInit) {
   const response = await fetch(url, { cache: "no-store", ...init });
@@ -14,13 +14,23 @@ async function request(url: string, init?: RequestInit) {
   return data;
 }
 function PartPicker({ label, kind, part, disabled, onChange }: { label: string; kind: PartKind; part: DeckPart; disabled: boolean; onChange: (p: DeckPart) => void }) {
-  return <label>{label}<select disabled={disabled} value={part.custom ? "__other" : part.value} onChange={e => onChange({ value: e.target.value === "__other" ? "" : e.target.value, custom: e.target.value === "__other" })} required>
+  const id = useId();
+  const [query, setQuery] = useState("");
+  const blades = bladeOptions(catalog.blades, query);
+  const selectedOutsideFilter = kind === "blade" && !part.custom && part.value && !blades.some(blade => blade.value === part.value);
+  return <div className="archive-part-picker"><label htmlFor={id}>{label}</label>
+    {kind === "blade" && <label className="archive-part-search">Cerca per nome, categoria o sistema
+      <input type="search" disabled={disabled} aria-label={`Cerca ${label.toLowerCase()}`} value={query} onChange={event => setQuery(event.target.value)} placeholder="Es. Wizard, Phoenix, CX…" />
+    </label>}
+    <select id={id} disabled={disabled} value={part.custom ? "__other" : part.value} onChange={e => onChange({ value: e.target.value === "__other" ? "" : e.target.value, custom: e.target.value === "__other" })} required>
     <option value="" disabled>Scegli {kind === "blade" ? "la lama" : kind === "bit" ? "il bit" : "il ratchet"}</option>
-    {kind === "blade" ? categories.map(category => <optgroup key={category} label={category}>{catalog.blades.filter(p => p.category === category).map(p => <option key={p.value} value={p.value}>{p.value}</option>)}</optgroup>)
+    {selectedOutsideFilter && <option hidden value={part.value}>{part.value} (selezionata)</option>}
+    {kind === "blade" ? blades.map(blade => <option key={blade.value} value={blade.value}>{blade.value} · {blade.category}</option>)
       : kind === "bit" ? catalog.bits.map(p => <option key={p.value} value={p.value}>{p.label}</option>)
         : <>{catalog.ratchets.map(p => <option key={p} value={p}>{p}</option>)}<option value={INTEGRATED_RATCHET}>{INTEGRATED_RATCHET}</option></>}
     <option value="__other">＋ Aggiungi altro…</option>
-  </select>{part.custom && <input disabled={disabled} aria-label={`${label}: nome del componente aggiunto`} required maxLength={100} value={part.value} onChange={e => onChange({ custom: true, value: e.target.value })} placeholder="Nome del componente" />}</label>;
+  </select>{kind === "blade" && <small role="status">{blades.length ? `${blades.length} opzioni in ordine alfabetico` : "Nessuna corrispondenza. Modifica la ricerca oppure scegli Aggiungi altro."}{selectedOutsideFilter ? ` · Selezione mantenuta: ${part.value}` : ""}</small>}
+  {part.custom && <input disabled={disabled} aria-label={`${label}: nome del componente aggiunto`} required maxLength={100} value={part.value} onChange={e => onChange({ custom: true, value: e.target.value })} placeholder="Nome del componente" />}</div>;
 }
 
 export default function StageArchive({ onClick }: { onClick: () => void }) {

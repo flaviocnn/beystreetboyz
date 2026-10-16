@@ -1,6 +1,21 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {parseDeck,isTopEight,catalog,INTEGRATED_RATCHET} from '../app/lib/decks.ts';
+import {bladeOptions} from '../app/lib/blade-options.ts';
+
+test('blade picker sorts globally A-Z and filters names, categories and systems without mutating the catalog',()=>{
+  const original=structuredClone(catalog.blades);
+  const sorted=bladeOptions(catalog.blades);
+  assert.equal(sorted.length,155);
+  for(let i=1;i<sorted.length;i++)assert.ok(sorted[i-1].value.localeCompare(sorted[i].value,'it',{sensitivity:'base',numeric:true})<=0);
+  assert.ok(bladeOptions(catalog.blades,'  wIzArD  ').every(part=>part.value.toLowerCase().includes('wizard')));
+  assert.ok(bladeOptions(catalog.blades,'wizard').length>0);
+  assert.ok(bladeOptions(catalog.blades,'Metal Blade').every(part=>part.category==='Metal Blade'));
+  assert.ok(bladeOptions(catalog.blades,'CX').length>0);
+  assert.deepEqual(bladeOptions(catalog.blades,'not-existing-xyz'),[]);
+  assert.equal(bladeOptions([{value:'Fénice',category:'Lama',system:'CX'}],'fenice')[0].value,'Fénice');
+  assert.deepEqual(catalog.blades,original);
+});
 
 const part=value=>({value,custom:false});
 const bey=()=>({blades:[part('Wizard Rod')],ratchet:part('9-60'),bit:part('Ball')});

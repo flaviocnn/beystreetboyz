@@ -696,6 +696,8 @@ button:disabled { cursor: wait; opacity: .55; }
 .archive-editor legend { padding: 0 8px; font: 800 12px ui-monospace, monospace; }
 .archive-parts { display: grid; gap: 14px; }
 .archive-blade { min-width: 0; display: grid; gap: 6px; }
+.archive-part-picker { min-width: 0; display: grid; gap: 8px; }
+.archive-part-search { font-size: 12px; font-weight: normal; }
 .archive-parts select, .archive-parts input { width: 100%; min-width: 0; min-height: 46px; padding: 11px; color: #233126; background: #fafbf5; border: 2px solid #8da080; border-radius: 0; font-size: 16px; }
 .archive-parts label { min-width: 0; }
 .archive-notice { padding: 12px 14px; background: #dce8cc; border-left: 4px solid #57753c; }
