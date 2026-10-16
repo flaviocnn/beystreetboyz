@@ -4,7 +4,7 @@ import { checkinAudit, checkinEvents, checkinParticipants, members } from "../..
 import { sameOrigin } from "./auth";
 import { staffSession } from "./staff-access";
 import { checkinSummary, paymentTransition, validEventDate } from "./checkin";
-import { fetchRoster } from "./challonge-roster";
+import { fetchRoster, fetchTournament, fetchUpcomingTournaments } from "./challonge-roster";
 import { isUniqueViolation } from "./database-errors";
 
 type Tx = Parameters<Parameters<ReturnType<typeof getDb>["transaction"]>[0]>[0];
@@ -33,6 +33,13 @@ export async function requestBody(request: Request): Promise<Record<string, unkn
 async function remoteRoster(input: string) {
   try { return await fetchRoster(input); }
   catch (error) { throw new CheckinError(error instanceof Error ? error.message : "Challonge non disponibile", 502); }
+}
+export async function checkinChallonge(request: Request) {
+  const input = new URL(request.url).searchParams.get("tournament");
+  if (input !== null && (!input.trim() || input.length > 500)) throw new CheckinError("Indica un link o ID torneo valido.");
+  try {
+    return input !== null ? { tournament: await fetchTournament(input) } : { tournaments: await fetchUpcomingTournaments(), syncedAt: new Date().toISOString(), community: "BeyStreetBoyz" };
+  } catch (error) { throw new CheckinError(error instanceof Error ? error.message : "Challonge non disponibile", 502); }
 }
 export async function listCheckinEvents() {
   const events = await getDb().select().from(checkinEvents).orderBy(desc(checkinEvents.eventDate), desc(checkinEvents.createdAt));
@@ -67,7 +74,7 @@ export async function createCheckinEvent(body: Record<string, unknown>) {
   const id = crypto.randomUUID();
   await getDb().transaction(async tx => {
     await tx.insert(checkinEvents).values({ id, tournamentId: roster.id, tournamentRef: roster.ref, sourceUrl: roster.sourceUrl,
-      name: typeof body.name === "string" && body.name.trim() ? body.name.trim() : roster.name,
+      name: roster.name,
       eventDate: body.eventDate as string, feeCents: body.feeCents as number, lastSyncedAt: new Date() });
     await rosterIntoDb(tx, id, roster);
   });

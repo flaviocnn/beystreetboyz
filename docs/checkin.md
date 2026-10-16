@@ -16,8 +16,13 @@ La migrazione `0011_member_staff_role.sql` abilita solo gli otto ID verificati
 richiesti dall'organizzatore. Il ruolo predefinito per nuovi membri è `member`.
 
 1. Crea il torneo su Challonge e fai iscrivere lì i partecipanti.
-2. Nel check-in scegli “Nuova tappa”, incolla link/ID, indica data e quota in euro.
-   Il nome è facoltativo; in alternativa viene usato quello Challonge.
+2. Nel check-in scegli “Nuova tappa”, poi “Sincronizza” per caricare i tornei non
+   ancora iniziati della community BeyStreetBoyz. Scegliendone uno si compilano
+   ID, nome e data. In alternativa incolla link/ID: nome e data vengono letti
+   automaticamente da Challonge dopo una breve pausa di digitazione.
+   Il nome è sempre quello del provider, verificato anche dal server alla creazione.
+   La data è convertita nel fuso Europe/Rome e resta modificabile. Se manca sul
+   provider, impostala manualmente. La quota proposta è 3,00 €, modificabile.
 3. Gli iscritti vengono importati. Nessuno viene considerato presente o pagato
    solo perché è iscritto. Gli ospiti possono pagare senza una nuova anagrafica.
 4. Indica l'operatore del banco e il metodo per il prossimo incasso. Premi
@@ -70,6 +75,17 @@ Ogni richiesta include `include_community_tournaments=1` per leggere anche i
 tornei delle community creati da quell'account, sia all'importazione sia al resync
 per ID numerico. Non è necessario spostare il torneo su un account personale.
 I rifiuti di accesso e i limiti API sono mostrati senza modificare i dati salvati.
+
+L'elenco usa il vero community identifier `c3fc3026d7761c60969ca7eb` (ID
+`197576`), non il nome pubblico. Filtra le relazioni della community e gli stati
+`pending`, `checking_in`, `checked_in`, `accepting_predictions`, escludendo tornei
+iniziati e conclusi anche se il provider ignora il filtro `state`. Legge tutte le
+pagine entro un limite sicuro, altrimenti segnala errore. Recupero metadata e
+roster provano anche lo scope della community quando il torneo non è nel user
+scope (ad esempio creato da un altro organizzatore). Un refresh elenco non crea
+tappe, non avvia tornei e non modifica pagamenti. Gli errori mantengono l'ultimo
+elenco disponibile. API staff: GET `/api/staff/checkin/challonge`, con parametro
+`tournament` per il solo nome/data del singolo torneo. Nessuna chiave al browser.
 
 Migrazioni additive: `0009_stage_checkin.sql` e `0010_checkin_complete_payment.sql`, tre tabelle con RLS e privilegi
 anon/authenticated revocati: `checkin_events`, `checkin_participants`, `checkin_audit`.

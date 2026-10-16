@@ -5,6 +5,7 @@ import "./checkin.css";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { parseFee, paymentLabels, presenceLabels, type CheckinDetail, type CheckinEvent, type CheckinRow } from "../../lib/checkin";
+import type { ChallongeTournament } from "../../lib/challonge-tournament";
 
 const money = (cents: number) => new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR" }).format(cents / 100);
 const stamp = (value: string | Date) => new Date(value).toLocaleString("it-IT", { timeZone: "Europe/Rome", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
@@ -31,7 +32,13 @@ export default function StageCheckin() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("verify");
   const [showCreate, setShowCreate] = useState(false);
-  const [form, setForm] = useState({ name: "", tournament: "", eventDate: "", fee: "" });
+  const [form, setForm] = useState({ name: "", tournament: "", eventDate: "", fee: "3,00" });
+  const [upcoming, setUpcoming] = useState<ChallongeTournament[]>([]), [upcomingLoaded, setUpcomingLoaded] = useState(false);
+  const [upcomingSelection, setUpcomingSelection] = useState("");
+  const [metadata, setMetadata] = useState<{ input: string; tournament: ChallongeTournament } | null>(null);
+  const [metadataError, setMetadataError] = useState("");
+  const [metadataBusy, setMetadataBusy] = useState(false);
+  const [metadataReload, setMetadataReload] = useState(0);
   const [editing, setEditing] = useState<CheckinRow | null>(null);
   const selectedId = useRef("");
   useEffect(() => { selectedId.current = eventId; }, [eventId]);
@@ -60,6 +67,42 @@ export default function StageCheckin() {
   }, [loadEvents]);
 
   useEffect(() => {
+    const input = form.tournament.trim();
+    if (access !== "unlocked" || !input) return;
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => {
+      setMetadataBusy(true); setMetadataError("");
+      void api(`/api/staff/checkin/challonge?tournament=${encodeURIComponent(input)}`, { signal: controller.signal }).then(data => {
+        if (controller.signal.aborted) return;
+        const tournament = data.tournament as ChallongeTournament;
+        setMetadata({ input, tournament });
+        setForm(current => ({ ...current, name: tournament.name, eventDate: tournament.eventDate ?? current.eventDate }));
+      }).catch(cause => {
+        if (!controller.signal.aborted) setMetadataError(cause.message);
+      }).finally(() => { if (!controller.signal.aborted) setMetadataBusy(false); });
+    }, 450);
+    return () => { window.clearTimeout(timer); controller.abort(); };
+  }, [form.tournament, access, metadataReload]);
+
+  async function syncTournaments() {
+    setBusy("tournaments"); setError(""); setNotice("");
+    try {
+      const data = await api("/api/staff/checkin/challonge");
+      setUpcoming(data.tournaments); setUpcomingLoaded(true);
+      setNotice(data.tournaments.length === 1 ? "1 torneo non ancora iniziato trovato nella community BeyStreetBoyz." : `${data.tournaments.length} tornei non ancora iniziati trovati nella community BeyStreetBoyz.`);
+    } catch (cause) { setError(cause instanceof Error ? cause.message : "Sincronizzazione tornei non riuscita"); }
+    finally { setBusy(""); }
+  }
+  function chooseTournament(id: string) {
+    setUpcomingSelection(id); setMetadataError(""); setMetadataBusy(false);
+    const tournament = upcoming.find(item => item.id === id);
+    if (!tournament) { setMetadata(null); setForm(current => ({ ...current, tournament: "", name: "", eventDate: today() })); return; }
+    // Use the stable ID: it remains valid even if Challonge renames the URL.
+    setMetadata({ input: tournament.id, tournament });
+    setForm(current => ({ ...current, name: tournament.name, tournament: tournament.id, eventDate: tournament.eventDate ?? today() }));
+  }
+
+  useEffect(() => {
     if (!eventId || access !== "unlocked") return;
     const controller = new AbortController();
     const refresh = () => {
@@ -85,14 +128,16 @@ export default function StageCheckin() {
   async function create(event: React.FormEvent) {
     event.preventDefault(); setError(""); setNotice("");
     const feeCents = parseFee(form.fee);
-    if (feeCents === null) { setError("Indica una quota valida, ad esempio 5,00."); return; }
+    if (feeCents === null) { setError("Indica una quota valida, ad esempio 3,00."); return; }
+    if (!metadata || metadata.input !== form.tournament.trim() || metadataBusy) { setError("Attendi la verifica del torneo su Challonge prima di creare la tappa."); return; }
     setBusy("create");
     try {
       const next: CheckinDetail = await api("/api/staff/checkin", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...form, feeCents }) });
       await loadEvents();
       selectedId.current = next.event.id; setEventId(next.event.id); setDetail(next);
       setShowCreate(false); setFilter("verify"); setSearch("");
-      setForm({ name: "", tournament: "", eventDate: today(), fee: "" });
+      setForm({ name: "", tournament: "", eventDate: today(), fee: "3,00" });
+      setMetadata(null); setUpcomingSelection("");
       setNotice(`Tappa creata: ${next.summary.registered} iscritti importati. Nessun pagamento è stato presunto.`);
     } catch (cause) { setError(cause instanceof Error ? cause.message : "Creazione non riuscita"); }
     finally { setBusy(""); }
@@ -135,7 +180,20 @@ export default function StageCheckin() {
       <p className="checkin-intro">Una lista, un controllo. Iscrizione Challonge, presenza e quota della tappa nello stesso posto.</p>
       {access === "loading" ? <p role="status">Controllo l’accesso staff…</p> : access === "locked" ? <section className="auth-card"><h2>Accesso staff</h2><p>Accedi con il tuo account abilitato per entrare senza parola d’ordine. Se usi una password temporanea, cambiala prima.</p><Link className="solid-button" href="/gilda">ACCEDI CON IL TUO ACCOUNT →</Link><p>Oppure usa la parola d’ordine dello staff.</p><form className="stack-form" onSubmit={unlock}><label>PAROLA D’ORDINE<input type="password" autoComplete="current-password" required value={passphrase} onChange={e => setPassphrase(e.target.value)} /></label><button className="solid-button" disabled={!!busy}>ENTRA NEL CHECK-IN →</button></form></section> : <>
         <div className="checkin-toolbar"><label>TAPPA<select value={eventId} onChange={e => { setEventId(e.target.value); setEditing(null); setSearch(""); setError(""); setNotice(""); }} disabled={!!busy}><option value="" disabled>Seleziona una tappa</option>{events.map(event => <option key={event.id} value={event.id}>{dateLabel(event.eventDate)} · {event.name}</option>)}</select></label><button className="outline-button" disabled={!!busy} onClick={() => setShowCreate(!showCreate)} aria-expanded={showCreate}>{showCreate ? "CHIUDI NUOVA TAPPA" : "+ NUOVA TAPPA"}</button></div>
-        {showCreate && <section className="checkin-create"><div><p className="section-kicker">COLLEGA UN TORNEO</p><h2>Apri il banco</h2><p>Crea prima il torneo su Challonge, poi incolla qui il link. Gli iscritti verranno importati senza creare nuove anagrafiche.</p></div><form className="stack-form" onSubmit={create}><label>NOME TAPPA (FACOLTATIVO)<input maxLength={160} value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Es. Tappa #2 Ranked BSB" /></label><label>LINK O ID TORNEO CHALLONGE<input required maxLength={500} value={form.tournament} onChange={e => setForm({ ...form, tournament: e.target.value })} placeholder="https://challonge.com/…" autoCapitalize="none" spellCheck={false} /></label><div className="checkin-form-pair"><label>DATA DELLA TAPPA<input type="date" required value={form.eventDate} onChange={e => setForm({ ...form, eventDate: e.target.value })} /></label><label>QUOTA DELLA TAPPA (€)<input required inputMode="decimal" value={form.fee} onChange={e => setForm({ ...form, fee: e.target.value })} placeholder="Es. 5,00" /></label></div><button className="solid-button" disabled={!!busy}>{busy === "create" ? "IMPORTO DA CHALLONGE…" : "CREA TAPPA E IMPORTA ISCRITTI →"}</button></form></section>}
+        {showCreate && <section className="checkin-create">
+          <div><p className="section-kicker">COLLEGA UN TORNEO</p><h2>Apri il banco</h2><p>Sincronizza i prossimi tornei della community BeyStreetBoyz e scegli quello della tappa. Puoi anche incollare un link o ID manualmente. Il nome viene sempre letto da Challonge.</p></div>
+          <form className="stack-form" onSubmit={create}>
+            <div className="checkin-tournament-picker"><label>PROSSIMI TORNEI · BEYSTREETBOYZ<select value={upcomingSelection} onChange={e => chooseTournament(e.target.value)} disabled={!!busy}><option value="">Seleziona un torneo o inserisci il link sotto</option>{upcoming.map(tournament => <option key={tournament.id} value={tournament.id}>{tournament.eventDate ? dateLabel(tournament.eventDate) : "Data da definire"} · {tournament.name}</option>)}</select></label><button type="button" className="outline-button" disabled={!!busy} onClick={() => void syncTournaments()}>{busy === "tournaments" ? "SINCRONIZZO…" : "SINCRONIZZA"}</button></div>
+            <p className="checkin-field-hint">{upcomingLoaded ? upcoming.length ? "Elenco aggiornato da Challonge. Include solo tornei non ancora iniziati della community." : "Nessun torneo non ancora iniziato trovato nella community. Puoi inserire un link manualmente." : "Premi Sincronizza per leggere i tornei della community. Nessuna tappa o pagamento viene creato dalla sincronizzazione."}</p>
+            <label>LINK O ID TORNEO CHALLONGE<input required maxLength={500} disabled={!!busy} value={form.tournament} onChange={e => { setUpcomingSelection(""); setMetadata(null); setMetadataError(""); setMetadataBusy(false); setForm({ ...form, tournament: e.target.value, name: "", eventDate: today() }); }} placeholder="https://challonge.com/…" autoCapitalize="none" spellCheck={false} /></label>
+            <label>NOME TAPPA · AUTOMATICO DA CHALLONGE<input readOnly maxLength={160} value={form.name} placeholder="Il nome comparirà dopo la verifica del torneo" /></label>
+            {metadataBusy && <p className="checkin-field-hint" role="status">Leggo nome e data da Challonge…</p>}
+            {metadataError && <div role="alert"><p className="form-error">{metadataError}</p><button type="button" className="text-button" disabled={!!busy} onClick={() => setMetadataReload(value => value + 1)}>RIPROVA LETTURA TORNEO</button></div>}
+            <div className="checkin-form-pair"><label>DATA DELLA TAPPA<input type="date" required disabled={!!busy || metadataBusy} value={form.eventDate} onChange={e => setForm({ ...form, eventDate: e.target.value })} /></label><label>QUOTA DELLA TAPPA (€)<input required disabled={!!busy} inputMode="decimal" value={form.fee} onChange={e => setForm({ ...form, fee: e.target.value })} placeholder="3,00" /></label></div>
+            {metadata?.input === form.tournament.trim() && <p className="checkin-field-hint">{metadata.tournament.eventDate ? "Data precompilata da Challonge nel fuso Europe/Rome. Puoi modificarla prima di creare la tappa." : "Challonge non indica una data: verifica e imposta manualmente quella della tappa."}</p>}
+            <button className="solid-button" disabled={!!busy || metadataBusy || metadata?.input !== form.tournament.trim()}>{busy === "create" ? "IMPORTO DA CHALLONGE…" : "CREA TAPPA E IMPORTA ISCRITTI →"}</button>
+          </form>
+        </section>}
         {!eventId && !showCreate && <p>Nessuna tappa: collega un torneo per iniziare.</p>}
         {eventId && !current && <p role="status">Carico gli iscritti…</p>}
         {current && <>

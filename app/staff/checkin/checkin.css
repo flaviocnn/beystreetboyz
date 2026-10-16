@@ -52,7 +52,13 @@
 .checkin-dialog::backdrop { background: #17231dcc; }
 .checkin-dialog h2 { margin: 0; overflow-wrap: anywhere; font: 750 25px var(--font-geist-sans),sans-serif; }
 .checkin-dialog p { font: 13px/1.5 var(--font-geist-sans),sans-serif; }
+.checkin-tournament-picker { display: flex; align-items: end; gap: 10px; min-width: 0; }
+.checkin-tournament-picker label { flex: 1; min-width: 0; }
+.checkin-tournament-picker button { min-height: 48px; flex: 0 0 auto; }
+.checkin-field-hint { margin: 0; color: #4d604d; font: 13px/1.5 var(--font-geist-sans),sans-serif; }
+.checkin-create input[readonly] { background: #e8eddf; color: #354630; }
 @media(max-width:760px) {
+  .checkin-tournament-picker { flex-direction: column; align-items: stretch; }
   .checkin-toolbar, .checkin-heading, .checkin-desk { align-items: stretch; flex-direction: column; }
   .checkin-create { grid-template-columns: 1fr; gap: 15px; padding: 20px; }
   .checkin-stats { grid-template-columns: repeat(2,1fr); }
