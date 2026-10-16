@@ -1,29 +1,42 @@
 import { drawPixelPlayer, type Avatar } from "../../lib/pixel-player";
+import { drawChampionThrone } from "../../lib/throne-art";
+import type { ReigningChampion } from "../../lib/reigning-champion";
 
-export type PlaceId = "board" | "ranking" | "mirror" | "champion" | "library" | "archive";
-export const WORLD = { width: 1450, height: 1080 };
-export const START = { x: 725, y: 700 };
+export type PlaceId = "board" | "ranking" | "mirror" | "champion" | "library" | "archive" | "throne";
+export const WORLD = { width: 1600, height: 1480 };
+export const START = { x: 800, y: 620 };
 export const PLACES: { id: PlaceId; name: string; x: number; y: number; symbol: string }[] = [
-  { id: "board", name: "Bacheca della Gilda", x: 725, y: 505, symbol: "B" },
-  { id: "ranking", name: "Classifica della Gilda", x: 1015, y: 680, symbol: "R" },
-  { id: "mirror", name: "Specchio dei blader", x: 310, y: 535, symbol: "S" },
-  { id: "champion", name: "Statua di GranBurstone", x: 1120, y: 535, symbol: "C" },
-  { id: "library", name: "Libreria dei giochi", x: 360, y: 875, symbol: "L" },
-  { id: "archive", name: "Archivio delle Tappe", x: 725, y: 895, symbol: "A" },
+  { id: "ranking", name: "Classifica della Gilda", x: 645, y: 535, symbol: "R" },
+  { id: "throne", name: "Trono del Campione", x: 985, y: 545, symbol: "T" },
+  { id: "mirror", name: "Specchio dei blader", x: 535, y: 995, symbol: "S" },
+  { id: "archive", name: "Archivio delle Tappe", x: 1045, y: 975, symbol: "A" },
+  { id: "board", name: "Bacheca della Gilda", x: 310, y: 1360, symbol: "B" },
+  { id: "champion", name: "Statua di GranBurstone", x: 800, y: 1365, symbol: "C" },
+  { id: "library", name: "Libreria dei giochi", x: 1260, y: 1365, symbol: "L" },
 ];
-const SOLIDS = [
-  { x: 588, y: 305, w: 274, h: 151 },
-  { x: 936, y: 540, w: 160, h: 90 },
-  { x: 218, y: 260, w: 184, h: 240 },
-  { x: 1035, y: 285, w: 170, h: 210 },
-  { x: 204, y: 663, w: 312, h: 170 },
-  { x: 987, y: 740, w: 190, h: 95 },
-  { x: 92, y: 586, w: 52, h: 70 },
-  { x: 1306, y: 586, w: 52, h: 70 },
-  { x: 610, y: 755, w: 230, h: 88 },
-];
+// Sprite footprints and collision geometry share a single layout definition.
+export const FURNITURE = {
+  ranking: { x: 515, y: 275, w: 260, h: 190 },
+  throne: { x: 886, y: 252, w: 198, h: 224 },
+  mirror: { x: 455, y: 725, w: 160, h: 210 },
+  archive: { x: 915, y: 780, w: 260, h: 132 },
+  board: { x: 180, y: 1160, w: 260, h: 140 },
+  champion: { x: 726, y: 1110, w: 148, h: 206 },
+  library: { x: 1110, y: 1145, w: 300, h: 165 },
+};
+const SOLIDS = Object.values(FURNITURE);
+export const THRONE = { x: 985, y: 380, scale: 1.15 };
+export type RankingPreview = { name: string; rank: number; score: number };
+export function guildCamera(width: number, height: number, player: { x: number; y: number }) {
+  const scale = Math.min(1, Math.max(.42, Math.min(width / 760, height / 480)));
+  const viewWidth = width / scale, viewHeight = height / scale;
+  return { scale,
+    x: Math.max(0, Math.min(WORLD.width - viewWidth, player.x - viewWidth / 2)),
+    y: Math.max(0, Math.min(WORLD.height - viewHeight, player.y - viewHeight * .8)),
+  };
+}
 export function canWalk(x: number, y: number) {
-  return x >= 36 && x <= WORLD.width - 36 && y >= 225 && y <= WORLD.height - 40
+  return x >= 36 && x <= WORLD.width - 36 && y >= 205 && y <= WORLD.height - 40
     && !SOLIDS.some((r) => x + 13 > r.x && x - 13 < r.x + r.w && y + 23 > r.y && y + 9 < r.y + r.h);
 }
 export function nearbyPlace(x: number, y: number): PlaceId | null {
@@ -70,108 +83,147 @@ export const GAMES = [
   { title: "Ludo", kind: "Sfida a colori", color: "#c6c28e", text: "Quattro colori e una corsa verso casa. Il rito perfetto per ritrovarsi dopo la ranked." },
 ];
 
-// The room is painted once into an offscreen canvas; only players and markers animate.
+// Clear spatial hierarchy: a central ranked dais, two personal wings, then
+// the community gallery. Furniture never occupies the connecting promenades.
+function floorArea(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, color: string) {
+  rect(ctx, "#a7b49e", x, y, w, h);
+  rect(ctx, color, x + 5, y + 5, w - 10, h - 10);
+  for (const dx of [14, w - 20]) for (const dy of [14, h - 20]) rect(ctx, "#b8c3aa", x + dx, y + dy, 6, 6);
+}
+function boardSprite(ctx: CanvasRenderingContext2D) {
+  const { x, y, w, h } = FURNITURE.board;
+  rect(ctx, "#2b3b30", x, y, w, h); rect(ctx, "#c4bda0", x + 7, y + 7, w - 14, h - 14);
+  rect(ctx, "#485a42", x + 15, y + 15, w - 30, 23);
+  label(ctx, "BACHECA", x + w / 2, y + 31, "#edf1df", 13);
+  for (let i = 0; i < 3; i++) {
+    const px = x + 22 + i * 74, py = y + 51 + (i % 2) * 7;
+    rect(ctx, i === 1 ? "#d1ddd0" : "#ede3be", px, py, 64, 65);
+    rect(ctx, "#344633", px + 28, py - 3, 6, 6);
+    for (let line = 0; line < 3; line++) rect(ctx, "#8b9a79", px + 10, py + 18 + line * 12, 44 - line * 6, 3);
+  }
+}
+function rankingSprite(ctx: CanvasRenderingContext2D, leaders: RankingPreview[] = []) {
+  const { x, y, w, h } = FURNITURE.ranking;
+  rect(ctx, "#283b30", x - 8, y + h - 2, w + 16, 14);
+  rect(ctx, "#2b3b30", x, y, w, h); rect(ctx, "#c7ba88", x + 5, y + 5, w - 10, h - 10);
+  rect(ctx, "#e7e9d9", x + 10, y + 10, w - 20, h - 20);
+  rect(ctx, "#304637", x + 10, y + 10, w - 20, 45);
+  label(ctx, "CLASSIFICA RANKED", x + w / 2, y + 31, "#f0dc98", 16);
+  label(ctx, "STAGIONE IN CORSO", x + w / 2, y + 46, "#c4d0b3", 8);
+  for (let i = 0; i < 3; i++) {
+    const row = leaders[i], ry = y + 67 + i * 35;
+    rect(ctx, i === 0 ? "#d8c995" : "#d4ddc8", x + 17, ry - 3, w - 34, 29);
+    label(ctx, String(row?.rank ?? i + 1).padStart(2, "0"), x + 34, ry + 16, "#52644c", 12);
+    if (row) {
+      ctx.fillStyle = "#273a2c"; ctx.font = "bold 12px monospace"; ctx.textAlign = "left";
+      ctx.fillText(row.name, x + 54, ry + 15, 136);
+      ctx.textAlign = "right"; ctx.font = "bold 10px monospace"; ctx.fillText(String(row.score), x + w - 24, ry + 15);
+    } else {
+      rect(ctx, "#8da17c", x + 58, ry + 5, 120 - i * 20, 5);
+      rect(ctx, "#a2b091", x + 58, ry + 15, 81 - i * 15, 3);
+    }
+  }
+  label(ctx, "TUTTI I MEMBRI · TUTTE LE TAPPE", x + w / 2, y + h - 8, "#66765b", 8);
+}
+function mirrorSprite(ctx: CanvasRenderingContext2D) {
+  const { x, y, w, h } = FURNITURE.mirror;
+  rect(ctx, "#6d694c", x - 7, y + h, w + 14, 9);
+  rect(ctx, "#526454", x, y, w, h); rect(ctx, "#c6b77d", x + 5, y + 5, w - 10, h - 10);
+  rect(ctx, "#7d805e", x + 15, y + 15, w - 30, h - 30);
+  rect(ctx, "#a7c6c2", x + 22, y + 22, w - 44, h - 44);
+  rect(ctx, "#e0ece0", x + 29, y + 30, 7, 125); rect(ctx, "#d2e4d8", x + 42, y + 35, 4, 75);
+  for (const px of [x, x + w - 14]) for (const py of [y - 5, y + h - 12]) rect(ctx, "#e0cc91", px, py, 14, 16);
+}
+function archiveSprite(ctx: CanvasRenderingContext2D) {
+  const { x, y, w, h } = FURNITURE.archive;
+  rect(ctx, "#3a4b37", x, y, w, h); rect(ctx, "#8e9e79", x + 7, y + 7, w - 14, h - 14);
+  rect(ctx, "#c5ceb1", x + 15, y + 14, w - 30, 22);
+  label(ctx, "LE TUE TAPPE · I TUOI DECK", x + w / 2, y + 30, "#3e513b", 10);
+  rect(ctx, "#eae4c8", x + 20, y + 50, 104, 61); rect(ctx, "#f5eed8", x + 24, y + 54, 44, 53);
+  rect(ctx, "#d9d2af", x + 73, y + 54, 47, 53); rect(ctx, "#5b6e4c", x + 68, y + 52, 5, 57);
+  for (let row = 0; row < 4; row++) for (const dx of [31, 82]) rect(ctx, "#8e9c74", x + dx, y + 63 + row * 10, 28, 3);
+  for (let i = 0; i < 3; i++) {
+    const bx = x + 143 + i * 31;
+    rect(ctx, "#344a38", bx, y + 70, 25, 25);
+    rect(ctx, ["#b8ced2", "#d6bd7d", "#c19a8c"][i], bx + 3, y + 73, 19, 19);
+    rect(ctx, "#f4edd7", bx + 10, y + 80, 5, 5);
+  }
+}
+function librarySprite(ctx: CanvasRenderingContext2D) {
+  const { x, y, w, h } = FURNITURE.library;
+  rect(ctx, "#354730", x, y, w, h); rect(ctx, "#9ca17c", x + 7, y + 7, w - 14, h - 14);
+  for (let row = 0; row < 3; row++) {
+    rect(ctx, "#40503a", x + 14, y + 13 + row * 47, w - 28, 36);
+    for (let col = 0; col < 7; col++) {
+      const bx = x + 20 + col * 37, by = y + 18 + row * 47, bh = 22 + (col % 3) * 3;
+      rect(ctx, GAMES[(row * 7 + col) % GAMES.length].color, bx, by + 28 - bh, 29, bh);
+      rect(ctx, "#eeecd7", bx + 4, by + 18, 21, 3); rect(ctx, "#4a5c42", bx + 4, by + 8, 5, 5);
+    }
+  }
+}
 export function drawGuildWorld(ctx: CanvasRenderingContext2D) {
   rect(ctx, "#dbe0d3", 0, 0, WORLD.width, WORLD.height);
-  for (let y = 200; y < WORLD.height; y += 42) for (let x = 0; x < WORLD.width; x += 42) {
-    rect(ctx, (Math.floor(x / 42) + Math.floor(y / 42)) % 2 ? "#e7e9dd" : "#d3dbce", x, y, 41, 41);
-    rect(ctx, "#becbb8", x + 3, y + 3, 3, 3);
+  for (let y = 190; y < WORLD.height; y += 48) for (let x = 0; x < WORLD.width; x += 48) {
+    rect(ctx, (x / 48 + Math.floor(y / 48)) % 2 ? "#e5e8dc" : "#d7dfd0", x, y, 47, 47);
   }
-  rect(ctx, "#a1b394", 618, 200, 214, 880); rect(ctx, "#526a56", 630, 200, 190, 880);
-  rect(ctx, "#a1b394", 230, 580, 990, 76); rect(ctx, "#61795d", 230, 588, 990, 60);
-  for (let y = 228; y < 1060; y += 54) for (const x of [642, 796]) rect(ctx, "#93aa85", x, y, 12, 12);
-  rect(ctx, "#27332a", 0, 0, WORLD.width, 185);
-  for (let x = 30; x < WORLD.width; x += 65) rect(ctx, "#35473b", x, 25, 52, 140);
-  rect(ctx, "#8a9f82", 0, 185, WORLD.width, 18);
-  label(ctx, "RANKED", 725, 65, "#b9cbaa", 22);
-  label(ctx, "BeyStreetBoyz", 725, 117, "#edf1df", 42);
-  label(ctx, "LA GILDA DEL GRIFONE", 725, 152, "#b9cbaa", 13);
-  for (const x of [130, 1320]) {
-    rect(ctx, "#9ead8a", x - 32, 32, 64, 125); label(ctx, "G", x, 116, "#27332a", 68);
-    rect(ctx, "#344935", x - 26, 586, 52, 70); rect(ctx, "#8da284", x - 20, 575, 40, 67);
-    rect(ctx, "#c1ccab", x - 30, 574, 60, 12);
-  }
-  // Members' message board.
-  rect(ctx, "#27332a", 588, 305, 274, 151); rect(ctx, "#e9eedb", 596, 313, 258, 135);
-  rect(ctx, "#27332a", 608, 325, 234, 28); label(ctx, "BACHECA DELLA GILDA", 725, 344, "#edf1df", 14);
-  for (let i = 0; i < 3; i++) {
-    const x = 620 + i * 69, y = 366 + (i % 2) * 9;
-    rect(ctx, i === 1 ? "#c5ddce" : "#e5d5a5", x, y, 59, 56);
-    rect(ctx, "#526b52", x + 12, y + 15, 35, 4);
-    rect(ctx, "#879b76", x + 9, y + 28, 41, 3);
-    rect(ctx, "#879b76", x + 9, y + 37, 30, 3);
-    rect(ctx, "#27332a", x + 27, y - 3, 6, 6);
-  }
-  // A separate scoreboard stands on the eastern side of the hall.
-  rect(ctx, "#27332a", 936, 540, 160, 90);
-  rect(ctx, "#d4dec5", 944, 548, 144, 74);
-  rect(ctx, "#27332a", 951, 555, 130, 22);
-  label(ctx, "CLASSIFICA", 1016, 571, "#edf1df", 13);
-  for (let i = 0; i < 3; i++) {
-    label(ctx, String(i + 1), 963, 593 + i * 10, "#354835", 9);
-    rect(ctx, "#819c76", 976, 586 + i * 10, 83 - i * 17, 5);
-  }
-  // Full-length mirror and golden frame.
-  rect(ctx, "#30372e", 218, 267, 184, 232); rect(ctx, "#bdad76", 224, 259, 172, 230);
-  rect(ctx, "#776e49", 237, 272, 146, 203); rect(ctx, "#a7c6c2", 245, 281, 130, 187);
-  rect(ctx, "#d5e7d9", 254, 291, 10, 145); rect(ctx, "#d5e7d9", 270, 295, 6, 96);
-  rect(ctx, "#8ca9a5", 284, 450, 82, 10);
-  for (const x of [218, 385]) { rect(ctx, "#dec990", x, 248, 17, 20); rect(ctx, "#dec990", x, 478, 17, 23); }
-  label(ctx, "SPECCHIO DEI BLADER", 310, 239);
-  // Champion alcove, pedestal and plaque.
-  rect(ctx, "#bcc9b0", 1018, 288, 204, 210); rect(ctx, "#879e7d", 1035, 300, 170, 180);
-  drawChampion(ctx, 1120, 385, 1.5);
-  rect(ctx, "#26372b", 1038, 470, 164, 29); label(ctx, "GranBurstone", 1120, 490, "#edd995", 16);
-  label(ctx, "CAMPIONE RANKED · 2025", 1120, 260, "#344332", 13);
-  // Shelves full of differently sized board-game boxes.
-  rect(ctx, "#26352a", 204, 663, 312, 170); rect(ctx, "#8b9571", 212, 671, 296, 154);
-  for (let row = 0; row < 3; row++) {
-    rect(ctx, "#374331", 220, 677 + row * 47, 280, 37);
-    for (let col = 0; col < 7; col++) {
-      const x = 225 + col * 39, y = 682 + row * 47, h = 24 + (col % 3) * 3;
-      rect(ctx, GAMES[(row * 7 + col) % GAMES.length].color, x, y + 31 - h, 32, h);
-      rect(ctx, "#f0edd8", x + 4, y + 20, 23, 3); rect(ctx, "#475740", x + 4, y + 10, 5, 5);
-    }
-  }
-  label(ctx, "LA LIBRERIA DEI GIOCHI", 360, 644);
-  // Communal gaming table: checkerboard, dice and spare seats.
-  rect(ctx, "#303d2e", 987, 740, 190, 95); rect(ctx, "#a6b28a", 995, 748, 174, 79);
-  for (let row = 0; row < 6; row++) for (let col = 0; col < 6; col++) rect(ctx, (row + col) % 2 ? "#435340" : "#e4e6cc", 1013 + col * 9, 760 + row * 9, 9, 9);
-  rect(ctx, "#edf0de", 1118, 771, 18, 18); rect(ctx, "#33432f", 1123, 776, 4, 4); rect(ctx, "#33432f", 1128, 781, 4, 4);
-  rect(ctx, "#617251", 1020, 851, 38, 25); rect(ctx, "#617251", 1110, 851, 38, 25);
-  label(ctx, "UN ALTRO TURNO?", 1082, 906, "#52664b", 12);
-  // A personal tournament ledger with three Beyblade display slots.
-  rect(ctx, "#283a2e", 610, 755, 230, 88); rect(ctx, "#8d9e78", 618, 763, 214, 72);
-  rect(ctx, "#dce5c5", 628, 770, 88, 52); rect(ctx, "#f0ecd2", 632, 774, 38, 44);
-  rect(ctx, "#e2d9ae", 674, 774, 38, 44); rect(ctx, "#4c6046", 669, 774, 5, 44);
-  for (let i = 0; i < 4; i++) { rect(ctx, "#7b8f6b", 638, 781 + i * 9, 26, 3); rect(ctx, "#7b8f6b", 680, 781 + i * 9, 25, 3); }
-  for (let i = 0; i < 3; i++) { const x = 733 + i * 30; rect(ctx, "#354b38", x, 788, 24, 24); rect(ctx, ["#b8ced2", "#d6bd7d", "#c19a8c"][i], x + 3, 791, 18, 18); rect(ctx, "#f1ecd5", x + 9, 797, 6, 6); }
-  label(ctx, "ARCHIVIO DELLE TAPPE", 725, 744, "#edf1df", 14);
-  label(ctx, "← SPECCHIO     CAMPIONE →", 725, 677, "#e8efdc", 12);
-  label(ctx, "CLASSIFICA →", 876, 713, "#e8efdc", 11);
-  label(ctx, "↖ LIBRERIA · ARCHIVIO ↑", 725, 990, "#e8efdc", 12);
+  // Broad, unobstructed promenades. No decorative furniture on the main axis.
+  rect(ctx, "#b6c3a8", 710, 190, 180, WORLD.height - 190);
+  rect(ctx, "#698267", 718, 190, 164, WORLD.height - 190);
+  for (const y of [570, 955]) { rect(ctx, "#b6c3a8", 110, y, 1380, 78); rect(ctx, "#7c9273", 110, y + 6, 1380, 66); }
+  for (let y = 615; y < WORLD.height; y += 70) for (const x of [730, 859]) rect(ctx, "#9db38b", x, y, 10, 10);
+  rect(ctx, "#273b2e", 0, 0, WORLD.width, 165);
+  rect(ctx, "#879d7b", 0, 165, WORLD.width, 16);
+  label(ctx, "RANKED BEYSTREETBOYZ", 800, 92, "#e0e7ca", 28);
+  label(ctx, "LA GILDA DEL GRIFONE", 800, 128, "#b9cbaa", 12);
+  // The primary focus is a shared dais, with equal space for ranked and throne.
+  floorArea(ctx, 475, 210, 655, 355, "#cbd4ba");
+  rect(ctx, "#bdc7ad", 490, 565, 625, 9); rect(ctx, "#d5dcc5", 505, 574, 595, 8);
+  rankingSprite(ctx);
+  drawChampionThrone(ctx, THRONE.x, THRONE.y, null, 0, THRONE.scale);
+  label(ctx, "TRONO DEL CAMPIONE", THRONE.x, 231, "#4e6046", 13);
+  // Personal wings, intentionally one level below the ranked dais.
+  floorArea(ctx, 390, 680, 290, 360, "#d1dbc5");
+  mirrorSprite(ctx); label(ctx, "SPECCHIO DEI BLADER", 535, 705, "#455e45", 15);
+  floorArea(ctx, 890, 710, 310, 330, "#d1dbc5");
+  archiveSprite(ctx); label(ctx, "ARCHIVIO DELLE TAPPE", 1045, 752, "#455e45", 15);
+  label(ctx, "←  SPECCHIO", 635, 660, "#52694d", 12);
+  label(ctx, "TAPPE E DECK  →", 965, 660, "#52694d", 12);
+  // The community gallery is quiet and separated from the competition area.
+  floorArea(ctx, 130, 1080, 1340, 350, "#d4d9c5");
+  label(ctx, "LA VITA DELLA GILDA", 800, 1060, "#6d7d61", 13);
+  boardSprite(ctx);
+  drawChampion(ctx, 800, 1225, 1.1);
+  rect(ctx, "#344934", 726, 1290, 148, 26);
+  label(ctx, "GranBurstone", 800, 1308, "#e3d39a", 13);
+  label(ctx, "CAMPIONE ANNUALE · 2025", 800, 1112, "#66775a", 10);
+  librarySprite(ctx); label(ctx, "LIBRERIA DEI GIOCHI", 1260, 1123, "#66775a", 12);
+  label(ctx, "MESSAGGI DEI MEMBRI", 310, 1137, "#66775a", 12);
+  label(ctx, "INGRESSO", 800, 1456, "#e0e8d2", 11);
 }
-export function drawRoomDetails(ctx: CanvasRenderingContext2D, near: PlaceId | null, now: number, avatar: Avatar) {
-  // A live reflection of the member's saved avatar.
-  ctx.save(); ctx.beginPath(); ctx.rect(246, 282, 128, 186); ctx.clip();
-  ctx.translate(310, 375); ctx.scale(2, 2);
+export function drawRoomDetails(ctx: CanvasRenderingContext2D, near: PlaceId | null, now: number, avatar: Avatar, champion: ReigningChampion | null = null, leaders: RankingPreview[] = []) {
+  rankingSprite(ctx, leaders);
+  drawChampionThrone(ctx, THRONE.x, THRONE.y, champion, now, THRONE.scale);
+  rect(ctx, "#53684c", 877, 488, 216, 28);
+  ctx.fillStyle = "#f0df9b"; ctx.font = "bold 12px monospace"; ctx.textAlign = "center";
+  ctx.fillText(champion?.displayName ?? "IN ATTESA DEL CAMPIONE", THRONE.x, 507, 198);
+  const mirror = FURNITURE.mirror;
+  ctx.save(); ctx.beginPath(); ctx.rect(mirror.x + 23, mirror.y + 23, mirror.w - 46, mirror.h - 46); ctx.clip();
+  ctx.translate(mirror.x + mirror.w / 2, mirror.y + mirror.h / 2 + 5); ctx.scale(2.1, 2.1);
   drawPixelPlayer(ctx, 0, 0, "down", false, now, avatar); ctx.restore();
-  for (const p of PLACES) {
-    const active = p.id === near;
-    rect(ctx, active ? "#f4e4a1" : "#dce6ce", p.x - 15, p.y - 15, 30, 30);
-    ctx.strokeStyle = "#293b2c"; ctx.lineWidth = 3; ctx.strokeRect(p.x - 15, p.y - 15, 30, 30);
-    label(ctx, active ? "!" : p.symbol, p.x, p.y + 6, "#293b2c", 17);
-    if (active) {
-      ctx.strokeStyle = "#536b45"; ctx.setLineDash([7, 5]); ctx.strokeRect(p.x - 34, p.y - 28, 68, 56); ctx.setLineDash([]);
-    }
+  // A single active floor marker, rather than seven competing labels.
+  const place = PLACES.find(p => p.id === near);
+  if (place) {
+    rect(ctx, "#f4e4a1", place.x - 15, place.y - 15, 30, 30);
+    ctx.strokeStyle = "#536b45"; ctx.lineWidth = 2; ctx.strokeRect(place.x - 20, place.y - 20, 40, 40);
+    label(ctx, "!", place.x, place.y + 7, "#293b2c", 18);
   }
 }
 export function drawMinimap(ctx: CanvasRenderingContext2D, x: number, y: number) {
-  const w = 144, h = 103, left = 12, top = 12;
-  rect(ctx, "#1d2c24e8", left, top, w, h);
+  const w = 144, h = 112, left = 12, top = 12;
+  rect(ctx, "#1d2c24ef", left, top, w, h);
   ctx.strokeStyle = "#bacab1"; ctx.lineWidth = 2; ctx.strokeRect(left, top, w, h);
   label(ctx, "MAPPA DELLA GILDA", left + w / 2, top + 15, "#dce7d1", 9);
-  const project = (px: number, py: number) => [left + 10 + px / WORLD.width * 124, top + 25 + (py - 200) / (WORLD.height - 200) * 65];
+  const project = (px: number, py: number) => [left + 10 + px / WORLD.width * 124, top + 27 + (py - 190) / (WORLD.height - 190) * 72];
   for (const p of PLACES) { const [mx, my] = project(p.x, p.y); label(ctx, p.symbol, mx, my + 3, "#dce7d1", 11); }
   const [px, py] = project(x, y); rect(ctx, "#edcc75", px - 3, py - 3, 6, 6);
 }

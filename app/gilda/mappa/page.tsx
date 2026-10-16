@@ -1,14 +1,19 @@
 "use client";
+import Link from "next/link";
+import "./throne.css";
 import { memberDisplayName } from "../../lib/member-name";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useGameAudio, usePopupSound } from "../../lib/game-audio";
 import { drawPixelPlayer, type Direction } from "../../lib/pixel-player";
 import { type PlayerMember as Member, readResponse } from "../../lib/client-api";
 import { useDialogFocus } from "../../lib/dialog-focus";
-import { WORLD, START, PLACES, GAMES, canWalk, nearbyPlace, drawGuildWorld, drawRoomDetails, drawMinimap, drawChampion, type PlaceId } from "./guild-world";
+import { WORLD, START, PLACES, GAMES, canWalk, nearbyPlace, guildCamera, drawGuildWorld, drawRoomDetails, drawMinimap, drawChampion, type PlaceId, type RankingPreview } from "./guild-world";
 import MirrorPhoto from "./mirror-photo";
 import GuildBoard from "./guild-board";
 import StageArchive from "./stage-archive";
+import ThroneCard from "./throne-card";
+import { useReigningChampion } from "../../lib/use-reigning-champion";
+import type { ReigningChampion } from "../../lib/reigning-champion";
 
 type RankingRow = { id: string; firstName: string; lastName: string | null; challongeUsername: string | null; score: number; rank: number };
 const KEY_DIRECTIONS: Record<string, Direction> = { ArrowUp: "up", w: "up", ArrowDown: "down", s: "down", ArrowLeft: "left", a: "left", ArrowRight: "right", d: "right" };
@@ -24,12 +29,20 @@ function beginWalk(keys: Set<Direction>, player: { x: number; y: number; dir: Di
   keys.add(direction);
 }
 
-function GuildRoom({ onOpen, onNear, onStep, paused, member }: {
+function GuildRoom({ onOpen, onNear, onStep, paused, member, champion, leaders }: {
   member: Member; onOpen: (id: PlaceId) => void; onNear: (id: PlaceId | null) => void; onStep: () => void; paused: boolean;
+  champion: ReigningChampion | null;
+  leaders: RankingPreview[];
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const playerRef = useRef({ ...START, dir: "up" as Direction });
   const keysRef = useRef(new Set<Direction>());
+  const [showGuide, setShowGuide] = useState(false);
+  const guideRef = useRef(showGuide), leadersRef = useRef(leaders);
+  useEffect(() => { guideRef.current = showGuide; }, [showGuide]);
+  useEffect(() => { leadersRef.current = leaders; }, [leaders]);
+  const championRef = useRef(champion);
+  useEffect(() => { championRef.current = champion; }, [champion]);
   const nearRef = useRef<PlaceId | null>(null), pausedRef = useRef(paused);
   useEffect(() => { pausedRef.current = paused; if (paused) keysRef.current.clear(); }, [paused]);
   useEffect(() => {
@@ -56,17 +69,16 @@ function GuildRoom({ onOpen, onNear, onStep, paused, member }: {
       if (walking && now - lastFootstep > 245) { onStep(); lastFootstep = now; }
       const near = nearbyPlace(player.x, player.y);
       if (near !== nearRef.current) { nearRef.current = near; onNear(near); }
-      const cameraX = canvas.width > WORLD.width ? (WORLD.width - canvas.width) / 2 : Math.max(0, Math.min(WORLD.width - canvas.width, player.x - canvas.width / 2));
-      const cameraY = Math.max(0, Math.min(WORLD.height - canvas.height, player.y - canvas.height * .58));
+      const camera = guildCamera(canvas.width, canvas.height, player);
       ctx.fillStyle = "#dbe0d3"; ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.save(); ctx.translate(-Math.round(cameraX), -Math.round(cameraY)); ctx.drawImage(background, 0, 0);
-      drawRoomDetails(ctx, near, now, member); drawPixelPlayer(ctx, player.x, player.y, player.dir, walking, now, member); ctx.restore();
-      drawMinimap(ctx, player.x, player.y);
+      ctx.save(); ctx.scale(camera.scale, camera.scale); ctx.translate(-Math.round(camera.x), -Math.round(camera.y)); ctx.drawImage(background, 0, 0);
+      drawRoomDetails(ctx, near, now, member, championRef.current, leadersRef.current); drawPixelPlayer(ctx, player.x, player.y, player.dir, walking, now, member); ctx.restore();
+      if (guideRef.current) drawMinimap(ctx, player.x, player.y);
       frame = requestAnimationFrame(render);
     };
     frame = requestAnimationFrame(render);
     const keydown = (event: KeyboardEvent) => {
-      if (pausedRef.current || (event.target instanceof Element && event.target.closest("input, textarea, select"))) return;
+      if (pausedRef.current || (event.target instanceof Element && event.target.closest("input, textarea, select, button, a, summary"))) return;
       const direction = KEY_DIRECTIONS[event.key] || KEY_DIRECTIONS[event.key.toLowerCase()];
       if (direction) { event.preventDefault(); beginWalk(keysRef.current, playerRef.current, direction); }
       if (event.key === "Enter" && nearRef.current && !event.repeat) { event.preventDefault(); onOpen(nearRef.current); }
@@ -77,8 +89,9 @@ function GuildRoom({ onOpen, onNear, onStep, paused, member }: {
     return () => { cancelAnimationFrame(frame); observer.disconnect(); window.removeEventListener("keydown", keydown); window.removeEventListener("keyup", keyup); window.removeEventListener("blur", blur); document.removeEventListener("visibilitychange", blur); };
   }, [onOpen, onNear, onStep, member]);
   return <>
-    <canvas ref={canvasRef} className="guild-canvas" aria-label="Mappa della Gilda: bacheca a nord, classifica a est, specchio a nord-ovest, statua del campione a nord-est, libreria a sud-ovest e Archivio delle Tappe a sud. Muoviti con le frecce o i pulsanti touch e interagisci vicino agli oggetti." />
-    <div className="guild-map-legend" aria-label="Legenda mappa"><span>S · Specchio</span><span>C · Campione</span><span>L · Libreria</span><span>B · Bacheca</span><span>R · Classifica</span><span>A · Tappe e deck</span></div>
+    <canvas ref={canvasRef} className="guild-canvas" aria-label="Mappa della Gilda: classifica e trono sulla pedana centrale a nord, specchio nell'ala ovest e archivio tappe nell'ala est. Nella galleria a sud: bacheca a sinistra, statua annuale al centro, libreria a destra. Muoviti con le frecce o i pulsanti touch e interagisci vicino agli oggetti." />
+    <button className="guild-guide-toggle" title={showGuide ? "Nascondi mappa e legenda" : "Mostra mappa e legenda"} aria-label={showGuide ? "Nascondi mappa e legenda" : "Mostra mappa e legenda"} aria-expanded={showGuide} aria-controls="guild-map-guide" onClick={() => setShowGuide(value => !value)}>⌖</button>
+    {showGuide && <div id="guild-map-guide" className="guild-map-legend" role="region" aria-label="Legenda mappa" tabIndex={0} onKeyDown={event => event.stopPropagation()}>{PLACES.map(place => <span key={place.id}>{place.symbol} · {place.name}</span>)}</div>}
     <div className="guild-dpad" aria-label="Controlli movimento">{(["up", "left", "down", "right"] as Direction[]).map((direction) => <button key={direction} className={`guild-${direction}`} aria-label={`Vai ${DIRECTION_NAMES[direction]}`} disabled={paused}
       onPointerDown={(event) => { if (!pausedRef.current) { event.currentTarget.setPointerCapture(event.pointerId); beginWalk(keysRef.current, playerRef.current, direction); } }}
       onPointerUp={() => keysRef.current.delete(direction)} onPointerCancel={() => keysRef.current.delete(direction)} onLostPointerCapture={() => keysRef.current.delete(direction)}>
@@ -102,7 +115,9 @@ function Library({ onClick }: { onClick: () => void }) {
 export default function GuildMapPage() {
   const [loading, setLoading] = useState(true), [member, setMember] = useState<Member | null>(null);
   const [ranking, setRanking] = useState<RankingRow[]>([]), [error, setError] = useState("");
+  const leaders = useMemo(() => ranking.slice(0, 3).map(row => ({ name: memberDisplayName(row), rank: row.rank, score: row.score })), [ranking]);
   const [near, setNear] = useState<PlaceId | null>(null), [opened, setOpened] = useState<PlaceId | null>(null);
+  const championState = useReigningChampion(member?.id);
   usePopupSound(Boolean(near));
   useDialogFocus(!!opened);
   const { enabled: audioEnabled, toggle: toggleAudio, playClick, playStep } = useGameAudio("guild");
@@ -131,17 +146,19 @@ export default function GuildMapPage() {
   }, [opened, close]);
   const nearby = PLACES.find((p) => p.id === near), selected = PLACES.find((p) => p.id === opened);
   return <main className="guild-map-shell">
-    <header className="guild-map-header"><a href="/gilda">← ATRIO DELLA GILDA</a><span>LA GILDA DEL GRIFONE</span><div className="guild-header-actions"><button className="guild-audio-toggle" onClick={toggleAudio} aria-pressed={audioEnabled} aria-label={audioEnabled ? "Disattiva audio" : "Attiva audio"}><span aria-hidden="true">{audioEnabled ? "♫" : "×"}</span><span className="guild-audio-label">AUDIO {audioEnabled ? "ON" : "OFF"}</span></button><a href="/">MAPPA DI TORINO ↗</a></div></header>
+    <header className="guild-map-header"><a href="/gilda">← ATRIO DELLA GILDA</a><span>LA GILDA DEL GRIFONE</span><div className="guild-header-actions"><button className="guild-audio-toggle" onClick={toggleAudio} aria-pressed={audioEnabled} aria-label={audioEnabled ? "Disattiva audio" : "Attiva audio"}><span aria-hidden="true">{audioEnabled ? "♫" : "×"}</span><span className="guild-audio-label">AUDIO {audioEnabled ? "ON" : "OFF"}</span></button><Link href="/">MAPPA DI TORINO ↗</Link></div></header>
     {loading ? <div className="guild-map-message">Apro la sala della Gilda…</div> : !member ? <div className="guild-map-message"><h1>La porta è chiusa.</h1><p>{error || "Accedi con le tue credenziali per entrare."}</p><a className="solid-button" href="/gilda">VAI ALL’ACCESSO →</a></div> : <>
       <div className="guild-map-title"><p>BENVENUTO, {memberDisplayName(member)}</p><h1>Una Gilda da esplorare</h1><span>FRECCE / WASD · AVVICINATI E PREMI INVIO</span></div>
-      <div className="guild-stage"><GuildRoom onOpen={open} onNear={updateNear} onStep={playStep} paused={!!opened} member={member} />
+      {championState.champion && <button className="guild-champion-banner" onClick={() => { playClick(); open("throne"); }}>♛ Il campione in carica è <strong>{championState.champion.displayName}</strong> · {championState.champion.stage.name} <span>SCOPRI IL TRONO →</span></button>}
+      <div className="guild-stage"><GuildRoom onOpen={open} onNear={updateNear} onStep={playStep} paused={!!opened} member={member} champion={championState.champion} leaders={leaders} />
         <div className={`guild-interaction-prompt ${nearby && !opened ? "is-visible" : ""}`} aria-live="polite">{nearby && !opened && <button onClick={() => open(nearby.id)}><span className="prompt-icon">!</span><span><small>ESPLORA</small>{nearby.name}</span><kbd>INVIO ↵</kbd></button>}</div>
       </div>
       {opened && selected && <div className="guild-overlay" onMouseDown={close}><section className={`ranking-card guild-object-card guild-object-${opened}`} role="dialog" aria-modal="true" aria-labelledby="guild-object-title" onMouseDown={(event) => event.stopPropagation()}>
         <button className="close-button" onClick={close} aria-label="Chiudi">×</button>
-        <p className="section-kicker">RANKED BEYSTREETBOYZ / {opened === "mirror" ? "IL TUO RITRATTO" : opened === "champion" ? "ALBO D’ORO" : opened === "library" ? "UN ALTRO TURNO" : opened === "ranking" ? "CLASSIFICA" : opened === "archive" ? "LE TUE TAPPE E I TUOI DECK" : "BACHECA"}</p>
+        <p className="section-kicker">RANKED BEYSTREETBOYZ / {opened === "mirror" ? "IL TUO RITRATTO" : opened === "throne" ? "IL CAMPIONE IN CARICA" : opened === "champion" ? "ALBO D’ORO" : opened === "library" ? "UN ALTRO TURNO" : opened === "ranking" ? "CLASSIFICA" : opened === "archive" ? "LE TUE TAPPE E I TUOI DECK" : "BACHECA"}</p>
         <h2 id="guild-object-title">{selected.name}</h2>
-        {opened === "mirror" && <MirrorPhoto member={member} onClick={playClick} />}
+        {opened === "mirror" && <MirrorPhoto member={member} onClick={playClick} championState={championState} />}
+        {opened === "throne" && <ThroneCard state={championState} />}
         {opened === "champion" && <div className="champion-memorial"><div className="champion-sprite"><ChampionPortrait /></div><p className="champion-year">CAMPIONE RANKED · 2025</p><h3>GranBurstone</h3><p>Al campione della ranked dell’anno scorso.<br />Il suo nome resta scolpito nella storia della Gilda.</p><blockquote>Un trofeo passa di mano.<br />Una leggenda resta.</blockquote></div>}
         {opened === "library" && <Library onClick={playClick} />}
         {opened === "board" && <GuildBoard member={member} onClick={playClick} />}

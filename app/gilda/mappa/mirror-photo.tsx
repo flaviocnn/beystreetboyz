@@ -1,11 +1,14 @@
 "use client";
 import { memberDisplayName } from "../../lib/member-name";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { drawPixelPlayer, type Avatar } from "../../lib/pixel-player";
 import type { PlayerMember } from "../../lib/client-api";
 import type { PersonalStage } from "../../lib/decks";
 import { achievementCaption, topEightStages, wrapPortraitText, type MirrorAchievement } from "../../lib/mirror-achievement";
 import { MIRROR_MOTTOS, mirrorMotto } from "../../lib/mirror-mottos";
+import { drawChampionThrone } from "../../lib/throne-art";
+import type { ChampionState } from "../../lib/use-reigning-champion";
+import { canExportThrone } from "../../lib/reigning-champion";
 
 const BACKGROUNDS = [
   { name: "Fenici", ink: "#351d2c", paper: "#fff0d4", mid: "#a54146", light: "#f4a457", accent: "#ffd66d" },
@@ -15,7 +18,7 @@ const BACKGROUNDS = [
   { name: "Inferno", ink: "#240f1b", paper: "#fff0d1", mid: "#6e202c", light: "#ef6838", accent: "#ffce62" },
 ];
 const POSES = ["Frontale", "Trionfante", "Sdraiato", "Guanto di sfida"];
-export function drawPortrait(canvas: HTMLCanvasElement, avatar: Avatar, name: string, background: number, pose: number, achievement: MirrorAchievement | null = null, mottoId = "guild-seal") {
+export function drawPortrait(canvas: HTMLCanvasElement, avatar: Avatar, name: string, background: number, pose: number, achievement: MirrorAchievement | null = null, mottoId = "guild-seal", throne = false) {
   canvas.width = 1080; canvas.height = 1350;
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
@@ -34,7 +37,7 @@ export function drawPortrait(canvas: HTMLCanvasElement, avatar: Avatar, name: st
   for (let x = 25; x < 340; x += 14) { box(theme.accent, x, 23, 7, 3); box(theme.accent, x, height - 27, 7, 3); }
   text("R A N K E D", 54, 14, theme.accent);
   text("BeyStreetBoyz", 85, 30);
-  text("GILDA DEL GRIFONE / TORINO", 106, 9, theme.light);
+  text(throne ? "CAMPIONE IN CARICA / TRONO DELLA GILDA" : "GILDA DEL GRIFONE / TORINO", 106, 9, theme.light);
   // Pixel mirror, geometric floor and light beams, all rendered without external assets.
   box(theme.accent, 57, 124, 246, 221); box(theme.paper, 63, 130, 234, 208); box(theme.mid, 68, 135, 224, 199);
   if (background === 0) {
@@ -78,20 +81,23 @@ export function drawPortrait(canvas: HTMLCanvasElement, avatar: Avatar, name: st
   box(theme.ink, 69, 302, 222, 31);
   for (let y = 305; y < 334; y += 10) for (let x = 70; x < 290; x += 20) if ((x / 20 + y / 10) % 2 < 1) box(theme.mid, x, y, 19, 9);
   if (background === 4) for (let x = 73; x < 285; x += 21) { box(theme.light, x, 312 + x % 9, 17, 3); box(theme.accent, x + 4, 315 + x % 9, 8, 2); }
-  ctx.save();
-  ctx.translate(pose === 2 ? 171 : 180, pose === 2 ? 256 : 230);
-  if (pose === 2) ctx.rotate(-Math.PI / 2);
-  ctx.scale(3, 3);
-  drawPixelPlayer(ctx, 0, 0, "down", false, 0, avatar);
-  if (pose === 1) {
-    box(theme.ink, -19, -11, 8, 16); box(theme.ink, 11, -11, 8, 16);
-    box(theme.accent, -17, -9, 4, 6); box(theme.accent, 13, -9, 4, 6);
-  } else if (pose === 3) {
-    box(theme.ink, 11, 5, 14, 10); box(theme.accent, 20, 0, 17, 17);
-    box(theme.paper, 23, 3, 5, 6); box(theme.ink, 25, 15, 9, 3);
+  if (throne) drawChampionThrone(ctx, 180, 245, avatar, 0, .94);
+  else {
+    ctx.save();
+    ctx.translate(pose === 2 ? 171 : 180, pose === 2 ? 256 : 230);
+    if (pose === 2) ctx.rotate(-Math.PI / 2);
+    ctx.scale(3, 3);
+    drawPixelPlayer(ctx, 0, 0, "down", false, 0, avatar);
+    if (pose === 1) {
+      box(theme.ink, -19, -11, 8, 16); box(theme.ink, 11, -11, 8, 16);
+      box(theme.accent, -17, -9, 4, 6); box(theme.accent, 13, -9, 4, 6);
+    } else if (pose === 3) {
+      box(theme.ink, 11, 5, 14, 10); box(theme.accent, 20, 0, 17, 17);
+      box(theme.paper, 23, 3, 5, 6); box(theme.ink, 25, 15, 9, 3);
+    }
+    ctx.restore();
   }
-  ctx.restore();
-  if (pose === 1) { box(theme.accent, 113, 167, 7, 7); box(theme.accent, 243, 160, 7, 7); }
+  if (!throne && pose === 1) { box(theme.accent, 113, 167, 7, 7); box(theme.accent, 243, 160, 7, 7); }
   for (const [x, y] of [[112, 169], [248, 189], [268, 275]]) { box(theme.paper, x - 5, y, 15, 5); box(theme.paper, x, y - 5, 5, 15); }
   for (const [x, y] of [[49, 116], [294, 116], [49, 333], [294, 333]]) box(theme.accent, x, y, 17, 17);
   const displayName = name.trim() || "UN MEMBRO DELLA GILDA";
@@ -120,17 +126,24 @@ export function drawPortrait(canvas: HTMLCanvasElement, avatar: Avatar, name: st
   }
 }
 
-export default function MirrorPhoto({ member, onClick }: { member: PlayerMember; onClick: () => void }) {
+export default function MirrorPhoto({ member, onClick, championState }: { member: PlayerMember; onClick: () => void; championState: ChampionState }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [name, setName] = useState(memberDisplayName(member));
   const [background, setBackground] = useState(0), [pose, setPose] = useState(0);
   const [mottoId, setMottoId] = useState("guild-seal");
-  const [photo, setPhoto] = useState<{ url: string; blob: Blob; width: number; height: number } | null>(null);
+  const [photo, setPhoto] = useState<{ url: string; blob: Blob; width: number; height: number; throneStage: string | null } | null>(null);
+  const [throneSelected, setThroneSelected] = useState(false), [throneNotice, setThroneNotice] = useState("");
+  const [exporting, setExporting] = useState(false);
   const [message, setMessage] = useState("");
   const [stages, setStages] = useState<PersonalStage[]>([]), [stageSlug, setStageSlug] = useState("");
   const [stagesStatus, setStagesStatus] = useState<"loading" | "ready" | "error">("loading");
   const [reloadStages, setReloadStages] = useState(0);
-  const achievement = stages.find(stage => stage.slug === stageSlug) ?? null;
+  const throne = throneSelected && championState.canUseThrone && championState.champion?.memberId === member.id;
+  const portraitName = throne ? championState.champion!.displayName : name;
+  const achievement = useMemo(() => throne && championState.champion
+    ? { name: championState.champion.stage.name, finalRank: 1, deck: championState.champion.deck }
+    : stages.find(stage => stage.slug === stageSlug) ?? null, [throne, championState.champion, stages, stageSlug]);
+  const throneStage = throne ? championState.champion!.stage.slug : null;
   useEffect(() => {
     const controller = new AbortController();
     void fetch("/api/guild/stages", { cache: "no-store", signal: controller.signal }).then(async response => {
@@ -146,18 +159,38 @@ export default function MirrorPhoto({ member, onClick }: { member: PlayerMember;
     if (!canvas) return;
     let live = true, url = "";
     setPhoto(null); setMessage("");
-    drawPortrait(canvas, member, name, background, pose, achievement, mottoId);
+    drawPortrait(canvas, member, portraitName, background, pose, achievement, mottoId, throne);
     const width = canvas.width, height = canvas.height;
     canvas.toBlob((blob) => {
       if (!blob || !live) return;
-      url = URL.createObjectURL(blob); setPhoto({ url, blob, width, height });
+      url = URL.createObjectURL(blob); setPhoto({ url, blob, width, height, throneStage });
     }, "image/png");
     return () => { live = false; if (url) URL.revokeObjectURL(url); };
-  }, [member, name, background, pose, achievement, mottoId]);
+  }, [member, portraitName, background, pose, achievement, mottoId, throne, throneStage]);
+  async function authorizePhoto(selected: NonNullable<typeof photo>) {
+    if (!selected.throneStage) return true;
+    const latest = await championState.refresh();
+    if (canExportThrone(latest, member.id, selected.throneStage)) return true;
+    setThroneSelected(false);
+    setThroneNotice("Il titolo non è più attivo oppure non è verificabile. Il ritratto del trono non è stato esportato: puoi usare il ritratto normale.");
+    return false;
+  }
+  async function downloadThrone() {
+    if (!photo || exporting) return;
+    const selected = photo; setExporting(true); onClick();
+    try {
+      if (!await authorizePhoto(selected)) return;
+      const url = URL.createObjectURL(selected.blob), link = document.createElement("a");
+      link.href = url; link.download = "Ranked-BeyStreetBoyz-Campione.png"; link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+    } finally { setExporting(false); }
+  }
   async function shareInstagram() {
-    if (!photo) return;
+    if (!photo || exporting) return;
+    const selected = photo;
     onClick();
-    const file = new File([photo.blob], "Ranked-BeyStreetBoyz.png", { type: "image/png" });
+    if (!await authorizePhoto(selected)) return;
+    const file = new File([selected.blob], "Ranked-BeyStreetBoyz.png", { type: "image/png" });
     if (navigator.canShare?.({ files: [file] }) && navigator.share) {
       try {
         await navigator.share({ files: [file], title: "Ranked BeyStreetBoyz", text: achievement ? `${achievement.name} · ${achievement.finalRank}° posto · Ranked BeyStreetBoyz` : "Il mio avatar della Gilda del Grifone" });
@@ -167,27 +200,34 @@ export default function MirrorPhoto({ member, onClick }: { member: PlayerMember;
       }
     }
     const link = document.createElement("a");
-    link.href = photo.url; link.download = file.name; link.click();
+    const url = URL.createObjectURL(file);
+    link.href = url; link.download = file.name; link.click(); setTimeout(() => URL.revokeObjectURL(url), 10000);
     setMessage("Foto scaricata. Apri Instagram e caricala dal tuo dispositivo.");
   }
   return <div className="mirror-workshop">
-    <div className="mirror-photo-preview"><canvas ref={canvasRef} hidden />{photo && <img src={photo.url} width={photo.width} height={photo.height} alt={`Ritratto pixel art di ${name || "un membro"}, con il brand Ranked BeyStreetBoyz${achievement ? `, ${achievement.name}, ${achievement.finalRank}° posto${achievement.deck ? ", con deck registrato" : ""}` : ""}`} />}</div>
+    <div className="mirror-photo-preview"><canvas ref={canvasRef} hidden />{photo && <img src={photo.url} width={photo.width} height={photo.height} alt={`Ritratto pixel art di ${portraitName || "un membro"}${throne ? ", campione in carica incoronato sul trono" : ""}, con il brand Ranked BeyStreetBoyz${achievement ? `, ${achievement.name}, ${achievement.finalRank}° posto${achievement.deck ? ", con deck registrato" : ""}` : ""}`} />}</div>
     <div className="mirror-photo-options"><p>Uno specchio, il tuo avatar, il tuo sigillo. Crea una cartolina da portare con te.</p>
-      <label className="mirror-name">NOME SULLA FOTO<input value={name} maxLength={80} onChange={(e) => setName(e.target.value)} placeholder="Il tuo nome o nickname" /></label>
+      <fieldset><legend>RITRATTO DEL CAMPIONE</legend>
+        {championState.canUseThrone && championState.champion?.memberId === member.id ? <label className="mirror-throne-choice"><input type="checkbox" checked={throne} onChange={event => { setThroneSelected(event.target.checked); setThroneNotice(""); onClick(); }} /> Sul trono · Campione di {championState.champion.stage.name}</label>
+          : <p>{championState.loading ? "Verifico il campione in carica…" : "Il ritratto sul trono è riservato al vincitore in carica, fino ai risultati della tappa successiva."}</p>}
+        {throne && <p>Ritratto esclusivo: avatar incoronato, username ufficiale, tappa vinta e deck, se registrato. Il titolo viene riverificato prima dell’esportazione.</p>}
+        {throneNotice && <p role="status">{throneNotice}</p>}
+      </fieldset>
+      <label className="mirror-name">NOME SULLA FOTO<input value={portraitName} disabled={throne} maxLength={80} onChange={(e) => setName(e.target.value)} placeholder="Il tuo nome o nickname" /></label>
       <label className="mirror-name">FRASE SULLA FOTO<select value={mottoId} onChange={event => { setMottoId(event.target.value); onClick(); }}>
         <option value="">Nessuna · nascondi la scritta</option>
         {MIRROR_MOTTOS.map(motto => <option key={motto.id} value={motto.id}>{motto.text}</option>)}
       </select></label>
       <fieldset><legend>BACKGROUND</legend><div className="mirror-choices">{BACKGROUNDS.map((theme, index) => <button key={theme.name} aria-pressed={background === index} onClick={() => { setBackground(index); onClick(); }}>{theme.name}</button>)}</div></fieldset>
-      <fieldset><legend>POSA</legend><div className="mirror-choices">{POSES.map((label, index) => <button key={label} aria-pressed={pose === index} onClick={() => { setPose(index); onClick(); }}>{label}</button>)}</div></fieldset>
-      <fieldset className="mirror-achievement"><legend>PIAZZAMENTO DI TAPPA</legend>
-        {stagesStatus === "loading" ? <p role="status">Cerco le tue tappe in top 8…</p> : stagesStatus === "error" ? <div><p role="alert">Non riesco a caricare le tappe. Puoi comunque creare il ritratto semplice.</p><button className="text-button" onClick={() => { onClick(); setStagesStatus("loading"); setReloadStages(value => value + 1); }}>RIPROVA</button></div> : stages.length ? <>
+      <fieldset disabled={throne}><legend>POSA{throne ? " · SUL TRONO" : ""}</legend><div className="mirror-choices">{POSES.map((label, index) => <button key={label} aria-pressed={!throne && pose === index} onClick={() => { setPose(index); onClick(); }}>{label}</button>)}</div></fieldset>
+      <fieldset className="mirror-achievement" disabled={throne}><legend>PIAZZAMENTO DI TAPPA{throne ? " · TAPPA VINTA INCLUSA" : ""}</legend>
+        {throne && achievement ? <p>{achievement.name} · 1° posto{achievement.deck ? " · Il deck registrato sarà incluso automaticamente." : " · Nessun deck registrato per questa tappa."}</p> : stagesStatus === "loading" ? <p role="status">Cerco le tue tappe in top 8…</p> : stagesStatus === "error" ? <div><p role="alert">Non riesco a caricare le tappe. Puoi comunque creare il ritratto semplice.</p><button className="text-button" onClick={() => { onClick(); setStagesStatus("loading"); setReloadStages(value => value + 1); }}>RIPROVA</button></div> : stages.length ? <>
           <label className="mirror-name">TAPPA DA MOSTRARE<select value={stageSlug} onChange={event => { setStageSlug(event.target.value); onClick(); }}><option value="">Nessuna · solo ritratto</option>{stages.map(stage => <option key={stage.slug} value={stage.slug}>{stage.name} · {stage.finalRank}° posto · {stage.eventDate}</option>)}</select></label>
           {achievement && <p>{achievement.deck ? "Il deck registrato sarà incluso automaticamente nella foto." : "Nessun deck registrato per questa tappa: la foto includerà nome e piazzamento. Puoi aggiungere il deck nell’Archivio delle Tappe."}</p>}
         </> : <p>Non hai ancora risultati in top 8 importati. Le tappe compariranno qui dopo la sincronizzazione dello staff.</p>}
       </fieldset>
-      {photo ? <a className="solid-button" href={photo.url} download="Ranked-BeyStreetBoyz.png" onClick={() => { onClick(); setMessage("Ritratto pronto: se richiesto, conferma il salvataggio nel browser."); }}>SCARICA PNG <span>↓</span></a> : <p role="status">Preparo il ritratto…</p>}
-      <button className="outline-button" disabled={!photo} onClick={() => void shareInstagram()}>CONDIVIDI SU INSTAGRAM ↗</button>
+      {photo ? photo.throneStage ? <button className="solid-button" disabled={exporting} onClick={() => void downloadThrone()}>{exporting ? "VERIFICO IL TITOLO…" : "SCARICA PNG DEL CAMPIONE ↓"}</button> : <a className="solid-button" href={photo.url} download="Ranked-BeyStreetBoyz.png" onClick={() => { onClick(); setMessage("Ritratto pronto: se richiesto, conferma il salvataggio nel browser."); }}>SCARICA PNG <span>↓</span></a> : <p role="status">Preparo il ritratto…</p>}
+      <button className="outline-button" disabled={!photo || exporting} onClick={() => void shareInstagram()}>CONDIVIDI SU INSTAGRAM ↗</button>
       <p className="mirror-photo-hint">Formato ritratto · {photo ? `${photo.width} × ${photo.height}` : "1080 × 1350"} px{achievement && <><br />L’altezza si adatta al testo per non tagliare nome e componenti.</>}<br />Su mobile scegli Instagram dal menu di condivisione. Se il dispositivo non lo supporta, la foto viene scaricata per caricarla nell’app.</p>
       {message && <p className="mirror-save-message" role="status">{message}</p>}
     </div>
