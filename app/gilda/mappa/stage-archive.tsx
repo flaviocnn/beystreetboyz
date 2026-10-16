@@ -87,7 +87,7 @@ export default function StageArchive({ onClick, memberId }: { onClick: () => voi
         <PartPicker disabled={busy} label="RATCHET" kind="ratchet" part={bey.ratchet} onChange={ratchet => change(index, { ratchet })} />
         <PartPicker disabled={busy} label="BIT" kind="bit" part={bey.bit} onChange={bit => change(index, { bit })} />
       </div></fieldset>)}
-      <p className="archive-hint" role="status">{attackBitCount(deck) === 3 ? "FULL ATTACCO · Tre bit Attacco. Se hai vinto questa tappa, sblocchi automaticamente Nessuna difesa." : `${attackBitCount(deck)} / 3 bit Attacco · Classificazione automatica dal catalogo Excel. I bit non classificati non contano come Attacco.`}</p>
+      <p className="archive-hint" role="status">{attackBitCount(deck) === 3 ? "FULL ATTACCO · Vinci con questo deck per conquistare Nessuna difesa." : `${attackBitCount(deck)} / 3 bit Attacco`}</p>
       <button className="solid-button" disabled={busy}>{busy ? "SALVO…" : "SALVA IL DECK →"}</button>
       <p className="archive-hint">La registrazione documenta il deck dichiarato, non ne certifica la legalità o l’uso effettivo nel torneo.</p>
     </form>}

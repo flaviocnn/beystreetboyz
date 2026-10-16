@@ -56,32 +56,31 @@ export default function SlotMachine({ memberId }: { memberId: string }) {
       if (alive.current) { setState(data); setResult(data.spin); setPending(null); playEffect(data.spin.payout > data.spin.cost ? "win" : "message"); }
     } catch (cause) {
       if (alive.current) setError(recovery.get(memberId)
-        ? "Esito non ricevuto. Recuperalo con il pulsante: lo stesso giro non verrà addebitato di nuovo."
+        ? "Il giro è in sospeso. Premi Recupera esito per scoprire il risultato."
         : cause instanceof Error ? cause.message : "Giro non disponibile");
     } finally { inFlight.current = false; if (alive.current) setBusy(false); }
   }
-  const message = result ? result.payout > result.cost ? `Premio: ${result.payout} BC, di cui ${result.payout - result.cost} BC di guadagno netto.`
-    : result.payout === result.cost ? "Una coppia: puntata restituita. Saldo invariato." : "Nessuna combinazione: 1 BC speso, nessun premio." : "Premi GIRA per giocare una sola volta.";
+  const message = result ? result.payout > result.cost ? `Hai vinto ${result.payout} Beycoin!`
+    : result.payout === result.cost ? "Una coppia! Il tuo Beycoin torna a te." : "Nessuna combinazione vincente." : "Fai girare i rulli!";
   const unavailable = busy || (!pending && (!state || state.balance < SLOT_COST || state.remaining === 0 || cooling));
   return <section className="guild-slot" aria-labelledby="slot-title">
     <header className="slot-heading"><div><p className="section-kicker">ARCADE DELLA GILDA</p><h3 id="slot-title">Beycoin Spin</h3></div><div className="slot-balance">SALDO<strong>{state ? `${state.balance} BC` : "…"}</strong></div></header>
-    <p>Tre rulli, un giro alla volta. Solo Beycoin virtuali, senza valore monetario: non si acquistano e non si convertono in denaro o premi reali.</p>
+    <p>Allinea i simboli e conquista Beycoin.</p>
     <div className="slot-cabinet"><div className="slot-marquee">✦ RANKED BEYSTREETBOYZ ✦</div>
       <Reels values={result?.reels ?? [0, 1, 3]} busy={busy} />
       <p className="slot-price">1 GIRO = {SLOT_COST} BEYCOIN</p>
       <button className="solid-button" data-audio="quiet" aria-disabled={unavailable} aria-busy={busy} onClick={() => { if (!unavailable) void spin(); }}>
-        {busy ? "ATTENDO L’ESITO…" : pending ? "RECUPERA ESITO · NESSUN DOPPIO ADDEBITO" : cooling ? "ATTENDI UN MOMENTO…" : "GIRA · 1 BC"}
+        {busy ? "GIRANO I RULLI…" : pending ? "RECUPERA ESITO" : cooling ? "ATTENDI UN MOMENTO…" : "GIRA · 1 BC"}
       </button>
     </div>
-    <p className="slot-result" role="status" data-sound="manual" aria-atomic="true">{busy ? "Il server sta verificando il giro…" : message}</p>
+    <p className="slot-result" role="status" data-sound="manual" aria-atomic="true">{busy ? "Vediamo cosa esce…" : message}</p>
     {error && <p className="form-error" role="alert">{error}</p>}
-    {state && <p>{state.remaining} giri disponibili oggi su {SLOT_DAILY_LIMIT}. Limite giornaliero, con reset a mezzanotte di Torino. Nessun giro automatico.</p>}
+    {state && <p>Giri rimasti oggi: {state.remaining}/{SLOT_DAILY_LIMIT}. Si ricaricano a mezzanotte.</p>}
     {state && state.balance < 1 && !pending && <p>Ti servono Beycoin: completa le imprese della Gilda per guadagnarli.</p>}
     <button className="text-button" disabled={busy} onClick={() => void load()}>AGGIORNA SALDO ↻</button>
     <details className="slot-rules"><summary>REGOLE, PREMI E PROBABILITÀ</summary>
-      <p>Ogni simbolo ha probabilità 1 su 4 su ciascun rullo, indipendentemente dagli altri. I premi indicati includono la puntata.</p>
-      <ul><li>Tre Grifoni: 12 BC · probabilità 1/64 (1,5625%).</li><li>Tre simboli uguali di qualsiasi altro tipo: 4 BC · 3/64 (4,6875%).</li><li>Esattamente due simboli uguali: 1 BC restituito · 36/64 (56,25%).</li><li>Tre simboli diversi: 0 BC · 24/64 (37,5%).</li></ul>
-      <p>Ritorno teorico: 93,75% della puntata su moltissimi giri, non una promessa per la tua sessione. Guadagno netto solo con tre simboli uguali (6,25% dei giri). Ogni giro è indipendente: perdere non rende più probabile vincere.</p>
+      <ul><li>Tre Grifoni: 12 BC · 1,5625%.</li><li>Tre altri simboli uguali: 4 BC · 4,6875%.</li><li>Una coppia: il tuo Beycoin torna a te · 56,25%.</li><li>Tre simboli diversi: nessun premio · 37,5%.</li></ul>
+      <p>I premi includono il Beycoin giocato. I Beycoin sono monete di gioco, non scambiabili con denaro o premi reali.</p>
     </details>
     {state && state.history.length > 0 && <details className="slot-history"><summary>I TUOI ULTIMI 10 GIRI</summary><ol>{state.history.map(row => <li key={row.id}>
       <span>{row.reels.map(i => SLOT_SYMBOLS[i].name).join(" · ")}<small>{new Date(row.createdAt).toLocaleString("it-IT", { timeZone: "Europe/Rome", dateStyle: "short", timeStyle: "short" })}</small></span>

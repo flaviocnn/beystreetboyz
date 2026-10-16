@@ -40,7 +40,7 @@ export async function playSlot(memberId: string, requestKey: string) {
     if (existing) return { ...await state(tx, memberId, clock.day), spin: serialize(existing) };
     const current = await state(tx, memberId, clock.day);
     const now = new Date(clock.now);
-    if (current.remaining === 0) throw new SlotError("Hai raggiunto i 20 giri di oggi. Si riparte domani, ora di Torino.", 429);
+    if (current.remaining === 0) throw new SlotError("Hai giocato tutti i giri di oggi. Torna domani!", 429);
     if (current.availableAt && new Date(current.availableAt).getTime() > now.getTime()) throw new SlotError("Attendi due secondi tra un giro e il successivo.", 429);
     if (current.balance < SLOT_COST) throw new SlotError("Non hai abbastanza Beycoin. Le imprese della Gilda ti permettono di guadagnarne.", 409);
     const reels: SlotReels = [randomInt(4), randomInt(4), randomInt(4)];

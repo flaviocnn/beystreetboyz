@@ -261,11 +261,11 @@ export default function MirrorPhoto({ member, onClick, championState }: { member
         {throne && achievement ? <p>{achievement.name} · 1° posto{achievement.deck ? " · Il deck registrato sarà incluso automaticamente." : " · Nessun deck registrato per questa tappa."}</p> : stagesStatus === "loading" ? <p role="status">Cerco le tue tappe in top 8…</p> : stagesStatus === "error" ? <div><p role="alert">Non riesco a caricare le tappe. Puoi comunque creare il ritratto semplice.</p><button className="text-button" onClick={() => { onClick(); setStagesStatus("loading"); setReloadStages(value => value + 1); }}>RIPROVA</button></div> : stages.length ? <>
           <label className="mirror-name">TAPPA DA MOSTRARE<select value={stageSlug} onChange={event => { setStageSlug(event.target.value); onClick(); }}><option value="">Nessuna · solo ritratto</option>{stages.map(stage => <option key={stage.slug} value={stage.slug}>{stage.name} · {stage.finalRank}° posto · {stage.eventDate}</option>)}</select></label>
           {achievement && <p>{achievement.deck ? "Il deck registrato sarà incluso automaticamente nella foto." : "Nessun deck registrato per questa tappa: la foto includerà nome e piazzamento. Puoi aggiungere il deck nell’Archivio delle Tappe."}</p>}
-        </> : <p>Non hai ancora risultati in top 8 importati. Le tappe compariranno qui dopo la sincronizzazione dello staff.</p>}
+        </> : <p>Conquista una Top 8 per aggiungere il tuo piazzamento alla foto.</p>}
       </fieldset>
       {photo ? photo.throneStage ? <button className="solid-button" disabled={exporting} onClick={() => void downloadThrone()}>{exporting ? "VERIFICO IL TITOLO…" : "SCARICA PNG DEL CAMPIONE ↓"}</button> : <a className="solid-button" href={photo.url} download="Ranked-BeyStreetBoyz.png" onClick={() => { onClick(); setMessage("Ritratto pronto: se richiesto, conferma il salvataggio nel browser."); }}>SCARICA PNG <span>↓</span></a> : <p role="status">Preparo il ritratto…</p>}
       <button className="outline-button" disabled={!photo || exporting} onClick={() => void shareInstagram()}>CONDIVIDI SU INSTAGRAM ↗</button>
-      <p className="mirror-photo-hint">Formato ritratto · {photo ? `${photo.width} × ${photo.height}` : "1080 × 1350"} px{achievement && <><br />L’altezza si adatta al testo per non tagliare nome e componenti.</>}<br />Su mobile scegli Instagram dal menu di condivisione. Se il dispositivo non lo supporta, la foto viene scaricata per caricarla nell’app.</p>
+      <p className="mirror-photo-hint">Salva il tuo ritratto o condividilo su Instagram. Se Instagram non compare tra le opzioni, carica la foto scaricata.</p>
       {message && <p className="mirror-save-message" role="status">{message}</p>}
     </div>
   </div>;

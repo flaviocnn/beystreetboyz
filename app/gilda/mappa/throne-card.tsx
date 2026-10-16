@@ -21,6 +21,6 @@ export default function ThroneCard({ state }: { state: ChampionState }) {
       {champion.deck ? <><h4>IL DECK DELLA TAPPA</h4><ul className="throne-deck">{champion.deck.map((bey, index) => <li key={index}>{deckBeyText(bey)}</li>)}</ul></> : <p>Il campione non ha ancora registrato il deck di questa tappa.</p>}
       {state.canUseThrone && <p className="archive-notice">Il trono è tuo! Nello Specchio dei blader puoi creare il ritratto speciale del campione.</p>}
       <a className="text-button" href={champion.stage.sourceUrl} target="_blank" rel="noopener noreferrer">TORNEO CHALLONGE ↗</a>
-    </> : <p>Il trono attende il vincitore dell’ultima tappa. Comparirà quando saranno importati risultati con un vincitore univoco.</p>}
+    </> : <p>Il trono attende il prossimo campione.</p>}
   </div>;
 }
