@@ -1,8 +1,8 @@
 import "server-only";
-import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { getDb } from "../../db";
 import { achievementActivity, achievementAudit, achievementProfiles, beycoinLedger, guildMessages, memberAchievements, stageDecks, tournamentResults, tournamentStages } from "../../db/schema";
-import { BEYCOIN_REWARDS, achievementDefinition, achievementTitle, evaluateAchievements, type AchievementAlbum, type AchievementId } from "./achievements";
+import { BEYCOIN_REWARDS, achievementDefinition, achievementTitle, evaluateAchievements, type AchievementAlbum, type AchievementId, type AchievementStage } from "./achievements";
 
 type Tx = Parameters<Parameters<ReturnType<typeof getDb>["transaction"]>[0]>[0];
 export async function recordAchievementActivity(tx: Tx, memberId: string, kind: "login" | "avatar") {
@@ -80,24 +80,23 @@ export async function syncAchievements(memberId: string, profile?: { showcase: s
 // Public opt-in cosmetics only. Re-evaluate the sources on read so a result/deck
 // correction cannot leave somebody else's invalid badge visible in the ranking.
 export async function publicAchievementShowcases() {
-  const db = getDb(), profiles = await db.select().from(achievementProfiles);
-  const visible = profiles.filter(p => p.showcase.length || p.titleId), ids = visible.map(p => p.memberId);
+  // Batch the opt-in profiles AND their current qualification facts in one
+  // snapshot/query. Never read wallets, passwords or private achievement history.
+  const profiles = await getDb().select({ memberId: achievementProfiles.memberId, showcase: achievementProfiles.showcase, titleId: achievementProfiles.titleId,
+    loggedIn: sql<boolean>`EXISTS(SELECT 1 FROM member_achievement_activity a WHERE a.member_id = member_achievement_profiles.member_id AND a.kind = 'login')`,
+    avatarChanged: sql<boolean>`EXISTS(SELECT 1 FROM member_achievement_activity a WHERE a.member_id = member_achievement_profiles.member_id AND a.kind = 'avatar')`,
+    hasMessage: sql<boolean>`EXISTS(SELECT 1 FROM guild_messages m WHERE m.member_id = member_achievement_profiles.member_id)`,
+    stages: sql<AchievementStage[]>`coalesce((SELECT jsonb_agg(jsonb_build_object(
+      'slug', s.slug, 'name', s.name, 'eventDate', s.event_date,
+      'finalRank', r.final_rank, 'deck', d.beys, 'version', d.version))
+      FROM tournament_results r JOIN tournament_stages s ON s.slug = r.stage_slug
+      LEFT JOIN stage_decks d ON d.stage_slug = r.stage_slug AND d.member_id = r.member_id
+      WHERE r.member_id = member_achievement_profiles.member_id), '[]'::jsonb)`,
+  }).from(achievementProfiles).where(sql`jsonb_array_length(${achievementProfiles.showcase}) > 0 OR ${achievementProfiles.titleId} IS NOT NULL`);
   const result = new Map<string, { badgeIds: AchievementId[]; title: string | null }>();
-  if (!ids.length) return result;
-  const [activities, messages, stages] = await Promise.all([
-    db.select().from(achievementActivity).where(inArray(achievementActivity.memberId, ids)),
-    db.selectDistinct({ memberId: guildMessages.memberId }).from(guildMessages).where(inArray(guildMessages.memberId, ids)),
-    db.select({ memberId: tournamentResults.memberId, slug: tournamentStages.slug, name: tournamentStages.name, eventDate: tournamentStages.eventDate,
-      finalRank: tournamentResults.finalRank, deck: stageDecks.beys, version: stageDecks.version }).from(tournamentResults)
-      .innerJoin(tournamentStages, eq(tournamentStages.slug, tournamentResults.stageSlug))
-      .leftJoin(stageDecks, and(eq(stageDecks.stageSlug, tournamentResults.stageSlug), eq(stageDecks.memberId, tournamentResults.memberId)))
-      .where(inArray(tournamentResults.memberId, ids)),
-  ]);
-  for (const profile of visible) {
+  for (const profile of profiles) {
     const owned = new Set(evaluateAchievements({
-      loggedIn: activities.some(a => a.memberId === profile.memberId && a.kind === "login"),
-      avatarChanged: activities.some(a => a.memberId === profile.memberId && a.kind === "avatar"),
-      hasMessage: messages.some(m => m.memberId === profile.memberId), stages: stages.filter(s => s.memberId === profile.memberId),
+      loggedIn: profile.loggedIn, avatarChanged: profile.avatarChanged, hasMessage: profile.hasMessage, stages: profile.stages,
     }).filter(a => a.qualified).map(a => a.id));
     result.set(profile.memberId, { badgeIds: profile.showcase.filter(id => owned.has(id)), title: profile.titleId && owned.has(profile.titleId) ? achievementTitle(profile.titleId) : null });
   }

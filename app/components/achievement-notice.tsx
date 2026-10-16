@@ -15,8 +15,9 @@ export default function AchievementNotice() {
   usePopupSound(unlocked.length > 0);
   useEffect(() => {
     let live = true, running = false, lastAuthCheck = 0;
-    async function sync() {
-      if (document.hidden || running || Date.now() - lastAuthCheck < 5000) return; running = true;
+    const initialReadyAt = Date.now() + 1200;
+    async function sync(explicit = false) {
+      if (document.hidden || running || (!explicit && Date.now() < initialReadyAt) || Date.now() - lastAuthCheck < 5000) return; running = true;
       try {
         const { member } = await getGameSession();
         lastAuthCheck = Date.now();
@@ -31,13 +32,16 @@ export default function AchievementNotice() {
       setCoinDelta(Number.isSafeInteger(album.beycoins?.delta) ? album.beycoins.delta : 0);
     };
     const refresh = () => void sync();
-    const changed = () => { invalidateGameData(); lastAuthCheck = 0; void sync(); };
+    const changed = () => { invalidateGameData(); lastAuthCheck = 0; void sync(true); };
     const sessionChanged = () => { invalidateGameData(); window.location.reload(); };
     window.addEventListener("torino-session-changed", sessionChanged);
     window.addEventListener("torino-achievements-unlocked", unlocked);
-    void sync(); const timer = window.setInterval(refresh, 60000);
+    // Let the access request and first game frame take priority over the
+    // achievement reconciliation transaction (badges/coins are not an entry gate).
+    const initialTimer = window.setTimeout(refresh, 1200);
+    const timer = window.setInterval(refresh, 60000);
     window.addEventListener("focus", refresh); document.addEventListener("visibilitychange", refresh); window.addEventListener("torino-achievements-changed", changed);
-    return () => { live = false; window.clearInterval(timer); window.removeEventListener("torino-session-changed", sessionChanged); window.removeEventListener("torino-achievements-unlocked", unlocked); window.removeEventListener("focus", refresh); document.removeEventListener("visibilitychange", refresh); window.removeEventListener("torino-achievements-changed", changed); };
+    return () => { live = false; window.clearTimeout(initialTimer); window.clearInterval(timer); window.removeEventListener("torino-session-changed", sessionChanged); window.removeEventListener("torino-achievements-unlocked", unlocked); window.removeEventListener("focus", refresh); document.removeEventListener("visibilitychange", refresh); window.removeEventListener("torino-achievements-changed", changed); };
   }, [pathname]);
   useEffect(() => { if (!unlocked.length) return; const timeout = window.setTimeout(() => setUnlocked([]), 14000); return () => window.clearTimeout(timeout); }, [unlocked]);
   if (!unlocked.length) return null;

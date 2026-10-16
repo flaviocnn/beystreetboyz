@@ -1,4 +1,5 @@
 "use client";
+import dynamic from "next/dynamic";
 import "./throne.css";
 import { memberDisplayName } from "../../lib/member-name";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -7,9 +8,6 @@ import { drawPixelPlayer, type Direction } from "../../lib/pixel-player";
 import { type PlayerMember as Member } from "../../lib/client-api";
 import { useDialogFocus } from "../../lib/dialog-focus";
 import { WORLD, START, PLACES, GAMES, canWalk, nearbyPlace, guildCamera, drawGuildWorld, drawRoomDetails, drawChampion, type PlaceId, type RankingPreview } from "./guild-world";
-import MirrorPhoto from "./mirror-photo";
-import GuildBoard from "./guild-board";
-import StageArchive from "./stage-archive";
 import ThroneCard from "./throne-card";
 import { useReigningChampion } from "../../lib/use-reigning-champion";
 import type { ReigningChampion } from "../../lib/reigning-champion";
@@ -20,6 +18,11 @@ import { createAtmospherePaint, drawWorldAtmosphere } from "../../lib/world-atmo
 import { WorldDpad, WorldGuide, WorldHud, WorldInteraction } from "../../components/world-controls";
 import { KEY_DIRECTIONS, WALK_SPEED, isWorldInputTarget, drawWorldOverview } from "../../lib/world-game";
 import { getGameData, getGameSession } from "../../lib/game-data";
+import { loadGuildEntry } from "../../lib/guild-entry";
+
+const MirrorPhoto = dynamic(() => import("./mirror-photo"), { loading: () => <p role="status">Preparo lo specchio…</p> });
+const GuildBoard = dynamic(() => import("./guild-board"), { loading: () => <p role="status">Apro la bacheca…</p> });
+const StageArchive = dynamic(() => import("./stage-archive"), { loading: () => <p role="status">Sfoglio l’archivio…</p> });
 
 type RankingRow = { id: string; firstName: string; lastName: string | null; challongeUsername: string | null; score: number; rank: number; achievements?: { badgeIds: AchievementId[]; title: string | null } };
 function beginWalk(keys: Set<Direction>, player: { x: number; y: number; dir: Direction }, direction: Direction) {
@@ -121,6 +124,7 @@ function Library({ onClick }: { onClick: () => void }) {
 export default function GuildMapPage() {
   const [loading, setLoading] = useState(true), [member, setMember] = useState<Member | null>(null);
   const [ranking, setRanking] = useState<RankingRow[]>([]), [error, setError] = useState("");
+  const [accessError, setAccessError] = useState(""), [rankingLoaded, setRankingLoaded] = useState(false);
   const leaders = useMemo(() => ranking.slice(0, 3).map(row => ({ name: memberDisplayName(row), rank: row.rank, score: row.score })), [ranking]);
   const [near, setNear] = useState<PlaceId | null>(null), [opened, setOpened] = useState<PlaceId | null>(null);
   const championState = useReigningChampion(member?.id);
@@ -131,18 +135,20 @@ export default function GuildMapPage() {
   const close = useCallback(() => setOpened(null), []);
   const updateNear = useCallback((id: PlaceId | null) => setNear(id), []);
   useEffect(() => {
+    // Warm only the nearby object's JavaScript; its private data still loads on open.
+    const pending = near === "mirror" ? import("./mirror-photo") : near === "archive" ? import("./stage-archive") : near === "board" ? import("./guild-board") : null;
+    void pending?.catch(() => {});
+  }, [near]);
+  useEffect(() => {
     let live = true;
-    void (async () => {
-      try {
-        const session = await getGameSession();
-        if (!live || !session.member) return;
-        if (session.member.mustChangePassword) { window.location.replace("/gilda"); return; }
-        setMember(session.member);
-        const result = await getGameData<{ ranking: RankingRow[] }>("/api/guild/ranking", session.member.id);
-        if (live) setRanking(result.ranking);
-      } catch (cause) { if (live) setError(cause instanceof Error ? cause.message : "Impossibile caricare la Gilda"); }
-      finally { if (live) setLoading(false); }
-    })();
+    void loadGuildEntry({ session: getGameSession,
+      ranking: id => getGameData<{ ranking: RankingRow[] }>("/api/guild/ranking", id),
+      access: current => { setMember(current); setLoading(false); },
+      ranked: result => { setRanking(result.ranking); setRankingLoaded(true); },
+      accessError: cause => { setAccessError(cause instanceof Error ? cause.message : "Impossibile caricare la Gilda"); setLoading(false); },
+      rankingError: cause => { setError(cause instanceof Error ? cause.message : "Classifica non disponibile"); setRankingLoaded(true); },
+      passwordRequired: () => window.location.replace("/gilda"), active: () => live,
+    });
     return () => { live = false; };
   }, []);
   const [rankingBusy, setRankingBusy] = useState(false);
@@ -151,7 +157,7 @@ export default function GuildMapPage() {
     setRankingBusy(true);
     try { const data = await getGameData<{ ranking: RankingRow[] }>("/api/guild/ranking", member.id, 30000, force); setRanking(data.ranking); setError(""); }
     catch (cause) { setError(cause instanceof Error ? cause.message : "Classifica non disponibile"); }
-    finally { setRankingBusy(false); }
+    finally { setRankingBusy(false); setRankingLoaded(true); }
   }, [member]);
   useEffect(() => {
     if (!member) return;
@@ -171,7 +177,7 @@ export default function GuildMapPage() {
     <WorldHud area="GILDA DEL GRIFONE" title={member ? `Bentornato, ${memberDisplayName(member)}!` : "Gilda del Grifone"} paused={!!opened}>
       {championState.champion && <button className="world-champion" onClick={() => open("throne")}>♛ Campione in carica: <strong>{championState.champion.displayName}</strong> →</button>}
     </WorldHud>
-    {loading ? <div className="guild-map-message">Apro la sala della Gilda…</div> : !member ? <div className="guild-map-message"><h1>La porta è chiusa.</h1><p>{error || "Accedi con le tue credenziali per entrare."}</p><a className="solid-button" href="/gilda">VAI ALL’ACCESSO →</a></div> : <>
+    {loading ? <div className="guild-map-message" role="status">Verifico il tuo accesso…</div> : !member ? <div className="guild-map-message"><h1>La porta è chiusa.</h1><p>{accessError || "Accedi con le tue credenziali per entrare."}</p><a className="solid-button" href="/gilda">VAI ALL’ACCESSO →</a></div> : <>
       <div className="guild-stage"><GuildRoom onOpen={open} onNear={updateNear} onStep={playStep} paused={!!opened} member={member} champion={championState.champion} leaders={leaders} />
         <WorldInteraction name={!opened ? nearby?.name : undefined} onOpen={() => { if (nearby) open(nearby.id); }} />
       </div>
@@ -185,7 +191,7 @@ export default function GuildMapPage() {
         {opened === "library" && <Library onClick={playClick} />}
         {opened === "board" && <GuildBoard member={member} onClick={playClick} />}
         {opened === "archive" && <StageArchive onClick={playClick} memberId={member.id} />}
-        {opened === "ranking" && <><p className="ranking-note">Le prestazioni dei membri, tappa dopo tappa. A pari punti contano vittorie di tappa e migliori prestazioni.</p><div className="ranking-refresh"><span>Aggiornamento automatico ogni minuto</span><button className="text-button" disabled={rankingBusy} onClick={() => void refreshRanking(true)}>{rankingBusy ? "AGGIORNO…" : "AGGIORNA ORA ↻"}</button></div>{error && <p className="form-error" role="alert">{error}</p>}<div className="ranking-list">{ranking.map(row => <div className={`ranking-row ${row.id === member.id ? "is-you" : ""}`} key={row.id}><span>{String(row.rank).padStart(2, "0")}</span><strong>{memberDisplayName(row)}{row.id === member.id ? " · TU" : ""}<AchievementProfile profile={row.achievements} /></strong><b>{row.score} PT</b></div>)}</div></>}
+        {opened === "ranking" && <><p className="ranking-note">Le prestazioni dei membri, tappa dopo tappa. A pari punti contano vittorie di tappa e migliori prestazioni.</p><div className="ranking-refresh"><span>Aggiornamento automatico ogni minuto</span><button className="text-button" disabled={rankingBusy} onClick={() => void refreshRanking(true)}>{rankingBusy ? "AGGIORNO…" : "AGGIORNA ORA ↻"}</button></div>{!rankingLoaded && <p role="status">Carico la classifica. La sala è già pronta da esplorare.</p>}{error && <p className="form-error" role="alert">{error}</p>}<div className="ranking-list">{ranking.map(row => <div className={`ranking-row ${row.id === member.id ? "is-you" : ""}`} key={row.id}><span>{String(row.rank).padStart(2, "0")}</span><strong>{memberDisplayName(row)}{row.id === member.id ? " · TU" : ""}<AchievementProfile profile={row.achievements} /></strong><b>{row.score} PT</b></div>)}</div></>}
       </section></div>}
     </>}
   </main>;
