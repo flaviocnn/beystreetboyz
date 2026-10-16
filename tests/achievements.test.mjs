@@ -1,0 +1,40 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {registerHooks} from 'node:module';
+import {existsSync} from 'node:fs';
+registerHooks({resolve(specifier,context,next){try{return next(specifier,context);}catch(error){if(specifier.startsWith('.')&&context.parentURL?.startsWith('file:'))for(const suffix of ['.ts','/index.ts']){const url=new URL(specifier+suffix,context.parentURL);if(existsSync(url))return{url:url.href,shortCircuit:true};}throw error;}}});
+const {catalog,bitType,isFullAttackDeck,attackBitCount}=await import('../app/lib/decks.ts');
+const {ACHIEVEMENTS,evaluateAchievements}=await import('../app/lib/achievements.ts');
+const part=value=>({value,custom:false});
+const bey=(bit='Flat')=>({blades:[part('Wizard Rod')],ratchet:part('9-60'),bit:part(bit)});
+const deck=(bits=['Flat','Rush','Low Flat'])=>bits.map(bey);
+const stage=(slug,rank,date='2026-10-14',beys=null)=>({slug,name:slug,eventDate:date,finalRank:rank,deck:beys,version:1});
+const facts=stages=>({loggedIn:true,avatarChanged:false,hasMessage:false,stages});
+test('all 52 bit types match the Excel categories; full attack ignores blade type and trusts no supplied category',()=>{
+  assert.equal(catalog.bits.length,52);for(const bit of catalog.bits)assert.ok(bitType(bit.value));
+  assert.equal(catalog.bits.filter(bit=>bitType(bit.value)==='Attacco').length,17);
+  assert.equal(bitType('Elevate'),'Balance');assert.equal(bitType('Ball'),'Resistenza');assert.equal(bitType('Needle'),'Difesa');
+  assert.equal(isFullAttackDeck(deck()),true);assert.equal(attackBitCount(deck(['Flat','Ball','Rush'])),2);
+  assert.equal(isFullAttackDeck(deck(['Flat','Ball','Rush'])),false);
+  const custom=deck();custom[2].bit={value:'Super Attack Unknown',custom:true,type:'Attacco'};
+  assert.equal(isFullAttackDeck(custom),false);assert.equal(attackBitCount(custom),2);
+  assert.equal(isFullAttackDeck(deck().slice(0,2)),false);
+});
+test('ten deterministic achievements use final results, one stage each, and calendar-year seasons',()=>{
+  assert.equal(ACHIEVEMENTS.length,10);assert.equal(new Set(ACHIEVEMENTS.map(a=>a.id)).size,10);
+  let result=evaluateAchievements(facts([]));assert.deepEqual(result.filter(a=>a.qualified).map(a=>a.id),['welcome']);
+  const rows=[stage('a',1,'2026-10-01',deck()),stage('b',2),stage('c',3),stage('c',3)];
+  result=evaluateAchievements({...facts(rows),hasMessage:true,avatarChanged:true});
+  assert.equal(result.filter(a=>a.qualified).length,10);
+  assert.equal(result.find(a=>a.id==='regular').progress,3);assert.equal(result.find(a=>a.id==='attack').evidence.stageSlug,'a');
+  assert.deepEqual(result.find(a=>a.id==='attack').evidence.bits,['Flat','Rush','Low Flat']);
+  result=evaluateAchievements(facts([stage('old',1,'2025-01-01'),stage('new',2,'2026-01-01'),stage('third',3,'2026-02-01')]));
+  assert.equal(result.find(a=>a.id==='regular').qualified,false);assert.equal(result.find(a=>a.id==='podiums').progress,2);
+});
+test('attack bits must belong to the winning stage, and corrected deck/result revokes eligibility',()=>{
+  let result=evaluateAchievements(facts([stage('winner',1,'2026-10-14',deck(['Flat','Rush','Ball'])),stage('loser',8,'2026-10-14',deck())]));
+  assert.equal(result.find(a=>a.id==='attack').qualified,false);assert.equal(result.find(a=>a.id==='attack').progress,2);
+  result=evaluateAchievements(facts([stage('winner',1,'2026-10-14',deck())]));assert.equal(result.find(a=>a.id==='attack').qualified,true);
+  result=evaluateAchievements(facts([stage('winner',2,'2026-10-14',deck())]));assert.equal(result.find(a=>a.id==='attack').qualified,false);
+  result=evaluateAchievements(facts([stage('winner',null,'2026-10-14',deck())]));assert.equal(result.find(a=>a.id==='deck').qualified,false);assert.equal(result.find(a=>a.id==='first-stage').qualified,true);
+});

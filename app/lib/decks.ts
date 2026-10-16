@@ -1,10 +1,24 @@
 import catalog from "./bey-parts.json" with { type: "json" };
+import bitTypes from "./bit-types.json" with { type: "json" };
 
 export { catalog };
 export const INTEGRATED_RATCHET = "Integrato nella lama";
 export type DeckPart = { value: string; custom: boolean };
 export type Bey = { blades: DeckPart[]; ratchet: DeckPart; bit: DeckPart };
 export type Deck = [Bey, Bey, Bey];
+export function bitType(value: string): string | null {
+  const key = value.trim().normalize("NFC");
+  return Object.hasOwn(bitTypes.types, key) ? (bitTypes.types as Record<string, string>)[key] : null;
+}
+// User rule: a declared deck's type depends only on its three catalogued bits.
+// A custom/unknown bit never inherits a type supplied by a browser payload.
+export function attackBitCount(input: unknown): number {
+  const deck = parseDeck(input);
+  return deck ? deck.filter(bey => bitType(bey.bit.value) === "Attacco").length : 0;
+}
+export function isFullAttackDeck(input: unknown): boolean {
+  return parseDeck(input) !== null && attackBitCount(input) === 3;
+}
 export function isTopEight(rank: number | null) {
   return Number.isInteger(rank) && rank !== null && rank >= 1 && rank <= 8;
 }

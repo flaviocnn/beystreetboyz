@@ -8,7 +8,9 @@ export const MIRROR_MOTTOS = [
   { id: "not-overdo", text: "Non volevo esagerare" },
   { id: "how-is-it-possible", text: "Dai cazzo ma come si fa" },
 ] as const;
+export const ATTACK_MOTTO = { id: "attack-trio", text: "Tre Bey. Una sola direzione." } as const;
 
 export function mirrorMotto(id: string) {
+  if (id === ATTACK_MOTTO.id) return ATTACK_MOTTO.text;
   return MIRROR_MOTTOS.find(motto => motto.id === id)?.text ?? "";
 }

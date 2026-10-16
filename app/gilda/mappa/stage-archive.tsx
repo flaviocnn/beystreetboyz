@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useId, useState } from "react";
-import { catalog, INTEGRATED_RATCHET, type Bey, type Deck, type DeckPart, type PersonalStage } from "../../lib/decks";
+import { attackBitCount, bitType, catalog, INTEGRATED_RATCHET, type Bey, type Deck, type DeckPart, type PersonalStage } from "../../lib/decks";
 import { bladeOptions } from "../../lib/blade-options";
 
 const emptyPart = (): DeckPart => ({ value: "", custom: false });
@@ -26,7 +26,7 @@ function PartPicker({ label, kind, part, disabled, onChange }: { label: string; 
     <option value="" disabled>Scegli {kind === "blade" ? "la lama" : kind === "bit" ? "il bit" : "il ratchet"}</option>
     {selectedOutsideFilter && <option hidden value={part.value}>{part.value} (selezionata)</option>}
     {kind === "blade" ? blades.map(blade => <option key={blade.value} value={blade.value}>{blade.value} · {blade.category}</option>)
-      : kind === "bit" ? catalog.bits.map(p => <option key={p.value} value={p.value}>{p.label}</option>)
+      : kind === "bit" ? catalog.bits.map(p => <option key={p.value} value={p.value}>{p.label} · {bitType(p.value) ?? "Non classificato"}</option>)
         : <>{catalog.ratchets.map(p => <option key={p} value={p}>{p}</option>)}<option value={INTEGRATED_RATCHET}>{INTEGRATED_RATCHET}</option></>}
     <option value="__other">＋ Aggiungi altro…</option>
   </select>{kind === "blade" && <small role="status">{blades.length ? `${blades.length} opzioni in ordine alfabetico` : "Nessuna corrispondenza. Modifica la ricerca oppure scegli Aggiungi altro."}{selectedOutsideFilter ? ` · Selezione mantenuta: ${part.value}` : ""}</small>}
@@ -58,6 +58,7 @@ export default function StageArchive({ onClick }: { onClick: () => void }) {
       const data = await request(`/api/guild/stages/${encodeURIComponent(editing.slug)}/deck`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ deck, version: editing.version }) });
       setStages(current => current.map(stage => stage.slug === editing.slug ? { ...stage, ...data } : stage));
       setEditing(null); setNotice("Deck salvato nel tuo archivio. Puoi modificarlo in seguito.");
+      window.dispatchEvent(new Event("torino-achievements-changed"));
     } catch (cause) { setError(cause instanceof Error ? cause.message : "Salvataggio non riuscito"); }
     finally { setBusy(false); }
   }
@@ -84,6 +85,7 @@ export default function StageArchive({ onClick }: { onClick: () => void }) {
         <PartPicker disabled={busy} label="RATCHET" kind="ratchet" part={bey.ratchet} onChange={ratchet => change(index, { ratchet })} />
         <PartPicker disabled={busy} label="BIT" kind="bit" part={bey.bit} onChange={bit => change(index, { bit })} />
       </div></fieldset>)}
+      <p className="archive-hint" role="status">{attackBitCount(deck) === 3 ? "FULL ATTACCO · Tre bit Attacco. Se hai vinto questa tappa, sblocchi automaticamente Nessuna difesa." : `${attackBitCount(deck)} / 3 bit Attacco · Classificazione automatica dal catalogo Excel. I bit non classificati non contano come Attacco.`}</p>
       <button className="solid-button" disabled={busy}>{busy ? "SALVO…" : "SALVA IL DECK →"}</button>
       <p className="archive-hint">La registrazione documenta il deck dichiarato, non ne certifica la legalità o l’uso effettivo nel torneo.</p>
     </form>}

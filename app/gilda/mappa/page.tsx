@@ -14,8 +14,10 @@ import StageArchive from "./stage-archive";
 import ThroneCard from "./throne-card";
 import { useReigningChampion } from "../../lib/use-reigning-champion";
 import type { ReigningChampion } from "../../lib/reigning-champion";
+import AchievementProfile from "../../components/achievement-profile";
+import type { AchievementId } from "../../lib/achievements";
 
-type RankingRow = { id: string; firstName: string; lastName: string | null; challongeUsername: string | null; score: number; rank: number };
+type RankingRow = { id: string; firstName: string; lastName: string | null; challongeUsername: string | null; score: number; rank: number; achievements?: { badgeIds: AchievementId[]; title: string | null } };
 const KEY_DIRECTIONS: Record<string, Direction> = { ArrowUp: "up", w: "up", ArrowDown: "down", s: "down", ArrowLeft: "left", a: "left", ArrowRight: "right", d: "right" };
 const DIRECTION_NAMES = { up: "su", down: "giù", left: "a sinistra", right: "a destra" };
 function beginWalk(keys: Set<Direction>, player: { x: number; y: number; dir: Direction }, direction: Direction) {
@@ -146,7 +148,7 @@ export default function GuildMapPage() {
   }, [opened, close]);
   const nearby = PLACES.find((p) => p.id === near), selected = PLACES.find((p) => p.id === opened);
   return <main className="guild-map-shell">
-    <header className="guild-map-header"><a href="/gilda">← ATRIO DELLA GILDA</a><span>LA GILDA DEL GRIFONE</span><div className="guild-header-actions"><button className="guild-audio-toggle" onClick={toggleAudio} aria-pressed={audioEnabled} aria-label={audioEnabled ? "Disattiva audio" : "Attiva audio"}><span aria-hidden="true">{audioEnabled ? "♫" : "×"}</span><span className="guild-audio-label">AUDIO {audioEnabled ? "ON" : "OFF"}</span></button><Link href="/">MAPPA DI TORINO ↗</Link></div></header>
+    <header className="guild-map-header"><a href="/gilda">← ATRIO DELLA GILDA</a><span>LA GILDA DEL GRIFONE</span><div className="guild-header-actions"><Link href="/imprese">LE MIE IMPRESE ↗</Link><button className="guild-audio-toggle" onClick={toggleAudio} aria-pressed={audioEnabled} aria-label={audioEnabled ? "Disattiva audio" : "Attiva audio"}><span aria-hidden="true">{audioEnabled ? "♫" : "×"}</span><span className="guild-audio-label">AUDIO {audioEnabled ? "ON" : "OFF"}</span></button><Link href="/">MAPPA DI TORINO ↗</Link></div></header>
     {loading ? <div className="guild-map-message">Apro la sala della Gilda…</div> : !member ? <div className="guild-map-message"><h1>La porta è chiusa.</h1><p>{error || "Accedi con le tue credenziali per entrare."}</p><a className="solid-button" href="/gilda">VAI ALL’ACCESSO →</a></div> : <>
       <div className="guild-map-title"><p>BENVENUTO, {memberDisplayName(member)}</p><h1>Una Gilda da esplorare</h1><span>FRECCE / WASD · AVVICINATI E PREMI INVIO</span></div>
       {championState.champion && <button className="guild-champion-banner" onClick={() => { playClick(); open("throne"); }}>♛ Il campione in carica è <strong>{championState.champion.displayName}</strong> · {championState.champion.stage.name} <span>SCOPRI IL TRONO →</span></button>}
@@ -163,7 +165,7 @@ export default function GuildMapPage() {
         {opened === "library" && <Library onClick={playClick} />}
         {opened === "board" && <GuildBoard member={member} onClick={playClick} />}
         {opened === "archive" && <StageArchive onClick={playClick} />}
-        {opened === "ranking" && <><p className="ranking-note">Le prestazioni dei membri, tappa dopo tappa. A pari punti contano vittorie di tappa e migliori prestazioni.</p>{error ? <p className="form-error" role="alert">{error}</p> : <div className="ranking-list">{ranking.map(row => <div className={`ranking-row ${row.id === member.id ? "is-you" : ""}`} key={row.id}><span>{String(row.rank).padStart(2, "0")}</span><strong>{memberDisplayName(row)}{row.id === member.id ? " · TU" : ""}</strong><b>{row.score} PT</b></div>)}</div>}</>}
+        {opened === "ranking" && <><p className="ranking-note">Le prestazioni dei membri, tappa dopo tappa. A pari punti contano vittorie di tappa e migliori prestazioni.</p>{error ? <p className="form-error" role="alert">{error}</p> : <div className="ranking-list">{ranking.map(row => <div className={`ranking-row ${row.id === member.id ? "is-you" : ""}`} key={row.id}><span>{String(row.rank).padStart(2, "0")}</span><strong>{memberDisplayName(row)}{row.id === member.id ? " · TU" : ""}<AchievementProfile profile={row.achievements} /></strong><b>{row.score} PT</b></div>)}</div>}</>}
       </section></div>}
     </>}
   </main>;

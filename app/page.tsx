@@ -6,6 +6,7 @@ import { drawPixelPlayer, type Direction } from "./lib/pixel-player";
 import { type PlayerMember, readResponse } from "./lib/client-api";
 import { useDialogFocus } from "./lib/dialog-focus";
 import { createIdleEncounter, updateIdleEncounter, VISITORS } from "./lib/idle-visitor";
+import { ACHIEVEMENT_HOUSE, drawAchievementHouse } from "./lib/achievement-house";
 
 type Place = {
   id: string;
@@ -78,6 +79,12 @@ const places: Place[] = [
     x: 1160,
     y: 680,
   },
+  {
+    id: "achievements", name: "Casa delle Imprese", eyebrow: "IL TUO ALBUM PERSONALE",
+    description: "Le tue prime tappe, i podi, le vittorie e i deck memorabili. Scopri dieci imprese, segui il progresso e scegli i distintivi da esporre.",
+    detail: "Distintivi · Titoli · Ricompense per lo specchio · Nessun punto extra in classifica",
+    x: ACHIEVEMENT_HOUSE.x, y: ACHIEVEMENT_HOUSE.y,
+  },
 ];
 
 function pixelText(
@@ -115,6 +122,8 @@ function drawGround(ctx: CanvasRenderingContext2D) {
   ctx.fillRect(40, 450, WORLD.width - 80, 110);
   ctx.fillRect(750, 40, 100, WORLD.height - 80);
   ctx.fillRect(360, 770, 860, 75);
+  ctx.fillRect(810, 1010, 540, 54);
+  ctx.fillRect(1290, 980, 60, 50);
   for (const [x, y, h] of [[245, 400, 100], [410, 335, 115], [1180, 330, 120], [390, 735, 110], [1130, 735, 110]]) ctx.fillRect(x, y, 60, h);
   ctx.strokeStyle = PALETTE.mid;
   ctx.lineWidth = 2;
@@ -635,7 +644,7 @@ function GameMap({
     drawGround(scene);
     drawHouse(scene, 605, 100, 120, 105, "CAFFÈ");
     drawHouse(scene, 90, 875, 150, 112, "PORTA SUSA");
-    drawHouse(scene, 1360, 845, 135, 108, "OFFICINE");
+    drawAchievementHouse(scene, ACHIEVEMENT_HOUSE.x, ACHIEVEMENT_HOUSE.y);
     drawHouse(scene, 440, 915, 126, 103);
     for (const [x, y] of [[90, 120], [150, 150], [600, 300], [650, 335], [1000, 145], [1440, 350], [1390, 390], [230, 650], [210, 700], [1350, 650], [1370, 700], [630, 1020], [980, 1030]]) drawTree(scene, x, y);
     drawIntesa(scene, places[0].x, places[0].y);
@@ -647,7 +656,7 @@ function GameMap({
       { x: 370, y: 95, w: 140, h: 245 }, { x: 324, y: 550, w: 192, h: 198 },
       { x: 1052, y: 546, w: 216, h: 208 }, { x: 714, y: 890, w: 172, h: 125 },
       { x: 593, y: 86, w: 144, h: 119 }, { x: 78, y: 861, w: 174, h: 126 },
-      { x: 1348, y: 831, w: 159, h: 122 }, { x: 428, y: 901, w: 150, h: 117 },
+      ACHIEVEMENT_HOUSE.solid, { x: 428, y: 901, w: 150, h: 117 },
     ];
     const canWalk = (x: number, y: number) => x >= 28 && x <= WORLD.width - 28 && y >= 35 && y <= WORLD.height - 30
       && !solids.some(r => x + 10 > r.x && x - 10 < r.x + r.w && y + 24 > r.y && y + 14 < r.y + r.h);
@@ -894,7 +903,7 @@ export default function Home() {
       </div>
 
       <div className="map-index" aria-label="Luoghi presenti sulla mappa">
-        <span>05 LUOGHI</span>
+        <span>{String(places.length).padStart(2, "0")} LUOGHI</span>
         <div>{places.map((place) => <i key={place.id} className={nearby?.id === place.id ? "active" : ""} />)}</div>
       </div>
 
@@ -917,6 +926,7 @@ export default function Home() {
             {selected.id === "guild" && <p className="guild-event-modal">{wednesday ? "La Gilda si è accesa: stasera è il momento delle tappe di campionato!" : "Il mercoledì sera la Gilda si accende per le tappe di campionato."}</p>}
             {selected.id === "wistery" && <a className="modal-enter" href={member && !member.mustChangePassword ? "/wistery" : "/gilda"} onClick={playClick}>{member && !member.mustChangePassword ? "Personalizza il tuo avatar" : "Accedi per entrare"} →</a>}
             {selected.id === "intesa" && <a className="modal-enter" href="/banca" onClick={playClick}>Entra nella banca della Gilda →</a>}
+            {selected.id === "achievements" && <a className="modal-enter" href="/imprese" onClick={playClick}>Apri il tuo album delle imprese →</a>}
             {(selected.id === "staff" || selected.id === "guild") && (
               <a className="modal-enter" href={selected.id === "staff" ? "/staff" : "/gilda"} onClick={playClick}>
                 {selected.id === "staff" ? "Accedi all’area staff" : "Entra nella Gilda"} <span>→</span>

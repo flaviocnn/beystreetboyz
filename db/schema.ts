@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import type { Deck } from "../app/lib/decks";
+import type { AchievementEvidence, AchievementId } from "../app/lib/achievements";
 import { boolean, check, date, integer, jsonb, pgTable, primaryKey, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 
 export const members = pgTable("members", {
@@ -101,3 +102,23 @@ export const stageDecks = pgTable("stage_decks", {
   version: integer("version").notNull().default(1),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 }, table => [primaryKey({ columns: [table.stageSlug, table.memberId] })]);
+
+export const achievementActivity = pgTable("member_achievement_activity", {
+  memberId: text("member_id").notNull().references(() => members.id, { onDelete: "cascade" }),
+  kind: text("kind").notNull(), createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, t => [primaryKey({ columns: [t.memberId, t.kind] })]);
+export const memberAchievements = pgTable("member_achievements", {
+  memberId: text("member_id").notNull().references(() => members.id, { onDelete: "cascade" }),
+  achievementId: text("achievement_id").$type<AchievementId>().notNull(),
+  earnedAt: timestamp("earned_at", { withTimezone: true }).notNull().defaultNow(), active: boolean("active").notNull().default(true),
+  evidence: jsonb("evidence").$type<AchievementEvidence>().notNull(), ruleVersion: integer("rule_version").notNull().default(1),
+}, t => [primaryKey({ columns: [t.memberId, t.achievementId] })]);
+export const achievementProfiles = pgTable("member_achievement_profiles", {
+  memberId: text("member_id").primaryKey().references(() => members.id, { onDelete: "cascade" }),
+  showcase: jsonb("showcase").$type<AchievementId[]>().notNull().default([]), titleId: text("title_id").$type<AchievementId>(),
+});
+export const achievementAudit = pgTable("member_achievement_audit", {
+  id: text("id").primaryKey(), memberId: text("member_id").notNull().references(() => members.id, { onDelete: "cascade" }),
+  achievementId: text("achievement_id").notNull(), action: text("action").notNull(),
+  evidence: jsonb("evidence").$type<AchievementEvidence>().notNull(), createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});

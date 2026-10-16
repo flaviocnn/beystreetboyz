@@ -1,0 +1,20 @@
+{
+  "source": "Beyblade_X_componenti_torneo_POOL_TIER_DISTRIBUZIONE.xlsx",
+  "sheet": "Bit",
+  "range": "B5:C56",
+  "types": {
+    "Accel": "Attacco", "Ball": "Resistenza", "Bound Spike": "Difesa", "Cyclone": "Attacco",
+    "Dot": "Difesa", "Disk Ball": "Resistenza", "Disk Spike": "Difesa", "Elevate": "Balance",
+    "Flat": "Attacco", "Free Ball": "Resistenza", "Free Flat": "Attacco", "Glide": "Resistenza",
+    "Gear Ball": "Resistenza", "Gear Flat": "Attacco", "Gear Needle": "Difesa", "Gear Point": "Balance",
+    "Gear Rush": "Attacco", "Gear Unite": "Balance", "Hexa": "Balance", "High Needle": "Difesa",
+    "High Taper": "Balance", "Ignition": "Attacco", "Jolt": "Attacco", "Kick": "Balance",
+    "Level": "Attacco", "Low Flat": "Attacco", "Low Orb": "Resistenza", "Low Rush": "Attacco",
+    "Merge": "Balance", "Metal Needle": "Difesa", "Needle": "Difesa", "Narrow": "Resistenza",
+    "Orb": "Resistenza", "Operate": "Balance", "Point": "Balance", "Quake": "Attacco",
+    "Rush": "Attacco", "Rubber Accel": "Attacco", "Spike": "Difesa", "Taper": "Balance",
+    "Trans Kick": "Balance", "Trans Point": "Balance", "Turbo": "Attacco", "Unite": "Balance",
+    "Under Flat": "Attacco", "Under Needle": "Difesa", "Vortex": "Attacco", "Wedge": "Difesa",
+    "Wall Ball": "Resistenza", "Wall Wedge": "Difesa", "Yielding": "Resistenza", "Zap": "Balance"
+  }
+}

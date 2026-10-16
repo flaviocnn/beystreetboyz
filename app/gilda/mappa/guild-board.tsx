@@ -37,6 +37,7 @@ export default function GuildBoard({ member, onClick }: {
         body: JSON.stringify({ body: draft }),
       }));
       setDraft(""); setPostedToday(true);
+      window.dispatchEvent(new Event("torino-achievements-changed"));
       await refresh();
     } catch (cause) {
       const message = cause instanceof Error ? cause.message : "Pubblicazione non riuscita";

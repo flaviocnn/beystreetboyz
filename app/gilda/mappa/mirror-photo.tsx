@@ -5,7 +5,8 @@ import { drawPixelPlayer, type Avatar } from "../../lib/pixel-player";
 import type { PlayerMember } from "../../lib/client-api";
 import type { PersonalStage } from "../../lib/decks";
 import { achievementCaption, topEightStages, wrapPortraitText, type MirrorAchievement } from "../../lib/mirror-achievement";
-import { MIRROR_MOTTOS, mirrorMotto } from "../../lib/mirror-mottos";
+import { ATTACK_MOTTO, MIRROR_MOTTOS, mirrorMotto } from "../../lib/mirror-mottos";
+import { achievementDefinition, achievementTitle, type AchievementAlbum } from "../../lib/achievements";
 import { drawChampionThrone } from "../../lib/throne-art";
 import type { ChampionState } from "../../lib/use-reigning-champion";
 import { canExportThrone } from "../../lib/reigning-champion";
@@ -18,7 +19,8 @@ const BACKGROUNDS = [
   { name: "Inferno", ink: "#240f1b", paper: "#fff0d1", mid: "#6e202c", light: "#ef6838", accent: "#ffce62" },
 ];
 const POSES = ["Frontale", "Trionfante", "Sdraiato", "Guanto di sfida"];
-export function drawPortrait(canvas: HTMLCanvasElement, avatar: Avatar, name: string, background: number, pose: number, achievement: MirrorAchievement | null = null, mottoId = "guild-seal", throne = false) {
+type PortraitRewards = { frame: string; labels: string[] };
+export function drawPortrait(canvas: HTMLCanvasElement, avatar: Avatar, name: string, background: number, pose: number, achievement: MirrorAchievement | null = null, mottoId = "guild-seal", throne = false, rewards: PortraitRewards = { frame: "", labels: [] }) {
   canvas.width = 1080; canvas.height = 1350;
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
@@ -27,13 +29,21 @@ export function drawPortrait(canvas: HTMLCanvasElement, avatar: Avatar, name: st
   const motto = mirrorMotto(mottoId);
   const mottoLines = motto ? wrapPortraitText(motto, value => ctx.measureText(value).width, 295) : [];
   const mottoExtra = Math.max(0, mottoLines.length - 1) * 14;
-  const height = (caption ? 435 + caption.height + 38 : 450) + mottoExtra;
+  const rewardLines = rewards.labels.flatMap(label => wrapPortraitText(label, value => ctx.measureText(value).width, 285));
+  const rewardExtra = rewardLines.length ? 28 + rewardLines.length * 13 : 0;
+  const baseHeight = (caption ? 435 + caption.height + 38 : 450) + mottoExtra;
+  const height = baseHeight + rewardExtra;
   canvas.height = height * 3;
   ctx.imageSmoothingEnabled = false; ctx.scale(3, 3);
   const theme = BACKGROUNDS[background] || BACKGROUNDS[0];
   const box = (color: string, x: number, y: number, w: number, h: number) => { ctx.fillStyle = color; ctx.fillRect(x, y, w, h); };
   const text = (value: string, y: number, size: number, color = theme.paper, maxWidth?: number) => { ctx.fillStyle = color; ctx.font = `bold ${size}px monospace`; ctx.textAlign = "center"; ctx.fillText(value, 180, y, maxWidth); };
   box(theme.ink, 0, 0, 360, height); box(theme.paper, 10, 10, 340, height - 20); box(theme.ink, 15, 15, 330, height - 30);
+  if (rewards.frame) {
+    const color = rewards.frame === "bronze" ? "#cd995f" : "#ffd66d";
+    box(color, 4, 4, 352, 5); box(color, 4, height - 9, 352, 5); box(color, 4, 4, 5, height - 8); box(color, 351, 4, 5, height - 8);
+    if (rewards.frame === "sparks") for (let y = 26; y < height - 24; y += 28) { box(color, 19, y, 5, 7); box(color, 336, y + 9, 5, 7); }
+  }
   for (let x = 25; x < 340; x += 14) { box(theme.accent, x, 23, 7, 3); box(theme.accent, x, height - 27, 7, 3); }
   text("R A N K E D", 54, 14, theme.accent);
   text("BeyStreetBoyz", 85, 30);
@@ -124,6 +134,10 @@ export function drawPortrait(canvas: HTMLCanvasElement, avatar: Avatar, name: st
       ctx.fillText(line.text, 55, y);
     }
   }
+  if (rewardLines.length) {
+    box(theme.accent, 34, baseHeight - 12, 292, 2);
+    rewardLines.forEach((line, index) => text(line, baseHeight + 6 + index * 13, 10, theme.light));
+  }
 }
 
 export default function MirrorPhoto({ member, onClick, championState }: { member: PlayerMember; onClick: () => void; championState: ChampionState }) {
@@ -138,6 +152,25 @@ export default function MirrorPhoto({ member, onClick, championState }: { member
   const [stages, setStages] = useState<PersonalStage[]>([]), [stageSlug, setStageSlug] = useState("");
   const [stagesStatus, setStagesStatus] = useState<"loading" | "ready" | "error">("loading");
   const [reloadStages, setReloadStages] = useState(0);
+  const [album, setAlbum] = useState<AchievementAlbum | null>(null), [frame, setFrame] = useState("");
+  const [showBadges, setShowBadges] = useState(false);
+  const attackUnlocked = album?.achievements.some(a => a.id === "attack" && a.qualified) ?? false;
+  const podiumUnlocked = album?.achievements.some(a => a.id === "podiums" && a.qualified) ?? false;
+  const effectiveFrame = (frame === "sparks" && attackUnlocked) || (frame === "bronze" && podiumUnlocked) ? frame : "";
+  const effectiveMotto = mottoId === ATTACK_MOTTO.id && !attackUnlocked ? "guild-seal" : mottoId;
+  const rewards = useMemo(() => ({ frame: effectiveFrame, labels: showBadges && album ? [achievementTitle(album.titleId), ...album.showcase.map(id => achievementDefinition(id)?.name)].flatMap(value => value ? [value] : []) : [] }), [effectiveFrame, showBadges, album]);
+  useEffect(() => {
+    const controller = new AbortController();
+    const refresh = async () => {
+      try {
+        const response = await fetch("/api/member/achievements", { method: "POST", cache: "no-store", signal: controller.signal });
+        if (!response.ok) throw new Error("Album non disponibile");
+        const data = await response.json(); if (!controller.signal.aborted) setAlbum(data);
+      } catch { if (!controller.signal.aborted) setAlbum(null); }
+    };
+    void refresh(); const interval = window.setInterval(() => { if (!document.hidden) void refresh(); }, 45000);
+    return () => { controller.abort(); window.clearInterval(interval); };
+  }, [member.id]);
   const throne = throneSelected && championState.canUseThrone && championState.champion?.memberId === member.id;
   const portraitName = throne ? championState.champion!.displayName : name;
   const achievement = useMemo(() => throne && championState.champion
@@ -159,14 +192,14 @@ export default function MirrorPhoto({ member, onClick, championState }: { member
     if (!canvas) return;
     let live = true, url = "";
     setPhoto(null); setMessage("");
-    drawPortrait(canvas, member, portraitName, background, pose, achievement, mottoId, throne);
+    drawPortrait(canvas, member, portraitName, background, pose, achievement, effectiveMotto, throne, rewards);
     const width = canvas.width, height = canvas.height;
     canvas.toBlob((blob) => {
       if (!blob || !live) return;
       url = URL.createObjectURL(blob); setPhoto({ url, blob, width, height, throneStage });
     }, "image/png");
     return () => { live = false; if (url) URL.revokeObjectURL(url); };
-  }, [member, portraitName, background, pose, achievement, mottoId, throne, throneStage]);
+  }, [member, portraitName, background, pose, achievement, effectiveMotto, throne, throneStage, rewards]);
   async function authorizePhoto(selected: NonNullable<typeof photo>) {
     if (!selected.throneStage) return true;
     const latest = await championState.refresh();
@@ -214,10 +247,16 @@ export default function MirrorPhoto({ member, onClick, championState }: { member
         {throneNotice && <p role="status">{throneNotice}</p>}
       </fieldset>
       <label className="mirror-name">NOME SULLA FOTO<input value={portraitName} disabled={throne} maxLength={80} onChange={(e) => setName(e.target.value)} placeholder="Il tuo nome o nickname" /></label>
-      <label className="mirror-name">FRASE SULLA FOTO<select value={mottoId} onChange={event => { setMottoId(event.target.value); onClick(); }}>
+      <label className="mirror-name">FRASE SULLA FOTO<select value={effectiveMotto} onChange={event => { setMottoId(event.target.value); onClick(); }}>
         <option value="">Nessuna · nascondi la scritta</option>
         {MIRROR_MOTTOS.map(motto => <option key={motto.id} value={motto.id}>{motto.text}</option>)}
+        {attackUnlocked && <option value={ATTACK_MOTTO.id}>{ATTACK_MOTTO.text} · Impresa Nessuna difesa</option>}
       </select></label>
+      <fieldset><legend>RICOMPENSE DELLE IMPRESE</legend>
+        <label className="mirror-name">CORNICE<select value={effectiveFrame} onChange={event => { setFrame(event.target.value); onClick(); }}><option value="">Classica</option>{podiumUnlocked && <option value="bronze">Bronzo vivo · Abituato al podio</option>}{attackUnlocked && <option value="sparks">Scintille · Nessuna difesa</option>}</select></label>
+        <label className="mirror-throne-choice"><input type="checkbox" checked={showBadges} onChange={event => { setShowBadges(event.target.checked); onClick(); }} /> Mostra il titolo e i distintivi della mia vetrina</label>
+        <a href="/imprese">Gestisci le imprese e la vetrina →</a>
+      </fieldset>
       <fieldset><legend>BACKGROUND</legend><div className="mirror-choices">{BACKGROUNDS.map((theme, index) => <button key={theme.name} aria-pressed={background === index} onClick={() => { setBackground(index); onClick(); }}>{theme.name}</button>)}</div></fieldset>
       <fieldset disabled={throne}><legend>POSA{throne ? " · SUL TRONO" : ""}</legend><div className="mirror-choices">{POSES.map((label, index) => <button key={label} aria-pressed={!throne && pose === index} onClick={() => { setPose(index); onClick(); }}>{label}</button>)}</div></fieldset>
       <fieldset className="mirror-achievement" disabled={throne}><legend>PIAZZAMENTO DI TAPPA{throne ? " · TAPPA VINTA INCLUSA" : ""}</legend>

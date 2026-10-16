@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import LocalMemberSwitcher from "./components/local-member-switcher";
+import AchievementNotice from "./components/achievement-notice";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
@@ -17,7 +18,7 @@ export const viewport: Viewport = { width: "device-width", initialScale: 1, view
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="it">
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>{children}{process.env.NODE_ENV === "development" && !process.env.VERCEL && <LocalMemberSwitcher />}</body>
+      <body className={`${geistSans.variable} ${geistMono.variable}`}>{children}<AchievementNotice />{process.env.NODE_ENV === "development" && !process.env.VERCEL && <LocalMemberSwitcher />}</body>
     </html>
   );
 }

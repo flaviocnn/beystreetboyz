@@ -40,7 +40,7 @@ export default function Wistery() {
   }, []);
   async function save() {
     setBusy(true); setError(""); setSaved(false); playClick();
-    try { const result = await readResponse(await fetch("/api/member/avatar", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ avatarStyle: style, avatarColor: color }) })); setMember(result.member); setSaved(true); }
+    try { const result = await readResponse(await fetch("/api/member/avatar", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ avatarStyle: style, avatarColor: color }) })); setMember(result.member); setSaved(true); window.dispatchEvent(new Event("torino-achievements-changed")); }
     catch (cause) { setError(cause instanceof Error ? cause.message : "Salvataggio non riuscito"); }
     finally { setBusy(false); }
   }

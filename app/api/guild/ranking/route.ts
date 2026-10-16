@@ -2,14 +2,16 @@ import { getDb } from "../../../../db";
 import { members, tournamentResults } from "../../../../db/schema";
 import { currentMember } from "../../../lib/member-access";
 import { apiError } from "../../../lib/members";
+import { publicAchievementShowcases } from "../../../lib/achievement-service";
 
 export async function GET(request: Request) {
   const member = await currentMember(request);
   if (!member) return apiError("Accedi alla Gilda del Grifone", 401);
   if (member.mustChangePassword) return apiError("Modifica prima la password temporanea", 403);
-  const [membersList, results] = await Promise.all([
+  const [membersList, results, showcases] = await Promise.all([
     getDb().select({ id: members.id, firstName: members.firstName, lastName: members.lastName, challongeUsername: members.challongeUsername, score: members.score }).from(members),
     getDb().select({ memberId: tournamentResults.memberId, stagePoints: tournamentResults.stagePoints, finalRank: tournamentResults.finalRank }).from(tournamentResults),
+    publicAchievementShowcases(),
   ]);
   const byMember = new Map<string, { points: number[]; stageWins: number }>();
   for (const result of results) {
@@ -22,7 +24,7 @@ export async function GET(request: Request) {
   const ranking = membersList.map(member => {
     const stats = byMember.get(member.id) ?? { points: [], stageWins: 0 };
     const points = stats.points.sort((a, b) => b - a);
-    return { ...member, stages: points.length, stageWins: stats.stageWins, best: points.slice(0, 3) };
+    return { ...member, stages: points.length, stageWins: stats.stageWins, best: points.slice(0, 3), achievements: showcases.get(member.id) ?? { badgeIds: [], title: null } };
   });
   const tieValues = (row: typeof ranking[number]) => [row.score, row.stageWins, row.best[0] ?? 0, row.best[1] ?? 0, row.best[2] ?? 0, row.stages];
   const compare = (a: typeof ranking[number], b: typeof ranking[number]) => {
