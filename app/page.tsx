@@ -7,6 +7,8 @@ import { type PlayerMember, readResponse } from "./lib/client-api";
 import { useDialogFocus } from "./lib/dialog-focus";
 import { createIdleEncounter, updateIdleEncounter, VISITORS } from "./lib/idle-visitor";
 import { ACHIEVEMENT_HOUSE, drawAchievementHouse } from "./lib/achievement-house";
+import { useWorldWeather, WorldWeatherBadge } from "./components/world-weather";
+import { createAtmospherePaint, drawWorldAtmosphere } from "./lib/world-atmosphere";
 
 type Place = {
   id: string;
@@ -612,6 +614,8 @@ function GameMap({
   wednesday: boolean;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const weather = useWorldWeather(), weatherRef = useRef(weather);
+  useEffect(() => { weatherRef.current = weather; }, [weather]);
   const playerRef = useRef({ ...START, dir: "down" as Direction });
   const keysRef = useRef(new Set<Direction>());
   const nearbyRef = useRef<Place | null>(nearby);
@@ -675,6 +679,7 @@ function GameMap({
     let frame = 0;
     let last = performance.now();
     let lastFootstep = 0;
+    const atmosphere = createAtmospherePaint();
     const render = (now: number) => {
       const elapsed = Math.min(100, now - last);
       const dt = Math.min(32, now - last);
@@ -745,6 +750,7 @@ function GameMap({
       }
       drawPixelPlayer(ctx, player.x, player.y, player.dir, walking, now, memberRef.current?.mustChangePassword ? null : memberRef.current);
       ctx.restore();
+      drawWorldAtmosphere(ctx, canvas.width, canvas.height, now, weatherRef.current, atmosphere);
       frame = requestAnimationFrame(render);
     };
     frame = requestAnimationFrame(render);
@@ -781,6 +787,7 @@ function GameMap({
     };
     const down = (event: KeyboardEvent) => {
       const dir = map[event.key];
+      if (event.target instanceof Element && event.target.closest("[data-world-weather]")) return;
       if (dir && !modalRef.current) {
         event.preventDefault();
         setDirection(dir, true);
@@ -806,6 +813,7 @@ function GameMap({
   return (
     <>
       <canvas ref={canvasRef} className="map-canvas" aria-label="Mappa interattiva di Torino in stile videogame 8-bit" />
+      <WorldWeatherBadge />
       {visitorSpeech !== null && !modalOpen && <aside className={`visitor-dialogue visitor-${visitorSpeech}`} role="status" aria-live="polite">
         <span className="visitor-dialogue-label">UN INCONTRO IN CITTÀ</span>
         <strong>{VISITORS[visitorSpeech].name}</strong>
@@ -857,7 +865,7 @@ export default function Home() {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Enter" && nearby && !selected && !event.repeat && !(event.target instanceof Element && event.target.closest('button, a, input, textarea, select'))) {
+      if (event.key === "Enter" && nearby && !selected && !event.repeat && !(event.target instanceof Element && event.target.closest('button, a, input, textarea, select, summary, [data-world-weather]'))) {
         event.preventDefault();
         setSelected(nearby);
       }

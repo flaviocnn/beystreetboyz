@@ -16,6 +16,8 @@ import { useReigningChampion } from "../../lib/use-reigning-champion";
 import type { ReigningChampion } from "../../lib/reigning-champion";
 import AchievementProfile from "../../components/achievement-profile";
 import type { AchievementId } from "../../lib/achievements";
+import { useWorldWeather, WorldWeatherBadge } from "../../components/world-weather";
+import { createAtmospherePaint, drawWorldAtmosphere } from "../../lib/world-atmosphere";
 
 type RankingRow = { id: string; firstName: string; lastName: string | null; challongeUsername: string | null; score: number; rank: number; achievements?: { badgeIds: AchievementId[]; title: string | null } };
 const KEY_DIRECTIONS: Record<string, Direction> = { ArrowUp: "up", w: "up", ArrowDown: "down", s: "down", ArrowLeft: "left", a: "left", ArrowRight: "right", d: "right" };
@@ -37,6 +39,8 @@ function GuildRoom({ onOpen, onNear, onStep, paused, member, champion, leaders }
   leaders: RankingPreview[];
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const weather = useWorldWeather(), weatherRef = useRef(weather);
+  useEffect(() => { weatherRef.current = weather; }, [weather]);
   const playerRef = useRef({ ...START, dir: "up" as Direction });
   const keysRef = useRef(new Set<Direction>());
   const [showGuide, setShowGuide] = useState(false);
@@ -57,6 +61,7 @@ function GuildRoom({ onOpen, onNear, onStep, paused, member, champion, leaders }
     const resize = () => { const rect = canvas.getBoundingClientRect(); canvas.width = Math.max(1, Math.floor(rect.width)); canvas.height = Math.max(1, Math.floor(rect.height)); ctx.imageSmoothingEnabled = false; };
     resize(); const observer = new ResizeObserver(resize); observer.observe(canvas);
     let frame = 0, last = performance.now(), lastFootstep = 0;
+    const atmosphere = createAtmospherePaint();
     const render = (now: number) => {
       const dt = Math.min(32, now - last); last = now;
       const player = playerRef.current, keys = keysRef.current;
@@ -75,6 +80,7 @@ function GuildRoom({ onOpen, onNear, onStep, paused, member, champion, leaders }
       ctx.fillStyle = "#dbe0d3"; ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.save(); ctx.scale(camera.scale, camera.scale); ctx.translate(-Math.round(camera.x), -Math.round(camera.y)); ctx.drawImage(background, 0, 0);
       drawRoomDetails(ctx, near, now, member, championRef.current, leadersRef.current); drawPixelPlayer(ctx, player.x, player.y, player.dir, walking, now, member); ctx.restore();
+      drawWorldAtmosphere(ctx, canvas.width, canvas.height, now, weatherRef.current, atmosphere, true);
       if (guideRef.current) drawMinimap(ctx, player.x, player.y);
       frame = requestAnimationFrame(render);
     };
@@ -92,6 +98,7 @@ function GuildRoom({ onOpen, onNear, onStep, paused, member, champion, leaders }
   }, [onOpen, onNear, onStep, member]);
   return <>
     <canvas ref={canvasRef} className="guild-canvas" aria-label="Mappa della Gilda: classifica e trono sulla pedana centrale a nord, specchio nell'ala ovest e archivio tappe nell'ala est. Nella galleria a sud: bacheca a sinistra, statua annuale al centro, libreria a destra. Muoviti con le frecce o i pulsanti touch e interagisci vicino agli oggetti." />
+    <WorldWeatherBadge indoor />
     <button className="guild-guide-toggle" title={showGuide ? "Nascondi mappa e legenda" : "Mostra mappa e legenda"} aria-label={showGuide ? "Nascondi mappa e legenda" : "Mostra mappa e legenda"} aria-expanded={showGuide} aria-controls="guild-map-guide" onClick={() => setShowGuide(value => !value)}>⌖</button>
     {showGuide && <div id="guild-map-guide" className="guild-map-legend" role="region" aria-label="Legenda mappa" tabIndex={0} onKeyDown={event => event.stopPropagation()}>{PLACES.map(place => <span key={place.id}>{place.symbol} · {place.name}</span>)}</div>}
     <div className="guild-dpad" aria-label="Controlli movimento">{(["up", "left", "down", "right"] as Direction[]).map((direction) => <button key={direction} className={`guild-${direction}`} aria-label={`Vai ${DIRECTION_NAMES[direction]}`} disabled={paused}
