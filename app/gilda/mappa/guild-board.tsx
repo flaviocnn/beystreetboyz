@@ -3,6 +3,8 @@ import { memberDisplayName } from "../../lib/member-name";
 
 import { useCallback, useEffect, useState } from "react";
 import { readResponse, type PlayerMember } from "../../lib/client-api";
+import { getGameData, invalidateGameData } from "../../lib/game-data";
+import { usePopupSound } from "../../lib/game-audio";
 
 type Message = {
   id: string; memberId: string; body: string; createdAt: string;
@@ -17,14 +19,18 @@ export default function GuildBoard({ member, onClick }: {
   const [postedToday, setPostedToday] = useState(false);
   const [loading, setLoading] = useState(true), [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const refresh = useCallback(async () => {
-    const result = await readResponse(await fetch("/api/guild/messages", { cache: "no-store" }));
+  usePopupSound(messages[0]?.id);
+  const refresh = useCallback(async (force = false) => {
+    const result = await getGameData<{ messages: Message[]; postedToday: boolean }>("/api/guild/messages", member.id, 30000, force);
     setMessages(result.messages);
     setPostedToday(result.postedToday);
-  }, []);
+  }, [member.id]);
   useEffect(() => {
-    void refresh().catch((cause) => setError(cause instanceof Error ? cause.message : "Impossibile caricare la bacheca"))
+    void Promise.resolve().then(() => refresh()).catch((cause) => setError(cause instanceof Error ? cause.message : "Impossibile caricare la bacheca"))
       .finally(() => setLoading(false));
+    const update = () => { if (!document.hidden) void refresh().catch(() => {}); };
+    const timer = setInterval(update, 30000); window.addEventListener("focus", update); document.addEventListener("visibilitychange", update);
+    return () => { clearInterval(timer); window.removeEventListener("focus", update); document.removeEventListener("visibilitychange", update); };
   }, [refresh]);
 
   async function publish(event: React.FormEvent) {
@@ -38,7 +44,7 @@ export default function GuildBoard({ member, onClick }: {
       }));
       setDraft(""); setPostedToday(true);
       window.dispatchEvent(new Event("torino-achievements-changed"));
-      await refresh();
+      invalidateGameData(); await refresh(true);
     } catch (cause) {
       const message = cause instanceof Error ? cause.message : "Pubblicazione non riuscita";
       setError(message);

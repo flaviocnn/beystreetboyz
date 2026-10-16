@@ -1,4 +1,6 @@
 "use client";
+import Link from "next/link";
+import { getGameSession } from "../lib/game-data";
 import { memberDisplayName } from "../lib/member-name";
 import { useEffect, useRef, useState } from "react";
 import { AVATAR_COLORS, AVATAR_STYLES, BASE_STYLE_COUNT, drawPixelPlayer, type Direction } from "../lib/pixel-player";
@@ -34,7 +36,7 @@ export default function Wistery() {
   const [busy, setBusy] = useState(false), [error, setError] = useState(""), [saved, setSaved] = useState(false);
   const { enabled, toggle, playClick } = useGameAudio("wistery");
   useEffect(() => {
-    void fetch("/api/member/session", { cache: "no-store" }).then(readResponse).then(({ member: current }) => {
+    void getGameSession().then(({ member: current }) => {
       setMember(current); if (current) { setStyle(current.avatarStyle); setColor(current.avatarColor); }
     }).catch((cause) => setError(cause.message)).finally(() => setLoading(false));
   }, []);
@@ -44,7 +46,7 @@ export default function Wistery() {
     catch (cause) { setError(cause instanceof Error ? cause.message : "Salvataggio non riuscito"); }
     finally { setBusy(false); }
   }
-  return <main className="interior-shell wistery-shell"><header className="interior-topbar"><a href="/">← MAPPA DI TORINO</a><span>WISTERY / COBALT FLAMES</span><button className="guild-audio-toggle" aria-pressed={enabled} aria-label={enabled ? "Disattiva audio" : "Attiva audio"} onClick={toggle}>♫ {enabled ? "ON" : "OFF"}</button></header><div className="interior-container">
+  return <main className="interior-shell wistery-shell"><header className="interior-topbar"><Link href="/">← MAPPA DI TORINO</Link><span>WISTERY / COBALT FLAMES</span><button className="guild-audio-toggle" aria-pressed={enabled} aria-label={enabled ? "Disattiva audio" : "Attiva audio"} onClick={toggle}>♫ {enabled ? "ON" : "OFF"}</button></header><div className="interior-container">
     <p className="section-kicker">LA PATRIA DEI COBALT FLAMES</p><h1>Forgiato<br />nelle tenebre<span className="period">.</span></h1>
     {loading ? <p>Le porte si schiudono…</p> : !member || member.mustChangePassword ? <section className="auth-card"><h2>Il tuo sigillo è richiesto.</h2><p>{member ? "Modifica la password temporanea per entrare." : "Solo i membri della Gilda possono accedere all’atelier del Wistery."}</p><a className="solid-button" href="/gilda">VAI ALLA GILDA →</a></section> : <div className="avatar-workshop">
       <section className="avatar-preview-panel"><span className="section-kicker">IL TUO ALTER EGO</span><div className="avatar-stage"><Preview style={style} color={color} large direction={direction} /></div><h2>{AVATAR_STYLES[style]}</h2><p>{AVATAR_COLORS[color].name} · {memberDisplayName(member)}</p><div className="avatar-directions" aria-label="Ruota anteprima">{(["left", "up", "down", "right"] as Direction[]).map((d) => <button key={d} aria-pressed={direction === d} aria-label={`Vista ${d}`} onClick={() => setDirection(d)}>{d === "left" ? "←" : d === "up" ? "↑" : d === "down" ? "↓" : "→"}</button>)}</div></section>

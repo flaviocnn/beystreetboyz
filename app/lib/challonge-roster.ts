@@ -1,5 +1,8 @@
 import { tournamentReference } from "./checkin";
 import { BSB_COMMUNITY, UPCOMING_STATES, challongeEventDate, type ChallongeTournament } from "./challonge-tournament";
+import { createAsyncCache } from "./async-cache";
+import { createHash } from "node:crypto";
+const upcomingCache = createAsyncCache<ChallongeTournament[]>(4);
 export type RemoteParticipant = { participantId: string; displayName: string; username: string | null; registered: boolean };
 type Json = Record<string, unknown>;
 const object = (value: unknown): Json => value && typeof value === "object" && !Array.isArray(value) ? value as Json : {};
@@ -49,7 +52,11 @@ export async function fetchTournament(input: string) {
     return { ...tournamentMetadata(object(body.data), reference), community: BSB_COMMUNITY.identifier };
   }
 }
-export async function fetchUpcomingTournaments() {
+export async function fetchUpcomingTournaments(force = false) {
+  const scope = createHash("sha256").update(process.env.CHALLONGE_API_KEY ?? "unconfigured").digest("hex");
+  return upcomingCache.get(`${BSB_COMMUNITY.id}:${scope}`, 60000, loadUpcomingTournaments, force);
+}
+async function loadUpcomingTournaments() {
   const query = tournamentQuery(BSB_COMMUNITY.identifier);
   const tournaments: ChallongeTournament[] = [], ids = new Set<string>();
   for (let page = 1; page <= 20; page++) {

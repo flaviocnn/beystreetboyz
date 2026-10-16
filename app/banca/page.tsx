@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useDialogFocus } from "../lib/dialog-focus";
 import { useGameAudio } from "../lib/game-audio";
 import type { PlayerMember } from "../lib/client-api";
+import { getGameSession } from "../lib/game-data";
 import BankRoom, { type BankDesk } from "./bank-room";
 import BankLedger from "./bank-ledger";
 import "./bank.css";
@@ -19,7 +20,7 @@ export default function GuildBank() {
   const open = useCallback((desk: BankDesk) => setOpened(desk), []);
   useEffect(() => {
     const controller = new AbortController();
-    void fetch("/api/member/session", { cache: "no-store", signal: controller.signal }).then(response => response.json()).then(data => { if (data.member && !controller.signal.aborted) setMember(data.member); }).catch(() => {});
+    void getGameSession().then(data => { if (data.member && !controller.signal.aborted) setMember(data.member); }).catch(() => {});
     return () => controller.abort();
   }, []);
   useEffect(() => { if (!opened) return; const close = (event: KeyboardEvent) => { if (event.key === "Escape") setOpened(null); }; window.addEventListener("keydown", close); return () => window.removeEventListener("keydown", close); }, [opened]);

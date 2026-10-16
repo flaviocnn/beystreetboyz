@@ -4,6 +4,8 @@ import "./globals.css";
 import LocalMemberSwitcher from "./components/local-member-switcher";
 import AchievementNotice from "./components/achievement-notice";
 import { WorldWeatherProvider } from "./components/world-weather";
+import { GameAudioProvider } from "./lib/game-audio";
+import "./components/world-game.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
@@ -19,7 +21,7 @@ export const viewport: Viewport = { width: "device-width", initialScale: 1, view
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="it">
-      <body className={`${geistSans.variable} ${geistMono.variable}`}><WorldWeatherProvider>{children}<AchievementNotice />{process.env.NODE_ENV === "development" && !process.env.VERCEL && <LocalMemberSwitcher />}</WorldWeatherProvider></body>
+      <body className={`${geistSans.variable} ${geistMono.variable}`}><GameAudioProvider><WorldWeatherProvider>{children}<AchievementNotice />{process.env.NODE_ENV === "development" && !process.env.VERCEL && <LocalMemberSwitcher />}</WorldWeatherProvider></GameAudioProvider></body>
     </html>
   );
 }

@@ -36,6 +36,20 @@ test('metadata and participant resync resolve community tournaments created by a
     };
     const meta=await fetchTournament('42');assert.equal(meta.name,'Tappa 42');assert.equal(meta.sourceUrl,'https://challonge.com/test_42');assert.equal(meta.community,BSB_COMMUNITY.identifier);
     const roster=await fetchRoster('42');assert.equal(roster.id,'42');assert.deepEqual(roster.participants,[]);
-    globalThis.fetch=async()=>Response.json({errors:[]},{status:429});await assert.rejects(fetchUpcomingTournaments(),/Limite richieste/);
+    globalThis.fetch=async()=>Response.json({errors:[]},{status:429});await assert.rejects(fetchUpcomingTournaments(true),/Limite richieste/);
+  }finally{globalThis.fetch=original;if(oldKey===undefined)delete process.env.CHALLONGE_API_KEY;else process.env.CHALLONGE_API_KEY=oldKey;}
+});
+test('upcoming cache coalesces bursts, separates API credentials and never caches a failed refresh',async()=>{
+  const original=globalThis.fetch,oldKey=process.env.CHALLONGE_API_KEY;let calls=0;
+  try{
+    process.env.CHALLONGE_API_KEY='cache-fixture-A';
+    globalThis.fetch=async()=>{calls++;return Response.json({data:[record('77')],links:{next:null}})};
+    await Promise.all([fetchUpcomingTournaments(),fetchUpcomingTournaments(),fetchUpcomingTournaments()]);
+    await fetchUpcomingTournaments();assert.equal(calls,1);
+    process.env.CHALLONGE_API_KEY='cache-fixture-B';await fetchUpcomingTournaments();assert.equal(calls,2);
+    globalThis.fetch=async()=>{calls++;return Response.json({errors:[]},{status:429})};
+    await assert.rejects(fetchUpcomingTournaments(true),/Limite richieste/);
+    globalThis.fetch=async()=>{calls++;return Response.json({data:[],links:{next:null}})};
+    assert.deepEqual(await fetchUpcomingTournaments(),[]);assert.equal(calls,4);
   }finally{globalThis.fetch=original;if(oldKey===undefined)delete process.env.CHALLONGE_API_KEY;else process.env.CHALLONGE_API_KEY=oldKey;}
 });

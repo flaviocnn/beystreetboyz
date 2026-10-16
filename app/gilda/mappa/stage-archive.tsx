@@ -2,6 +2,7 @@
 import { useEffect, useId, useState } from "react";
 import { attackBitCount, bitType, catalog, INTEGRATED_RATCHET, type Bey, type Deck, type DeckPart, type PersonalStage } from "../../lib/decks";
 import { bladeOptions } from "../../lib/blade-options";
+import { getGameData, invalidateGameData } from "../../lib/game-data";
 
 const emptyPart = (): DeckPart => ({ value: "", custom: false });
 const emptyBey = (): Bey => ({ blades: [emptyPart()], ratchet: emptyPart(), bit: emptyPart() });
@@ -33,18 +34,18 @@ function PartPicker({ label, kind, part, disabled, onChange }: { label: string; 
   {part.custom && <input disabled={disabled} aria-label={`${label}: nome del componente aggiunto`} required maxLength={100} value={part.value} onChange={e => onChange({ custom: true, value: e.target.value })} placeholder="Nome del componente" />}</div>;
 }
 
-export default function StageArchive({ onClick }: { onClick: () => void }) {
+export default function StageArchive({ onClick, memberId }: { onClick: () => void; memberId: string }) {
   const [stages, setStages] = useState<PersonalStage[]>([]), [loading, setLoading] = useState(true);
   const [error, setError] = useState(""), [notice, setNotice] = useState("");
   const [editing, setEditing] = useState<PersonalStage | null>(null), [deck, setDeck] = useState<Deck>(emptyDeck);
   const [busy, setBusy] = useState(false);
   useEffect(() => {
     const controller = new AbortController();
-    void request("/api/guild/stages", { signal: controller.signal }).then(data => setStages(data.stages)).catch(cause => {
+    void getGameData<{ stages: PersonalStage[] }>("/api/guild/stages", memberId).then(data => { if (!controller.signal.aborted) setStages(data.stages); }).catch(cause => {
       if (!controller.signal.aborted) setError(cause.message);
     }).finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
-  }, []);
+  }, [memberId]);
   function change(index: number, update: Partial<Bey>) {
     setDeck(current => current.map((bey, i) => i === index ? { ...bey, ...update } : bey) as Deck);
   }
@@ -58,6 +59,7 @@ export default function StageArchive({ onClick }: { onClick: () => void }) {
       const data = await request(`/api/guild/stages/${encodeURIComponent(editing.slug)}/deck`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ deck, version: editing.version }) });
       setStages(current => current.map(stage => stage.slug === editing.slug ? { ...stage, ...data } : stage));
       setEditing(null); setNotice("Deck salvato nel tuo archivio. Puoi modificarlo in seguito.");
+      invalidateGameData();
       window.dispatchEvent(new Event("torino-achievements-changed"));
     } catch (cause) { setError(cause instanceof Error ? cause.message : "Salvataggio non riuscito"); }
     finally { setBusy(false); }

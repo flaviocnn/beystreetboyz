@@ -1,6 +1,7 @@
 import { drawPixelPlayer, type Avatar } from "../../lib/pixel-player";
 import { drawChampionThrone } from "../../lib/throne-art";
 import type { ReigningChampion } from "../../lib/reigning-champion";
+import { worldCamera, INTERACTION_RADIUS, playerHitsSolid, drawInteractionSpot } from "../../lib/world-game";
 
 export type PlaceId = "board" | "ranking" | "mirror" | "champion" | "library" | "archive" | "throne";
 export const WORLD = { width: 1600, height: 1480 };
@@ -28,20 +29,15 @@ const SOLIDS = Object.values(FURNITURE);
 export const THRONE = { x: 985, y: 380, scale: 1.15 };
 export type RankingPreview = { name: string; rank: number; score: number };
 export function guildCamera(width: number, height: number, player: { x: number; y: number }) {
-  const scale = Math.min(1, Math.max(.42, Math.min(width / 760, height / 480)));
-  const viewWidth = width / scale, viewHeight = height / scale;
-  return { scale,
-    x: Math.max(0, Math.min(WORLD.width - viewWidth, player.x - viewWidth / 2)),
-    y: Math.max(0, Math.min(WORLD.height - viewHeight, player.y - viewHeight * .8)),
-  };
+  return worldCamera(width, height, player, WORLD);
 }
 export function canWalk(x: number, y: number) {
   return x >= 36 && x <= WORLD.width - 36 && y >= 205 && y <= WORLD.height - 40
-    && !SOLIDS.some((r) => x + 13 > r.x && x - 13 < r.x + r.w && y + 23 > r.y && y + 9 < r.y + r.h);
+    && !SOLIDS.some((r) => playerHitsSolid(x, y, r));
 }
 export function nearbyPlace(x: number, y: number): PlaceId | null {
   const closest = PLACES.map((p) => ({ p, d: Math.hypot(x - p.x, y - p.y) })).sort((a, b) => a.d - b.d)[0];
-  return closest.d < 108 ? closest.p.id : null;
+  return closest.d < INTERACTION_RADIUS ? closest.p.id : null;
 }
 function rect(ctx: CanvasRenderingContext2D, color: string, x: number, y: number, w: number, h: number) {
   ctx.fillStyle = color; ctx.fillRect(x, y, w, h);
@@ -212,11 +208,7 @@ export function drawRoomDetails(ctx: CanvasRenderingContext2D, near: PlaceId | n
   drawPixelPlayer(ctx, 0, 0, "down", false, now, avatar); ctx.restore();
   // A single active floor marker, rather than seven competing labels.
   const place = PLACES.find(p => p.id === near);
-  if (place) {
-    rect(ctx, "#f4e4a1", place.x - 15, place.y - 15, 30, 30);
-    ctx.strokeStyle = "#536b45"; ctx.lineWidth = 2; ctx.strokeRect(place.x - 20, place.y - 20, 40, 40);
-    label(ctx, "!", place.x, place.y + 7, "#293b2c", 18);
-  }
+  if (place) drawInteractionSpot(ctx, place.x, place.y);
 }
 export function drawMinimap(ctx: CanvasRenderingContext2D, x: number, y: number) {
   const w = 144, h = 112, left = 12, top = 12;

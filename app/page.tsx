@@ -1,15 +1,20 @@
 "use client";
+import Link from "next/link";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useGameAudio, usePopupSound } from "./lib/game-audio";
 import { drawPixelPlayer, type Direction } from "./lib/pixel-player";
-import { type PlayerMember, readResponse } from "./lib/client-api";
+import { type PlayerMember } from "./lib/client-api";
+import { getGameSession } from "./lib/game-data";
 import { useDialogFocus } from "./lib/dialog-focus";
 import { createIdleEncounter, updateIdleEncounter, VISITORS } from "./lib/idle-visitor";
 import { ACHIEVEMENT_HOUSE, drawAchievementHouse } from "./lib/achievement-house";
 import { useWorldWeather, WorldWeatherBadge } from "./components/world-weather";
 import { createAtmospherePaint, drawWorldAtmosphere } from "./lib/world-atmosphere";
 import { memberDisplayName } from "./lib/member-name";
+import { WorldDpad, WorldGuide, WorldHud, WorldInteraction } from "./components/world-controls";
+import { worldCamera, WALK_SPEED, KEY_DIRECTIONS, isWorldInputTarget, drawWorldOverview, drawInteractionSpot } from "./lib/world-game";
+import { CITY_WORLD as WORLD, CITY_START as START, CITY_ENTRANCES, canWalkCity, nearbyCityPlace } from "./lib/city-navigation";
 
 type Place = {
   id: string;
@@ -21,8 +26,6 @@ type Place = {
   y: number;
 };
 
-const WORLD = { width: 1600, height: 1100 };
-const START = { x: 800, y: 500 };
 const PALETTE = {
   ink: "#202322",
   dark: "#515753",
@@ -625,6 +628,7 @@ function GameMap({
   const canWalkRef = useRef<(x: number, y: number) => boolean>(() => false);
   const encounterRef = useRef(createIdleEncounter(START));
   const [visitorSpeech, setVisitorSpeech] = useState<number | null>(null);
+  const guideRef = useRef(false);
   const speechRef = useRef<number | null>(null);
   usePopupSound(visitorSpeech !== null && !modalOpen);
   useEffect(() => { memberRef.current = member; }, [member]);
@@ -657,14 +661,7 @@ function GameMap({
     drawWistery(scene, places[2].x, places[2].y);
     drawStaffPalace(scene, places[3].x, places[3].y);
     // All entry points sit on forecourts; solid footprints keep the avatar outside walls.
-    const solids = [
-      { x: 370, y: 95, w: 140, h: 245 }, { x: 324, y: 550, w: 192, h: 198 },
-      { x: 1052, y: 546, w: 216, h: 208 }, { x: 714, y: 890, w: 172, h: 125 },
-      { x: 593, y: 86, w: 144, h: 119 }, { x: 78, y: 861, w: 174, h: 126 },
-      ACHIEVEMENT_HOUSE.solid, { x: 428, y: 901, w: 150, h: 117 },
-    ];
-    const canWalk = (x: number, y: number) => x >= 28 && x <= WORLD.width - 28 && y >= 35 && y <= WORLD.height - 30
-      && !solids.some(r => x + 10 > r.x && x - 10 < r.x + r.w && y + 24 > r.y && y + 14 < r.y + r.h);
+    const canWalk = canWalkCity;
     canWalkRef.current = canWalk;
 
     const resize = () => {
@@ -699,7 +696,7 @@ function GameMap({
         dx *= 0.707;
         dy *= 0.707;
       }
-      const speed = 0.19 * dt;
+      const speed = WALK_SPEED * dt;
       const beforeX = player.x, beforeY = player.y;
       if (canWalk(player.x + dx * speed, player.y)) player.x += dx * speed;
       if (canWalk(player.x, player.y + dy * speed)) player.y += dy * speed;
@@ -715,33 +712,24 @@ function GameMap({
       const speech = visitor?.phase === "talking" ? visitor.kind : null;
       if (speech !== speechRef.current) { speechRef.current = speech; setVisitorSpeech(speech); }
 
-      let closest: Place | null = null;
-      let closestDistance = Infinity;
-      for (const place of places) {
-        const distance = Math.hypot(player.x - place.x, player.y - place.y);
-        if (distance < 142 && distance < closestDistance) {
-          closest = place;
-          closestDistance = distance;
-        }
-      }
+      const closestId = nearbyCityPlace(player.x, player.y);
+      const closest = places.find(place => place.id === closestId) ?? null;
       if (closest?.id !== nearbyRef.current?.id) {
         nearbyRef.current = closest;
         onNearbyChange(closest);
       }
 
-      const zoom = canvas.width < 520 ? .85 : Math.max(.72, Math.min(1, canvas.width / 1100));
-      const viewWidth = canvas.width / zoom, viewHeight = canvas.height / zoom;
-      const cameraX = viewWidth > WORLD.width ? (WORLD.width - viewWidth) / 2 : Math.max(0, Math.min(WORLD.width - viewWidth, player.x - viewWidth / 2));
-      const cameraY = viewHeight > WORLD.height ? (WORLD.height - viewHeight) / 2 : Math.max(0, Math.min(WORLD.height - viewHeight, player.y - viewHeight / 2));
+      const camera = worldCamera(canvas.width, canvas.height, player, WORLD);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = PALETTE.paper; ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.save();
-      ctx.scale(zoom, zoom);
-      ctx.translate(-Math.round(cameraX), -Math.round(cameraY));
+      ctx.scale(camera.scale, camera.scale);
+      ctx.translate(-Math.round(camera.x), -Math.round(camera.y));
       ctx.drawImage(scenery, 0, 0);
       drawBeybladeGarden(ctx, now);
       drawGuild(ctx, places[4].x, places[4].y, wednesday, now);
       for (const place of places) drawMarker(ctx, place, closest?.id === place.id, now);
+      if (closest) { const entrance = CITY_ENTRANCES[closest.id]; drawInteractionSpot(ctx, entrance.x, entrance.y); }
       if (visitor) {
         ctx.save();
         ctx.globalAlpha = visitor.phase === "leaving" ? Math.max(0, 1 - visitor.age / 1000) : 1;
@@ -752,6 +740,7 @@ function GameMap({
       drawPixelPlayer(ctx, player.x, player.y, player.dir, walking, now, memberRef.current?.mustChangePassword ? null : memberRef.current);
       ctx.restore();
       drawWorldAtmosphere(ctx, canvas.width, canvas.height, now, weatherRef.current, atmosphere);
+      if (guideRef.current) drawWorldOverview(ctx, WORLD, player, places.map((place, index) => ({ ...CITY_ENTRANCES[place.id], symbol: String(index + 1) })));
       frame = requestAnimationFrame(render);
     };
     frame = requestAnimationFrame(render);
@@ -761,84 +750,62 @@ function GameMap({
     };
   }, [onNearbyChange, onStep, wednesday]);
 
-  const setDirection = (direction: Direction, active: boolean) => {
+  const setDirection = useCallback((direction: Direction, active: boolean) => {
     if (active && !modalRef.current) {
       if (!keysRef.current.has(direction)) {
         const player = playerRef.current;
         const x = player.x + (direction === "left" ? -8 : direction === "right" ? 8 : 0);
         const y = player.y + (direction === "up" ? -8 : direction === "down" ? 8 : 0);
-        if (canWalkRef.current(x, y)) { player.x = x; player.y = y; }
+        if (canWalkRef.current(x, y)) { player.x = x; player.y = y; onStep(); }
         player.dir = direction;
       }
       keysRef.current.add(direction);
     }
     else keysRef.current.delete(direction);
-  };
+  }, [onStep]);
 
   useEffect(() => {
-    const map: Record<string, Direction> = {
-      ArrowUp: "up",
-      w: "up",
-      ArrowDown: "down",
-      s: "down",
-      ArrowLeft: "left",
-      a: "left",
-      ArrowRight: "right",
-      d: "right",
-    };
+    const map = KEY_DIRECTIONS;
     const down = (event: KeyboardEvent) => {
-      const dir = map[event.key];
-      if (event.target instanceof Element && event.target.closest("[data-world-weather]")) return;
+      const dir = map[event.key] || map[event.key.toLowerCase()];
+      if (isWorldInputTarget(event.target)) return;
       if (dir && !modalRef.current) {
         event.preventDefault();
         setDirection(dir, true);
       }
     };
     const up = (event: KeyboardEvent) => {
-      const dir = map[event.key];
+      const dir = map[event.key] || map[event.key.toLowerCase()];
       if (dir) setDirection(dir, false);
     };
     window.addEventListener("keydown", down);
     window.addEventListener("keyup", up);
     const clearKeys = () => keysRef.current.clear();
+    const focus = (event: FocusEvent) => { if (isWorldInputTarget(event.target)) clearKeys(); };
     window.addEventListener("blur", clearKeys);
+    document.addEventListener("focusin", focus);
     document.addEventListener("visibilitychange", clearKeys);
     return () => {
       window.removeEventListener("keydown", down);
       window.removeEventListener("keyup", up);
       window.removeEventListener("blur", clearKeys);
+      document.removeEventListener("focusin", focus);
       document.removeEventListener("visibilitychange", clearKeys);
     };
-  }, []);
+  }, [setDirection]);
 
   return (
     <>
-      <canvas ref={canvasRef} className="map-canvas" aria-label="Mappa interattiva di Torino in stile videogame 8-bit" />
+      <canvas ref={canvasRef} className="map-canvas" tabIndex={0} onPointerDown={event => event.currentTarget.focus()} aria-label="Mappa interattiva di Torino in stile videogame 8-bit. Frecce o WASD per muoverti, Invio vicino a un luogo per esplorarlo." />
       <WorldWeatherBadge />
-      {visitorSpeech !== null && !modalOpen && <aside className={`visitor-dialogue visitor-${visitorSpeech}`} role="status" aria-live="polite">
+      <WorldGuide places={places} onChange={open => { guideRef.current = open; }} paused={modalOpen} />
+      {visitorSpeech !== null && !modalOpen && <aside className={`visitor-dialogue visitor-${visitorSpeech}`} role="status" aria-live="polite" data-sound="manual">
         <span className="visitor-dialogue-label">UN INCONTRO IN CITTÀ</span>
         <strong>{VISITORS[visitorSpeech].name}</strong>
         <p>«{VISITORS[visitorSpeech].message}»</p>
         <button aria-label="Chiudi il messaggio dell’NPC" onClick={() => { encounterRef.current.visitor = null; speechRef.current = null; setVisitorSpeech(null); }}>×</button>
       </aside>}
-      <div className="dpad" aria-label="Controlli movimento">
-        {(["up", "left", "down", "right"] as Direction[]).map((direction) => (
-          <button
-            key={direction}
-            className={`dpad-${direction}`}
-            aria-label={`Vai ${direction}`}
-            onPointerDown={(event) => {
-              event.currentTarget.setPointerCapture(event.pointerId);
-              setDirection(direction, true);
-            }}
-            onPointerUp={() => setDirection(direction, false)}
-            onPointerCancel={() => setDirection(direction, false)}
-            onLostPointerCapture={() => setDirection(direction, false)}
-          >
-            {direction === "up" ? "↑" : direction === "down" ? "↓" : direction === "left" ? "←" : "→"}
-          </button>
-        ))}
-      </div>
+      <WorldDpad paused={modalOpen} onDirection={setDirection} />
     </>
   );
 }
@@ -852,17 +819,17 @@ export default function Home() {
     const timer = window.setInterval(update, 60_000);
     return () => window.clearInterval(timer);
   }, []);
-  useEffect(() => { void fetch("/api/member/session", { cache: "no-store" }).then(readResponse).then((result) => setMember(result.member)).catch(() => setMember(null)); }, []);
+  useEffect(() => { void getGameSession().then((result) => setMember(result.member)).catch(() => setMember(null)); }, []);
   const [nearby, setNearby] = useState<Place | null>(null);
   const [selected, setSelected] = useState<Place | null>(null);
-  usePopupSound(Boolean(nearby));
+  usePopupSound(nearby?.id);
   useDialogFocus(Boolean(selected));
-  const { enabled: audioEnabled, toggle: toggleAudio, playClick, playStep } = useGameAudio();
+  const { playClick, playStep } = useGameAudio();
   const openSelected = useCallback(() => {
     if (nearby) {
       setSelected(nearby);
     }
-  }, [nearby, playClick]);
+  }, [nearby]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -877,44 +844,11 @@ export default function Home() {
   }, [nearby, playClick, selected]);
 
   return (
-    <main className="game-shell">
+    <main className="game-shell world-shell">
       <GameMap nearby={nearby} onNearbyChange={setNearby} modalOpen={Boolean(selected)} onStep={playStep} member={member} wednesday={wednesday} />
 
-      <header className="game-header">
-        <div className="brand-mark" aria-hidden="true">T</div>
-        <div>
-          <p className="kicker">{member ? "LA TUA CITTÀ TI ASPETTA" : "ESPLORA LA CITTÀ"}</p>
-          <h1>{member ? `Bentornato, ${memberDisplayName(member)}!` : "Torino, un passo alla volta."}</h1>
-        </div>
-      </header>
-
-      <aside className="instructions">
-        <span className="key">↑</span><span className="key">↓</span><span className="key">←</span><span className="key">→</span>
-        <span>MUOVITI</span>
-        <i />
-        <span className="key wide">INVIO</span>
-        <span>INTERAGISCI</span>
-      </aside>
-
-      <button className="audio-toggle" onClick={toggleAudio} aria-pressed={audioEnabled} aria-label={audioEnabled ? "Disattiva audio" : "Attiva audio"}>
-        <span aria-hidden="true">{audioEnabled ? "♫" : "×"}</span>
-        {audioEnabled ? "AUDIO ON" : "AUDIO OFF"}
-      </button>
-
-      <div className={`interaction-prompt ${nearby ? "is-visible" : ""}`} aria-live="polite">
-        {nearby && (
-          <button onClick={openSelected}>
-            <span className="prompt-icon">!</span>
-            <span><small>SEI VICINO A</small>{nearby.name}{nearby.id === "guild" && <em className="guild-event-hint">{wednesday ? "È mercoledì! Stasera c’è una tappa del campionato." : "Ogni mercoledì sera: tappe di campionato!"}</em>}</span>
-            <kbd>INVIO ↵</kbd>
-          </button>
-        )}
-      </div>
-
-      <div className="map-index" aria-label="Luoghi presenti sulla mappa">
-        <span>{String(places.length).padStart(2, "0")} LUOGHI</span>
-        <div>{places.map((place) => <i key={place.id} className={nearby?.id === place.id ? "active" : ""} />)}</div>
-      </div>
+      <WorldHud area="TORINO · RANKED BEYSTREETBOYZ" title={member ? `Bentornato, ${memberDisplayName(member)}!` : "Torino, un passo alla volta."} paused={!!selected} />
+      <WorldInteraction name={!selected ? nearby?.name : undefined} hint={nearby?.id === "guild" ? (wednesday ? "È mercoledì! Stasera c’è una tappa del campionato." : "Ogni mercoledì sera: tappe di campionato!") : undefined} onOpen={openSelected} />
 
       {selected && (
         <div className="modal-backdrop" role="presentation" onMouseDown={() => setSelected(null)}>
@@ -933,13 +867,13 @@ export default function Home() {
             <p className="modal-description">{selected.description}</p>
             <p className="modal-detail">{selected.detail}</p>
             {selected.id === "guild" && <p className="guild-event-modal">{wednesday ? "La Gilda si è accesa: stasera è il momento delle tappe di campionato!" : "Il mercoledì sera la Gilda si accende per le tappe di campionato."}</p>}
-            {selected.id === "wistery" && <a className="modal-enter" href={member && !member.mustChangePassword ? "/wistery" : "/gilda"} onClick={playClick}>{member && !member.mustChangePassword ? "Personalizza il tuo avatar" : "Accedi per entrare"} →</a>}
-            {selected.id === "intesa" && <a className="modal-enter" href="/banca" onClick={playClick}>Entra nella banca della Gilda →</a>}
-            {selected.id === "achievements" && <a className="modal-enter" href="/imprese" onClick={playClick}>Apri il tuo album delle imprese →</a>}
+            {selected.id === "wistery" && <Link className="modal-enter" href={member && !member.mustChangePassword ? "/wistery" : "/gilda"} onClick={playClick}>{member && !member.mustChangePassword ? "Personalizza il tuo avatar" : "Accedi per entrare"} →</Link>}
+            {selected.id === "intesa" && <Link className="modal-enter" href="/banca" onClick={playClick}>Entra nella banca della Gilda →</Link>}
+            {selected.id === "achievements" && <Link className="modal-enter" href="/imprese" onClick={playClick}>Apri il tuo album delle imprese →</Link>}
             {(selected.id === "staff" || selected.id === "guild") && (
-              <a className="modal-enter" href={selected.id === "staff" ? "/staff" : "/gilda"} onClick={playClick}>
+              <Link className="modal-enter" href={selected.id === "staff" ? "/staff" : "/gilda"} onClick={playClick}>
                 {selected.id === "staff" ? "Accedi all’area staff" : "Entra nella Gilda"} <span>→</span>
-              </a>
+              </Link>
             )}
             <div className="modal-footer"><span>FRECCE / TAB · INVIO PER SCEGLIERE</span><span>ESC PER CHIUDERE</span></div>
           </section>

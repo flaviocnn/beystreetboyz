@@ -8,7 +8,7 @@ export function useDialogFocus(open: boolean) {
     const previous = document.activeElement as HTMLElement | null;
     const dialog = document.querySelector<HTMLElement>('[role="dialog"]');
     if (!dialog) return;
-    const selector = 'button:not(:disabled), a[href], input:not(:disabled), textarea:not(:disabled), select:not(:disabled), [tabindex="0"]';
+    const selector = 'button:not(:disabled), a[href], input:not(:disabled), textarea:not(:disabled), select:not(:disabled), summary, [tabindex="0"]';
     (dialog.querySelector<HTMLElement>('.modal-enter') || dialog.querySelector<HTMLElement>(selector))?.focus();
     const trap = (event: KeyboardEvent) => {
       const items = Array.from(dialog.querySelectorAll<HTMLElement>(selector)).filter((el) => el.getClientRects().length);

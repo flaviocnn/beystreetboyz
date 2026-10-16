@@ -10,6 +10,7 @@ import { achievementDefinition, achievementTitle, type AchievementAlbum } from "
 import { drawChampionThrone } from "../../lib/throne-art";
 import type { ChampionState } from "../../lib/use-reigning-champion";
 import { canExportThrone } from "../../lib/reigning-champion";
+import { getAchievementAlbum, getGameData } from "../../lib/game-data";
 
 const BACKGROUNDS = [
   { name: "Fenici", ink: "#351d2c", paper: "#fff0d4", mid: "#a54146", light: "#f4a457", accent: "#ffd66d" },
@@ -163,12 +164,10 @@ export default function MirrorPhoto({ member, onClick, championState }: { member
     const controller = new AbortController();
     const refresh = async () => {
       try {
-        const response = await fetch("/api/member/achievements", { method: "POST", cache: "no-store", signal: controller.signal });
-        if (!response.ok) throw new Error("Album non disponibile");
-        const data = await response.json(); if (!controller.signal.aborted) setAlbum(data);
+        const data = await getAchievementAlbum(member.id); if (!controller.signal.aborted) setAlbum(data);
       } catch { if (!controller.signal.aborted) setAlbum(null); }
     };
-    void refresh(); const interval = window.setInterval(() => { if (!document.hidden) void refresh(); }, 45000);
+    void refresh(); const interval = window.setInterval(() => { if (!document.hidden) void refresh(); }, 60000);
     return () => { controller.abort(); window.clearInterval(interval); };
   }, [member.id]);
   const throne = throneSelected && championState.canUseThrone && championState.champion?.memberId === member.id;
@@ -179,9 +178,8 @@ export default function MirrorPhoto({ member, onClick, championState }: { member
   const throneStage = throne ? championState.champion!.stage.slug : null;
   useEffect(() => {
     const controller = new AbortController();
-    void fetch("/api/guild/stages", { cache: "no-store", signal: controller.signal }).then(async response => {
-      const data = await response.json().catch(() => null);
-      if (!response.ok || !Array.isArray(data?.stages)) throw new Error("stages_unavailable");
+    void getGameData<{ stages: PersonalStage[] }>("/api/guild/stages", member.id, 30000, reloadStages > 0).then(data => {
+      if (!Array.isArray(data?.stages)) throw new Error("stages_unavailable");
       if (controller.signal.aborted) return;
       setStages(topEightStages(data.stages)); setStagesStatus("ready");
     }).catch(() => { if (!controller.signal.aborted) setStagesStatus("error"); });

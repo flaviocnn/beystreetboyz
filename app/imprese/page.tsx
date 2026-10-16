@@ -1,4 +1,5 @@
 "use client";
+import { getGameSession, getAchievementAlbum, invalidateGameData } from "../lib/game-data";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { readResponse, type PlayerMember } from "../lib/client-api";
@@ -26,12 +27,12 @@ export default function AchievementHouse() {
   const { enabled, toggle, playClick } = useGameAudio("guild");
   const load = useCallback(async (signal?: AbortSignal) => {
     try {
-      const session = await readResponse(await fetch("/api/member/session", { cache: "no-store", signal }));
+      const session = await getGameSession();
       if (signal?.aborted) return;
       setError("");
       setMember(session.member);
       if (!session.member || session.member.mustChangePassword) { setAlbum(null); return; }
-      const data = await readResponse(await fetch("/api/member/achievements", { method: "POST", cache: "no-store", signal })) as AchievementAlbum;
+      const data = await getAchievementAlbum(session.member.id);
       if (signal?.aborted) return;
       setAlbum(data); setShowcase(data.showcase); setTitleId(data.titleId ?? "");
     } catch (cause) { if (!signal?.aborted) setError(cause instanceof Error ? cause.message : "Album non disponibile"); }
@@ -42,6 +43,7 @@ export default function AchievementHouse() {
     event.preventDefault(); if (busy) return; setBusy(true); setError(""); setNotice(""); playClick();
     try {
       const data = await readResponse(await fetch("/api/member/achievements", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ showcase, titleId: titleId || null }) })) as AchievementAlbum;
+      invalidateGameData();
       setAlbum(data); setShowcase(data.showcase); setTitleId(data.titleId ?? ""); setNotice("Vetrina salvata. I tuoi distintivi e il titolo compaiono nel profilo in classifica e possono accompagnarti nello specchio.");
     } catch (cause) { setError(cause instanceof Error ? cause.message : "Salvataggio non riuscito"); }
     finally { setBusy(false); }
