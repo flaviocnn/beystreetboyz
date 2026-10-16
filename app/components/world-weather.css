@@ -1,3 +1,10 @@
 .world-weather-badge{position:absolute;z-index:12;top:128px;left:30px;max-width:min(370px,calc(100% - 60px));color:#25352b;font:12px/1.5 var(--font-geist-mono),monospace}.world-weather-badge summary{background:#eef0df;border:2px solid #25352b;box-shadow:3px 3px 0 #25352b44;padding:10px 12px;min-height:44px;cursor:pointer;font-weight:700}.world-weather-badge>div{background:#eef0df;border:2px solid #25352b;border-top:0;padding:12px;max-height:45dvh;overflow:auto}.world-weather-badge p{margin:0 0 10px}.world-weather-badge a{color:inherit;display:inline-flex;align-items:center;min-height:44px;text-decoration:underline}.guild-stage>.world-weather-badge{top:12px;left:12px;max-width:min(350px,calc(100% - 90px))}.bank-room{position:relative}.bank-room>.world-weather-badge{top:10px;left:10px}.world-weather-badge:focus-within{z-index:20}
 @media(max-width:600px){.world-weather-badge{top:100px;left:12px;max-width:calc(100% - 24px);font-size:11px}.world-weather-badge summary{padding:8px 10px}.guild-stage>.world-weather-badge{top:8px;left:8px;max-width:calc(100% - 76px)}.bank-room>.world-weather-badge{position:relative;top:auto;left:auto;margin:8px;max-width:calc(100% - 16px)}}
 @media(max-height:480px){.world-weather-badge{top:65px}.world-weather-badge summary{padding:6px 8px}}
+.game-shell>.world-weather-badge{top:auto;bottom:max(24px,env(safe-area-inset-bottom));left:28px}
+.game-shell>.world-weather-badge>div{position:absolute;bottom:calc(100% + 6px);left:0;width:min(370px,calc(100vw - 24px));border-top:2px solid #25352b}
+.game-header{max-width:min(600px,calc(100% - 100px))}.game-header>div:last-child{min-width:0}.game-header h1{overflow-wrap:anywhere}
+/* Leave the local test switcher and the development indicator unobstructed. */
+body:has(.local-switcher) .game-shell>.world-weather-badge{bottom:max(78px,env(safe-area-inset-bottom))}
+@media(max-width:600px){.game-shell>.world-weather-badge{top:auto;left:12px;bottom:max(20px,env(safe-area-inset-bottom));max-width:calc(100% - 190px)}}
+@media(min-width:601px) and (max-width:1100px){.game-shell:has(.interaction-prompt.is-visible)>.world-weather-badge{bottom:120px}}

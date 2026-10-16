@@ -9,6 +9,7 @@ import { createIdleEncounter, updateIdleEncounter, VISITORS } from "./lib/idle-v
 import { ACHIEVEMENT_HOUSE, drawAchievementHouse } from "./lib/achievement-house";
 import { useWorldWeather, WorldWeatherBadge } from "./components/world-weather";
 import { createAtmospherePaint, drawWorldAtmosphere } from "./lib/world-atmosphere";
+import { memberDisplayName } from "./lib/member-name";
 
 type Place = {
   id: string;
@@ -882,8 +883,8 @@ export default function Home() {
       <header className="game-header">
         <div className="brand-mark" aria-hidden="true">T</div>
         <div>
-          <p className="kicker">ESPLORA LA CITTÀ</p>
-          <h1>Torino, un passo alla volta.</h1>
+          <p className="kicker">{member ? "LA TUA CITTÀ TI ASPETTA" : "ESPLORA LA CITTÀ"}</p>
+          <h1>{member ? `Bentornato, ${memberDisplayName(member)}!` : "Torino, un passo alla volta."}</h1>
         </div>
       </header>
 
