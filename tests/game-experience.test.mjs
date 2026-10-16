@@ -56,6 +56,8 @@ test('every game sound creates a tone; clicks are deduplicated and mute/hidden/d
   for(const kind of ['click','step','open','close','message','error'])await engine.play(kind);
   assert.equal(created,1,'One AudioContext is reused for the whole game');assert.deepEqual(notes,[740,92,523,784,659,220]);
   await engine.play('click');assert.equal(notes.length,6,'Manual and delegated click are one sound');
+  await engine.play('spin');await engine.play('win');assert.deepEqual(notes.slice(6),[392,880]);
+  notes=notes.slice(0,6);
   engine.enabled=false;engine.tone(800,.1,.1);await engine.play('open');assert.equal(notes.length,6);
   engine.enabled=true;hidden=true;engine.tone(800,.1,.1);assert.equal(notes.length,6);
   hidden=false;engine.dispose();engine.tone(800,.1,.1);await engine.play('message');assert.equal(notes.length,6);assert.equal(closed,1);

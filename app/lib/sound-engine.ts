@@ -1,4 +1,4 @@
-export type GameSound = "click" | "step" | "open" | "close" | "message" | "error";
+export type GameSound = "click" | "step" | "open" | "close" | "message" | "error" | "spin" | "win";
 export class SoundEngine {
   enabled = true;
   private context: AudioContext | null = null;
@@ -25,7 +25,7 @@ export class SoundEngine {
     const now = performance.now(), gap = kind === "step" ? 180 : kind === "message" || kind === "error" ? 220 : 65;
     if (now - (this.last.get(kind) ?? -Infinity) < gap) return;
     this.last.set(kind, now); await this.activate();
-    const notes = { click: [740, 988], step: [92], open: [523, 1047], close: [784, 392], message: [659, 880], error: [220, 165] }[kind];
+    const notes = { click: [740, 988], step: [92], open: [523, 1047], close: [784, 392], message: [659, 880], error: [220, 165], spin: [392, 523], win: [880, 1319] }[kind];
     this.tone(notes[0], kind === "step" ? .035 : .07, kind === "step" ? .024 : .04, kind === "click" || kind === "step" ? "square" : "triangle");
     if (notes.length > 1) { const timer = setTimeout(() => { this.timers.delete(timer); this.tone(notes[1], .1, .035, "triangle"); }, 65); this.timers.add(timer); }
   }

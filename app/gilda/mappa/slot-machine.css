@@ -1,0 +1,27 @@
+.guild-slot { margin-top: 24px; color: #29382f; font: 16px/1.6 var(--font-geist-sans), sans-serif; }
+.slot-heading { display: flex; justify-content: space-between; gap: 16px; align-items: center; }
+.slot-heading h3 { margin: 0; font-size: clamp(26px, 5vw, 36px); letter-spacing: -.04em; }
+.slot-balance { flex-shrink: 0; font-size: 12px; padding: 8px 14px; background: #d8e5bf; border: 2px solid #66794f; }
+.slot-balance strong { display: block; font-size: 24px; }
+.slot-cabinet { padding: clamp(14px, 4vw, 28px); background: #263c38; border: 6px solid #83927b; box-shadow: inset 0 0 0 3px #182b28, 0 6px #20332d; color: #fff2c4; }
+.slot-marquee { text-align: center; font: 700 12px/1.6 var(--font-geist-mono), monospace; letter-spacing: .08em; }
+.slot-reels { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 20px 0 12px; }
+.slot-reels > span { display: grid; place-items: center; min-width: 0; height: clamp(84px, 18vw, 130px); font: 70px/1 monospace; background: #152824; border: 3px solid #a6b194; box-shadow: inset 0 -10px #203630; text-shadow: 3px 3px #000; }
+.slot-reels.is-spinning > span { animation: slot-pulse .65s ease-in-out infinite alternate; }
+.slot-price { text-align: center; font: 700 13px/1.6 var(--font-geist-mono), monospace; }
+.slot-cabinet .solid-button { width: 100%; min-height: 52px; font-size: 14px; line-height: 1.6; padding: 12px; white-space: normal; }
+.slot-cabinet .solid-button[aria-disabled="true"] { opacity: .75; cursor: default; }
+.slot-result { padding: 14px; border-left: 4px solid #71874b; background: #e2e8d6; min-height: 56px; }
+.slot-rules, .slot-history { margin-top: 18px; border-top: 2px solid #a7b49a; padding-top: 12px; }
+.guild-slot summary { cursor: pointer; min-height: 44px; font-size: 14px; font-weight: 700; padding: 8px 0; }
+.slot-rules ul { padding-left: 22px; }
+.slot-rules li { margin-bottom: 8px; }
+.slot-history ol { list-style: none; padding: 0; }
+.slot-history li { display: flex; justify-content: space-between; gap: 12px; border-bottom: 1px solid #a7b49a; padding: 12px 0; overflow-wrap: anywhere; }
+.slot-history small, .slot-history strong { display: block; font-size: 13px; }
+.library-arcade-choice { display: block; width: 100%; min-height: 64px; padding: 14px; margin-bottom: 20px; text-align: left; color: #fff0b5; background: #2c443a; border: 3px solid #8c9d77; font-size: 16px; cursor: pointer; }
+.library-arcade-choice[aria-pressed="true"] { outline: 3px solid #ba953f; outline-offset: 2px; }
+.library-arcade-choice small { display: block; font: 14px/1.6 var(--font-geist-sans), sans-serif; color: #e4e9d6; }
+@keyframes slot-pulse { to { opacity: .45; transform: translateY(3px); } }
+@media (prefers-reduced-motion: reduce) { .slot-reels.is-spinning > span { animation: none; } }
+@media (max-width: 440px) { .slot-reels > span { font-size: 52px; } .slot-history li { flex-direction: column; gap: 4px; } }

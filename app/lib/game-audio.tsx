@@ -12,7 +12,7 @@ export function usePopupSound(open: boolean | string | null | undefined) {
   }, [open]);
   useEffect(() => () => { if (previous.current) { previous.current = false; window.dispatchEvent(new CustomEvent("torino-popup", { detail: false })); } }, []);
 }
-const Context = createContext({ enabled: true, toggle: () => {}, playClick: () => {}, playStep: () => {} });
+const Context = createContext({ enabled: true, toggle: () => {}, playClick: () => {}, playStep: () => {}, playEffect: (kind: GameSound) => { void kind; } });
 export function GameAudioProvider({ children }: { children: ReactNode }) {
   const [enabled, setEnabled] = useState(true);
   const engine = useRef<SoundEngine | null>(null);
@@ -65,6 +65,6 @@ export function GameAudioProvider({ children }: { children: ReactNode }) {
   }, [theme, musicArea]);
   const toggle = useCallback(() => { const sound = engine.current; if (!sound) return; sound.enabled = !sound.enabled; setEnabled(sound.enabled); try { localStorage.setItem(STORAGE_KEY, sound.enabled ? "on" : "off"); } catch {} if (sound.enabled) void sound.play("open"); }, []);
   const playClick = useCallback(() => play("click"), [play]), playStep = useCallback(() => play("step"), [play]);
-  return <Context.Provider value={{ enabled, toggle, playClick, playStep }}>{children}</Context.Provider>;
+  return <Context.Provider value={{ enabled, toggle, playClick, playStep, playEffect: play }}>{children}</Context.Provider>;
 }
 export function useGameAudio(theme?: "city" | "guild" | "wistery") { void theme; return useContext(Context); }

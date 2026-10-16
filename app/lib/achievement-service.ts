@@ -1,5 +1,6 @@
 import "server-only";
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
+import { beycoinBalance, beycoinHistory, lockBeycoinWallet } from "./beycoin-wallet";
 import { getDb } from "../../db";
 import { achievementActivity, achievementAudit, achievementProfiles, beycoinLedger, guildMessages, memberAchievements, stageDecks, tournamentResults, tournamentStages } from "../../db/schema";
 import { BEYCOIN_REWARDS, achievementDefinition, achievementTitle, evaluateAchievements, type AchievementAlbum, type AchievementId, type AchievementStage } from "./achievements";
@@ -54,16 +55,13 @@ async function reconcile(tx: Tx, memberId: string): Promise<AchievementAlbum> {
   if (profile && (profile.titleId !== titleId || JSON.stringify(profile.showcase) !== JSON.stringify(showcase))) {
     await tx.update(achievementProfiles).set({ showcase, titleId }).where(eq(achievementProfiles.memberId, memberId));
   }
-  const [wallet] = await tx.select({ balance: sql<number>`coalesce(sum(${beycoinLedger.amount}), 0)::integer` }).from(beycoinLedger).where(eq(beycoinLedger.memberId, memberId));
-  const history = await tx.select({ id: beycoinLedger.id, achievementId: beycoinLedger.achievementId, amount: beycoinLedger.amount,
-    reason: beycoinLedger.reason, createdAt: beycoinLedger.createdAt }).from(beycoinLedger).where(eq(beycoinLedger.memberId, memberId))
-    .orderBy(desc(beycoinLedger.createdAt), desc(beycoinLedger.revision), beycoinLedger.id).limit(50);
-  return { achievements, newlyUnlocked, showcase, titleId, beycoins: { balance: wallet.balance, delta: coinDelta, history: history.map(row => ({ ...row, createdAt: row.createdAt.toISOString() })) } };
+  const balance = await beycoinBalance(tx, memberId), history = await beycoinHistory(tx, memberId);
+  return { achievements, newlyUnlocked, showcase, titleId, beycoins: { balance, delta: coinDelta, history } };
 }
 
 export async function syncAchievements(memberId: string, profile?: { showcase: string[]; titleId: string | null }) {
   return getDb().transaction(async tx => {
-    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtextextended(${"achievements:" + memberId}, 0))`);
+    await lockBeycoinWallet(tx, memberId);
     // First authenticated use since this feature shipped, not an invented historical login.
     await recordAchievementActivity(tx, memberId, "login");
     const album = await reconcile(tx, memberId);

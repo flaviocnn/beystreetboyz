@@ -22,7 +22,7 @@ export type AchievementFacts = { loggedIn: boolean; avatarChanged: boolean; hasM
 export type AchievementEvidence = { stageSlug?: string; stageName?: string; eventDate?: string; season?: string; deckVersion?: number; bits?: string[] };
 export type AchievementProgress = { id: AchievementId; progress: number; target: number; qualified: boolean; evidence: AchievementEvidence };
 export type PersonalAchievement = AchievementProgress & { earnedAt: string | null; coinReward: number };
-export type BeycoinMovement = { id: string; achievementId: AchievementId; amount: number; reason: string; createdAt: string };
+export type BeycoinMovement = { id: string; achievementId: AchievementId | null; amount: number; reason: string; createdAt: string };
 export type AchievementAlbum = { achievements: PersonalAchievement[]; newlyUnlocked: AchievementId[]; showcase: AchievementId[]; titleId: AchievementId | null;
   beycoins: { balance: number; delta: number; history: BeycoinMovement[] } };
 

@@ -130,3 +130,10 @@ export const beycoinLedger = pgTable("beycoin_ledger", {
   amount: integer("amount").notNull(), reason: text("reason").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 }, t => [uniqueIndex("beycoin_achievement_revision_once").on(t.memberId, t.achievementId, t.revision)]);
+
+export const beycoinSlotSpins = pgTable("beycoin_slot_spins", {
+  id: text("id").primaryKey(), memberId: text("member_id").notNull().references(() => members.id, { onDelete: "cascade" }),
+  requestKey: text("request_key").notNull(), reels: jsonb("reels").$type<[number, number, number]>().notNull(),
+  cost: integer("cost").notNull(), payout: integer("payout").notNull(), ruleVersion: integer("rule_version").notNull().default(1),
+  gameDay: date("game_day").notNull(), createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, t => [uniqueIndex("slot_request_once").on(t.memberId, t.requestKey)]);
