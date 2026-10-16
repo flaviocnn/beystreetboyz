@@ -10,8 +10,8 @@ import BankLedger from "./bank-ledger";
 import "./bank.css";
 
 const clerks = {
-  ratilde: { name: "Ratilde, la cassiera", message: "Squitt! Ogni moneta ha la sua tappa. Quando lo staff conferma un nuovo pagamento nel check-in, lo ritrovi subito nel nostro registro. Tre euro di quota? Tre euro nel caveau. Mai due volte per lo stesso pagamento!" },
-  rodi: { name: "Mastro Rodi, il revisore", message: "I baffi non mentono: contiamo i pagamenti, non le presenze. Un assente che ha pagato conserva il suo introito. Un pagamento annullato dallo staff esce dal totale, lasciando la traccia della correzione nel check-in. E le monete del tesseramento annuale? Quelle non sono incassi di tappa!" },
+  ratilde: { name: "Ratilde, la cassiera", message: "Squitt! Benvenuto nel caveau della Gilda. Custodiamo le quote di ogni tappa: neanche una moneta sfugge ai miei conti!" },
+  rodi: { name: "Mastro Rodi, il revisore", message: "I baffi non mentono! Ogni tappa ha il suo tesoro e ogni moneta il suo posto. Lo staff può consultare i conti al nostro sportello." },
 };
 export default function GuildBank() {
   const [member, setMember] = useState<PlayerMember | undefined>(), [opened, setOpened] = useState<BankDesk | null>(null);

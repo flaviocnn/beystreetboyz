@@ -65,14 +65,14 @@ export default function StageArchive({ onClick, memberId }: { onClick: () => voi
     finally { setBusy(false); }
   }
   return <div className="stage-archive">
-    <p>Le tue tappe di campionato e i deck che hai portato in top 8. Lo storico si aggiorna quando lo staff importa i risultati da Challonge.</p>
+    <p>Le tue tappe di campionato e i deck che hai portato in Top 8.</p>
     {loading && <p role="status">Sfoglio il tuo archivio…</p>}
     {notice && <p className="archive-notice" role="status">{notice}</p>}
     {!loading && !editing && <>
-      {!stages.length && !error && <div className="archive-empty"><strong>La tua storia inizia qui.</strong><p>Non ci sono ancora risultati associati al tuo account. Il check-in da solo non aggiunge una tappa: occorre l’importazione dei risultati da parte dello staff.</p></div>}
+      {!stages.length && !error && <div className="archive-empty"><strong>La tua storia inizia qui.</strong><p>Qui troverai le tappe che hai giocato, con piazzamenti e deck.</p></div>}
       {stages.map(stage => <article key={stage.slug} className="archive-stage">
         <div className="archive-stage-header"><span className={stage.eligible ? "archive-rank is-top" : "archive-rank"}>{stage.finalRank !== null ? `#${stage.finalRank}` : "Fuori top 8"}</span><div><h3>{stage.name}</h3><time dateTime={stage.eventDate}>{new Intl.DateTimeFormat("it-IT", { dateStyle: "long", timeZone: "Europe/Rome" }).format(new Date(stage.eventDate + "T12:00:00Z"))}</time></div><strong>{stage.stagePoints} PT</strong></div>
-        <p>Fase a gironi: {stage.swissWins} vittorie · {stage.swissLosses} sconfitte.{stage.finalRank === null && " Il piazzamento numerico fuori top 8 non è disponibile nei risultati salvati."}</p>
+        <p>Fase a gironi: {stage.swissWins} vittorie · {stage.swissLosses} sconfitte.</p>
         {stage.deck && <ol className="archive-saved-deck">{stage.deck.map((bey, i) => <li key={i}><span>BEY {i + 1}</span><strong>{bey.blades.map(p => p.value).join(" · ")}</strong><small>{bey.ratchet.value} / {bey.bit.value}</small></li>)}</ol>}
         <div className="archive-actions">{stage.eligible ? <button className="solid-button" onClick={() => edit(stage)}>{stage.deck ? "MODIFICA IL DECK" : "REGISTRA IL DECK"} →</button> : <span className="archive-locked">Registrazione deck riservata alla top 8</span>}<a className="text-button" href={stage.sourceUrl} target="_blank" rel="noopener noreferrer">TORNEO CHALLONGE ↗</a></div>
         {stage.updatedAt && <small>Deck aggiornato il {new Date(stage.updatedAt).toLocaleString("it-IT", { timeZone: "Europe/Rome" })}</small>}
@@ -80,7 +80,7 @@ export default function StageArchive({ onClick, memberId }: { onClick: () => voi
     </>}
     {editing && <form className="archive-editor stack-form" onSubmit={save}>
       <button type="button" className="text-button" disabled={busy} onClick={() => { onClick(); setEditing(null); setError(""); }}>← TORNA ALLE TAPPE</button>
-      <h3>{editing.name} · #{editing.finalRank}</h3><p>Indica i tre beyblade usati in questa tappa. Per le lame CX puoi aggiungere più sottocomponenti. “Aggiungi altro” salva il nome nel tuo deck, senza modificare il catalogo comune.</p>
+      <h3>{editing.name} · #{editing.finalRank}</h3><p>Scegli i tre Beyblade che hai usato. Per le lame CX puoi aggiungere più componenti. Se manca un pezzo, scegli “Aggiungi altro”.</p>
       {deck.map((bey, index) => <fieldset key={index} disabled={busy}><legend>BEYBLADE {index + 1} / 3</legend><div className="archive-parts">
         {bey.blades.map((blade, i) => <div className="archive-blade" key={i}><PartPicker disabled={busy} label={i === 0 ? "LAMA / COMPONENTE CX" : `COMPONENTE LAMA ${i + 1}`} kind="blade" part={blade} onChange={value => change(index, { blades: bey.blades.map((p, j) => i === j ? value : p) })} />{i > 0 && <button type="button" className="text-button" aria-label={`Rimuovi componente lama ${i + 1} del beyblade ${index + 1}`} onClick={() => change(index, { blades: bey.blades.filter((_, j) => i !== j) })}>RIMUOVI</button>}</div>)}
         {bey.blades.length < 5 && <button className="text-button" type="button" onClick={() => change(index, { blades: [...bey.blades, emptyPart()] })}>＋ COMPONENTE LAMA CX</button>}
@@ -89,7 +89,6 @@ export default function StageArchive({ onClick, memberId }: { onClick: () => voi
       </div></fieldset>)}
       <p className="archive-hint" role="status">{attackBitCount(deck) === 3 ? "FULL ATTACCO · Vinci con questo deck per conquistare Nessuna difesa." : `${attackBitCount(deck)} / 3 bit Attacco`}</p>
       <button className="solid-button" disabled={busy}>{busy ? "SALVO…" : "SALVA IL DECK →"}</button>
-      <p className="archive-hint">La registrazione documenta il deck dichiarato, non ne certifica la legalità o l’uso effettivo nel torneo.</p>
     </form>}
     {error && <div role="alert"><p className="form-error">{error}</p>{!editing && <button className="text-button" onClick={() => { setLoading(true); setError(""); void request("/api/guild/stages").then(data => setStages(data.stages)).catch(cause => setError(cause.message)).finally(() => setLoading(false)); }}>RIPROVA</button>}</div>}
   </div>;

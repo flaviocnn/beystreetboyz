@@ -58,10 +58,10 @@ export function WorldWeatherBadge({ indoor = false }: { indoor?: boolean }) {
   const time = state.now ? new Intl.DateTimeFormat("it-IT", { timeZone: "Europe/Rome", hour: "2-digit", minute: "2-digit" }).format(state.now) : "…";
   return <details className={`world-weather-badge ${indoor ? "is-indoor" : ""}`} data-world-weather>
     <summary>TORINO · {light?.phase ?? "…"} · {state.weather ? `${Math.round(state.weather.temperature)}° · ${weatherLabel(state.weather)}` : "Meteo non disponibile"}{state.stale && state.weather ? " · ultimo dato" : ""}</summary>
-    <div><p>Ora di Torino: {time}. {indoor ? "All’interno cambia solo la luce ambientale." : "Luce solare e meteo aggiornano la città."}</p>
-      <p>{state.weather ? `Dato meteo delle ${new Intl.DateTimeFormat("it-IT", { timeZone: "Europe/Rome", hour: "2-digit", minute: "2-digit" }).format(state.weather.observedAt)}${state.stale ? " · Sincronizzazione in ritardo, uso l’ultimo dato valido." : "."}` : "Meteo non raggiungibile: il ciclo solare continua, senza inventare precipitazioni."}</p>
-      <p>Luce ogni minuto · meteo ogni 15 minuti. Dati modellati per il centro città, non misure sul posto.</p><a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Meteo: Open-Meteo · CC BY 4.0 ↗</a>
-      {state.weather && <p>Vento: {Math.round(state.weather.wind)} km/h. Nessuna posizione del giocatore viene richiesta o trasmessa.</p>}
+    <div><p>Ora di Torino: {time}.</p>
+      <p>{state.weather ? `Ultimo aggiornamento: ${new Intl.DateTimeFormat("it-IT", { timeZone: "Europe/Rome", hour: "2-digit", minute: "2-digit" }).format(state.weather.observedAt)}${state.stale ? " · In attesa di aggiornamenti." : "."}` : "Il meteo non è disponibile al momento."}</p>
+      {state.weather && <p>Vento: {Math.round(state.weather.wind)} km/h.</p>}
+      <a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Meteo: Open-Meteo · CC BY 4.0 ↗</a>
     </div>
   </details>;
 }
