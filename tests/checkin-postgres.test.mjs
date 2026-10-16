@@ -46,7 +46,7 @@ test('check-in routes: authorization, roster sync, financial records, concurrenc
       if(providerFailure)return Response.json({errors:['failure']},{status:503});
       if(parsed.pathname.endsWith('/tournaments.json'))return Response.json({data:[{id:'42',type:'tournament',attributes:{name:'Fixture tournament',state:'pending',starts_at:'2026-10-20T23:30:00Z'},relationships:{community:{data:{id:'197576'}}}}],links:{next:null}});
       if(parsed.pathname.endsWith('/participants.json'))return Response.json({data:roster,links:{next:null},meta:{count:roster.length}});
-      return Response.json({data:{id:'42',type:'tournament',attributes:{name:'Fixture tournament',starts_at:'2026-10-20T23:30:00Z'}}});
+      return Response.json({data:{id:'42',type:'tournament',attributes:{name:'Fixture tournament',starts_at:'2026-10-20T23:30:00Z',full_challonge_url:'https://challonge.com/fixture_event'}}});
     };
     const request=(method,path,body,auth=cookie,origin=base)=>new Request(base+path,{method,headers:{...(auth?{cookie:auth}:{}),origin,'content-type':'application/json'},...(body?{body:JSON.stringify(body)}:{})});
     const ctx=(id,participantId)=>({params:Promise.resolve({id,participantId})});
@@ -161,6 +161,22 @@ test('check-in routes: authorization, roster sync, financial records, concurrenc
     funds=(await treasury('/api/staff/treasury?eventId='+newEvent)).data;
     assert.equal(funds.receiptCount,1);assert.equal(funds.receipts[0].amountCents,300);assert.equal(funds.events.find(e=>e.id===newEvent).totalCents,300);
     assert.equal(funds.summary.totalCents,800,'Keep the original 5-euro receipt and the new 3-euro receipt exactly once');
+
+    // Verified substitutions are stage-specific and survive numeric-ID resync.
+    const original=randomUUID(),substitute=randomUUID();
+    await db`INSERT INTO members(id,first_name,challonge_username,password_salt,password_hash,created_at) VALUES(${original},'Original','original_fixture','salt','hash','2026-10-15'),(${substitute},'Substitute','substitute_fixture','salt','hash','2026-10-15')`;
+    await db`INSERT INTO tournament_stages(slug,name,event_date,source_url,attendance,coefficient_milli) VALUES('fixture_event','Historical fixture','2026-10-21','https://challonge.com/it/fixture_event/standings',24,1000)`;
+    await db`INSERT INTO tournament_results(stage_slug,source_key,display_name,source_challonge_username,member_id,swiss_wins,swiss_losses,base_points,stage_points) VALUES('fixture_event','original_fixture','Substitute player','original_fixture',${substitute},1,0,4,4)`;
+    roster=[{id:'21',type:'participant',attributes:{name:'Original player',username:'original_fixture'}}];
+    response=await json(await syncRoute(request('POST','/api/staff/checkin/'+eventId+'/sync'),ctx(eventId)));
+    assert.equal(response.status,200);
+    let replacement=response.data.participants.find(p=>p.participantId==='21');
+    assert.equal(replacement.memberId,substitute);assert.equal(replacement.challongeUsername,'substitute_fixture');assert.equal(replacement.displayName,'Substitute player');
+    assert.equal((await patch(replacement,{action:'pay',paymentMethod:'other'})).status,200);
+    response=await json(await syncRoute(request('POST','/api/staff/checkin/'+eventId+'/sync'),ctx(eventId)));
+    replacement=response.data.participants.find(p=>p.participantId==='21');
+    assert.equal(replacement.memberId,substitute);assert.equal(replacement.paymentStatus,'paid');assert.equal(replacement.paidCents,500);
+    assert.equal((await db`SELECT count(*)::int n FROM checkin_participants WHERE member_id=${original}`)[0].n,0);
   }finally{
     globalThis.fetch=originalFetch;
     for(const[k,v]of Object.entries(oldEnv)){if(v===undefined)delete process.env[k];else process.env[k]=v;}

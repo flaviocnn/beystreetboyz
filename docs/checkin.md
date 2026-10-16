@@ -58,6 +58,10 @@ Dettagli tecnici e criteri dei totali: [tesoreria](treasury.md).
   Un ID non più presente nell'elenco completo importato viene marcato non iscritto.
 - Le reimportazioni aggiornano elenco e associazioni, conservando presenze,
   pagamenti e storico. I partecipanti scomparsi restano nel filtro “Non più iscritti”.
+- Per tappe già in archivio, importazione e resync mantengono le associazioni
+  verificate nei risultati della stessa tappa, incluse sostituzioni come
+  Grizzly al posto di Nika37. La corrispondenza usa il torneo canonico e lo
+  username sorgente, non cambia l'associazione generale degli account Challonge.
 - L'incassato registrato comprende anche pagamenti di assenti/rimossi. Non si
   presume che un'assenza equivalga a un rimborso. Per correggere un rimborso già
   effettuato fisicamente si annulla la registrazione indicando la motivazione.

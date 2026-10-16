@@ -1,9 +1,9 @@
 import { and, desc, eq, sql } from "drizzle-orm";
 import { getDb } from "../../db";
-import { checkinAudit, checkinEvents, checkinParticipants, members } from "../../db/schema";
+import { checkinAudit, checkinEvents, checkinParticipants, members, tournamentResults, tournamentStages } from "../../db/schema";
 import { sameOrigin } from "./auth";
 import { staffSession } from "./staff-access";
-import { checkinSummary, paymentTransition, validEventDate } from "./checkin";
+import { checkinSummary, paymentTransition, tournamentReference, validEventDate } from "./checkin";
 import { fetchRoster, fetchTournament, fetchUpcomingTournaments } from "./challonge-roster";
 import { isUniqueViolation } from "./database-errors";
 
@@ -49,22 +49,38 @@ async function rosterIntoDb(tx: Tx, eventId: string, roster: Awaited<ReturnType<
   const existing = await tx.select().from(checkinParticipants).where(eq(checkinParticipants.eventId, eventId));
   const people = await tx.select({ id: members.id, username: members.challongeUsername }).from(members);
   const byUsername = new Map(people.filter(m => m.username).map(m => [m.username!.toLowerCase(), m.id]));
-  const byId = new Map(roster.participants.map(p => [p.participantId, p]));
+  // A completed stage can contain explicit substitutions (e.g. Grizzly for
+  // Nika37). Reuse its verified identities, scoped to this exact tournament,
+  // instead of attributing historical payments to the original account.
+  const canonical = tournamentReference(roster.sourceUrl);
+  const [stage] = await tx.select().from(tournamentStages).where(eq(tournamentStages.slug, canonical.ref));
+  const results = stage && tournamentReference(stage.sourceUrl).url === canonical.url
+    ? await tx.select().from(tournamentResults).where(eq(tournamentResults.stageSlug, stage.slug)) : [];
+  const bySource = new Map(results.map(result => [result.sourceKey.toLowerCase(), result]));
+  const identity = (incoming: (typeof roster.participants)[number]) => {
+    const result = bySource.get((incoming.username ?? incoming.displayName).toLowerCase());
+    if (!result) return { ...incoming, verifiedMemberId: undefined };
+    return { ...incoming, displayName: result.displayName,
+      username: result.challongeUsername ?? people.find(person => person.id === result.memberId)?.username ?? null,
+      verifiedMemberId: result.memberId };
+  };
+  const participants = roster.participants.map(identity);
+  const byId = new Map(participants.map(p => [p.participantId, p]));
   for (const row of existing) {
     const incoming = byId.get(row.participantId);
     const registered = incoming?.registered ?? false;
     const sameUsername = incoming?.username?.toLowerCase() === row.challongeUsername?.toLowerCase();
-    const memberId = incoming ? incoming.username ? byUsername.get(incoming.username.toLowerCase()) ?? (sameUsername ? row.memberId : null) : null : row.memberId;
+    const memberId = incoming ? incoming.verifiedMemberId !== undefined ? incoming.verifiedMemberId : incoming.username ? byUsername.get(incoming.username.toLowerCase()) ?? (sameUsername ? row.memberId : null) : null : row.memberId;
     const metadata = { registered, memberId, displayName: incoming?.displayName ?? row.displayName, challongeUsername: incoming ? incoming.username : row.challongeUsername };
     if (Object.entries(metadata).some(([key, value]) => row[key as keyof typeof row] !== value)) {
       await tx.update(checkinParticipants).set({ ...metadata, version: row.version + 1 }).where(eq(checkinParticipants.id, row.id));
     }
   }
   const known = new Set(existing.map(r => r.participantId));
-  for (const incoming of roster.participants) if (!known.has(incoming.participantId)) {
+  for (const incoming of participants) if (!known.has(incoming.participantId)) {
     await tx.insert(checkinParticipants).values({ id: crypto.randomUUID(), eventId, participantId: incoming.participantId,
       displayName: incoming.displayName, challongeUsername: incoming.username, registered: incoming.registered,
-      memberId: incoming.username ? byUsername.get(incoming.username.toLowerCase()) ?? null : null });
+      memberId: incoming.verifiedMemberId !== undefined ? incoming.verifiedMemberId : incoming.username ? byUsername.get(incoming.username.toLowerCase()) ?? null : null });
   }
   await tx.update(checkinEvents).set({ lastSyncedAt: new Date(), revision: sql`${checkinEvents.revision} + 1` }).where(eq(checkinEvents.id, eventId));
 }
