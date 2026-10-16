@@ -35,6 +35,7 @@ test('check-in routes: authorization, roster sync, financial records, concurrenc
     const {POST:syncRoute}=await import('../app/api/staff/checkin/[id]/sync/route.ts');
     const {PATCH:updateRoute}=await import('../app/api/staff/checkin/[id]/participants/[participantId]/route.ts');
     const {GET:challongeRoute}=await import('../app/api/staff/checkin/challonge/route.ts');
+    const {GET:treasuryRoute}=await import('../app/api/staff/treasury/route.ts');
     const base='http://localhost:3000';
     const cookie=(await sessionCookie('staff','staff',new Request(base))).split(';')[0];
     let providerFailure=false;
@@ -50,7 +51,11 @@ test('check-in routes: authorization, roster sync, financial records, concurrenc
     const request=(method,path,body,auth=cookie,origin=base)=>new Request(base+path,{method,headers:{...(auth?{cookie:auth}:{}),origin,'content-type':'application/json'},...(body?{body:JSON.stringify(body)}:{})});
     const ctx=(id,participantId)=>({params:Promise.resolve({id,participantId})});
     const json=async response=>({status:response.status,data:await response.json()});
+    const treasury=async(path='/api/staff/treasury',auth=cookie)=>json(await treasuryRoute(request('GET',path,null,auth)));
     assert.equal((await routes.GET(request('GET','/api/staff/checkin',null,null))).status,401);
+    assert.equal((await treasury('/api/staff/treasury',null)).status,401);
+    assert.equal((await treasury('/api/staff/treasury?page=-1')).status,400);
+    assert.equal((await treasury()).data.summary.totalCents,0);
     assert.equal((await challongeRoute(request('GET','/api/staff/checkin/challonge',null,null))).status,401);
     const upcoming=await json(await challongeRoute(request('GET','/api/staff/checkin/challonge')));
     assert.equal(upcoming.status,200);assert.equal(upcoming.data.tournaments[0].name,'Fixture tournament');
@@ -72,18 +77,25 @@ test('check-in routes: authorization, roster sync, financial records, concurrenc
     const patch=async(row,body)=>json(await updateRoute(request('PATCH','/api/staff/checkin/'+eventId+'/participants/'+row.id,{version:row.version,operator:'Desk A',...body}),ctx(eventId,row.id)));
     response=await patch(member,{action:'pay',paymentMethod:'cash'});assert.equal(response.status,200);detail=response.data;
     assert.equal(detail.summary.collectedCents,500);assert.equal(detail.summary.paidPresent,1);
+    assert.equal((await treasury()).data.summary.totalCents,500);
     assert.equal((await patch(member,{action:'pay',paymentMethod:'cash'})).status,409);
+    assert.equal((await treasury()).data.summary.receipts,1,'A repeated payment cannot create a second receipt');
     const parallel=await Promise.all([patch(guest,{action:'pay',paymentMethod:'card'}),patch(guest,{action:'pay',paymentMethod:'cash'})]);
     assert.deepEqual(parallel.map(r=>r.status).sort(),[200,409]);detail=parallel.find(r=>r.status===200).data;
     assert.equal(detail.summary.collectedCents,1000);assert.equal(detail.summary.ready,true);assert.equal(detail.audit.length,2);
+    let funds=(await treasury()).data;assert.equal(funds.summary.totalCents,1000);assert.equal(funds.summary.receipts,2);assert.equal(funds.events[0].totalCents,1000);
     const paidGuest=detail.participants.find(r=>r.id===guest.id);
     response=await patch(paidGuest,{action:'correct',presence:'absent',paymentStatus:'unpaid',note:'Wrong player selected'});assert.equal(response.status,200);detail=response.data;
     assert.equal(detail.summary.collectedCents,500);assert.equal(detail.summary.ready,true);assert.equal(detail.audit.length,3);
+    assert.equal((await treasury()).data.summary.totalCents,500,'Cancelled payment is excluded from treasury');
     roster=[roster[1],{id:'13',type:'participant',attributes:{name:'New guest',username:null,states:{active:true}}}];
     response=await json(await syncRoute(request('POST','/api/staff/checkin/'+eventId+'/sync'),ctx(eventId)));
     assert.equal(response.status,200);detail=response.data;
     const removed=detail.participants.find(r=>r.id===member.id);
     assert.equal(removed.registered,false);assert.equal(removed.paymentStatus,'paid');assert.equal(removed.paidCents,500);
+    funds=(await treasury('/api/staff/treasury?eventId='+eventId)).data;
+    assert.equal(funds.summary.totalCents,500,'Removing a registration does not imply a refund');assert.equal(funds.receipts[0].registered,false);
+    assert.equal((await treasury('/api/staff/treasury?eventId=missing')).data.receiptCount,0);
     assert.equal(detail.summary.removedPresent,1);assert.equal(detail.summary.ready,false);assert.equal(detail.audit.length,3);
     assert.equal((await patch(removed,{action:'pay',paymentMethod:'cash'})).status,400);
     const before=JSON.stringify(detail);providerFailure=true;
@@ -108,11 +120,13 @@ test('check-in routes: authorization, roster sync, financial records, concurrenc
     assert.equal((await json(await staffSessionRoute.GET(personalRequest('GET','/api/staff/session')))).data.authenticated,false);
     assert.equal((await memberRoutes.GET(personalRequest('GET','/api/staff/members'))).status,401);
     assert.equal((await routes.GET(personalRequest('GET','/api/staff/checkin'))).status,401);
+    assert.equal((await treasury('/api/staff/treasury',personal)).status,401);
     await db`UPDATE members SET role='staff' WHERE id=${memberId}`;
     assert.equal((await json(await staffSessionRoute.GET(personalRequest('GET','/api/staff/session')))).data.authenticated,true);
     assert.equal((await currentMember(personalRequest('GET','/api/member/session'))).id,memberId);
     assert.equal((await memberRoutes.GET(personalRequest('GET','/api/staff/members'))).status,200);
     assert.equal((await routes.GET(personalRequest('GET','/api/staff/checkin'))).status,200);
+    assert.equal((await treasury('/api/staff/treasury',personal)).status,200);
     providerFailure=false;
     assert.equal((await syncRoute(personalRequest('POST','/api/staff/checkin/'+eventId+'/sync'),ctx(eventId))).status,200);
     // Role injection in create/update is ignored, even for an authorized caller.
@@ -133,9 +147,20 @@ test('check-in routes: authorization, roster sync, financial records, concurrenc
     assert.equal((await memberRoutes.GET(personalRequest('GET','/api/staff/members',null,fresh))).status,200);
     await db`UPDATE members SET role='member' WHERE id=${memberId}`;
     assert.equal((await memberRoutes.GET(personalRequest('GET','/api/staff/members',null,fresh))).status,401);
+    assert.equal((await treasury('/api/staff/treasury',fresh)).status,401);
     await db`UPDATE members SET role='staff' WHERE id=${memberId}`;
     await db`DELETE FROM members WHERE id=${memberId}`;
     assert.equal((await memberRoutes.GET(personalRequest('GET','/api/staff/members',null,fresh))).status,401);
+
+    // Every new paid/present receipt for a 3-euro stage is exactly 300 cents.
+    const newEvent=randomUUID(),newPlayer=randomUUID();
+    await db`INSERT INTO checkin_events(id,tournament_id,tournament_ref,source_url,name,event_date,fee_cents,last_synced_at) VALUES(${newEvent},'43','three_euros','https://challonge.com/three_euros','Three euros fixture','2026-10-22',300,now())`;
+    await db`INSERT INTO checkin_participants(id,event_id,participant_id,display_name) VALUES(${newPlayer},${newEvent},'99','Three euro guest')`;
+    const payRequest=version=>updateRoute(request('PATCH','/api/staff/checkin/'+newEvent+'/participants/'+newPlayer,{action:'pay',version,operator:'Desk A',paymentMethod:'cash'}),ctx(newEvent,newPlayer));
+    assert.equal((await payRequest(0)).status,200);assert.equal((await payRequest(0)).status,409);assert.equal((await payRequest(1)).status,200);
+    funds=(await treasury('/api/staff/treasury?eventId='+newEvent)).data;
+    assert.equal(funds.receiptCount,1);assert.equal(funds.receipts[0].amountCents,300);assert.equal(funds.events.find(e=>e.id===newEvent).totalCents,300);
+    assert.equal(funds.summary.totalCents,800,'Keep the original 5-euro receipt and the new 3-euro receipt exactly once');
   }finally{
     globalThis.fetch=originalFetch;
     for(const[k,v]of Object.entries(oldEnv)){if(v===undefined)delete process.env[k];else process.env[k]=v;}

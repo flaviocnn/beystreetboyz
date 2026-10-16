@@ -155,7 +155,7 @@ export default function StageCheckin() {
     try {
       const next = await api(`/api/staff/checkin/${eventId}/participants/${row.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...values, version: row.version, operator }) });
       acceptDetail(next); setEditing(null);
-      setNotice(values.action === "pay" ? `Pagamento di ${row.challongeUsername || row.displayName} registrato: ${money(next.event.feeCents)}. Presenza confermata.` : "Correzione salvata nella cronologia.");
+      setNotice(values.action === "pay" ? row.paymentStatus === "paid" ? "Presenza confermata. L’introito era già registrato: nessun duplicato." : `Introito di ${money(next.event.feeCents)} registrato per ${row.challongeUsername || row.displayName} nella tappa. Presenza confermata.` : "Correzione salvata nella cronologia e nel registro introiti.");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Salvataggio non riuscito");
       if (cause && typeof cause === "object" && "status" in cause && cause.status === 409) setEditing(null);
@@ -177,7 +177,8 @@ export default function StageCheckin() {
     <header className="interior-topbar"><Link href="/staff" className="back-link">← PALAZZO DELLO STAFF</Link><span>RANKED BEYSTREETBOYZ</span></header>
     <div className="interior-container">
       <p className="section-kicker">IL BANCO DELLA TAPPA</p><h1>Check-in<span className="period">.</span></h1>
-      <p className="checkin-intro">Una lista, un controllo. Iscrizione Challonge, presenza e quota della tappa nello stesso posto.</p>
+      <p className="checkin-intro">Una lista, un controllo. Iscrizione Challonge, presenza e quota della tappa nello stesso posto. Ogni pagamento aggiorna automaticamente il registro introiti della banca.</p>
+      <Link className="text-button" href="/banca">CONSULTA GLI INTROITI NELLA BANCA DELLA GILDA →</Link>
       {access === "loading" ? <p role="status">Controllo l’accesso staff…</p> : access === "locked" ? <section className="auth-card"><h2>Accesso staff</h2><p>Accedi con il tuo account abilitato per entrare senza parola d’ordine. Se usi una password temporanea, cambiala prima.</p><Link className="solid-button" href="/gilda">ACCEDI CON IL TUO ACCOUNT →</Link><p>Oppure usa la parola d’ordine dello staff.</p><form className="stack-form" onSubmit={unlock}><label>PAROLA D’ORDINE<input type="password" autoComplete="current-password" required value={passphrase} onChange={e => setPassphrase(e.target.value)} /></label><button className="solid-button" disabled={!!busy}>ENTRA NEL CHECK-IN →</button></form></section> : <>
         <div className="checkin-toolbar"><label>TAPPA<select value={eventId} onChange={e => { setEventId(e.target.value); setEditing(null); setSearch(""); setError(""); setNotice(""); }} disabled={!!busy}><option value="" disabled>Seleziona una tappa</option>{events.map(event => <option key={event.id} value={event.id}>{dateLabel(event.eventDate)} · {event.name}</option>)}</select></label><button className="outline-button" disabled={!!busy} onClick={() => setShowCreate(!showCreate)} aria-expanded={showCreate}>{showCreate ? "CHIUDI NUOVA TAPPA" : "+ NUOVA TAPPA"}</button></div>
         {showCreate && <section className="checkin-create">

@@ -1,0 +1,46 @@
+.bank-shell .interior-topbar { gap: 16px; flex-wrap: wrap; }
+.bank-shell .interior-topbar button { color: inherit; }
+.bank-intro { max-width: 760px; font: 16px/1.7 var(--font-geist-sans),sans-serif; }
+.bank-room { margin-top: 30px; border: 4px solid #25392c; background: #20362b; box-shadow: 8px 8px 0 #98a88a; }
+.bank-room canvas { display: block; width: 100%; height: auto; image-rendering: pixelated; }
+.bank-room-controls { min-height: 70px; padding: 12px; display: flex; align-items: center; flex-wrap: wrap; gap: 15px; color: #e8e5ce; }
+.bank-room-controls p { flex: 1; font-size: 12px; }
+.bank-room-controls .solid-button { background: #e1cd98; color: #24372b; }
+.bank-dpad { display: flex; gap: 5px; }
+.bank-dpad button { min-width: 44px; min-height: 44px; border: 1px solid #9aae8d; color: #f1ecd7; background: #3d5840; touch-action: none; font-size: 21px; }
+.bank-actions { display: flex; flex-wrap: wrap; gap: 14px; margin: 32px 0 16px; }
+.bank-access-note, .bank-footnote { color: #53634b; font: 13px/1.6 var(--font-geist-sans),sans-serif; }
+.bank-dialog { width: min(1020px,100%); }
+.bank-dialog h2 { padding-right: 35px; }
+.bank-dialog > .section-kicker { padding-right: 45px; line-height: 1.6; }
+.bank-dialogue { font: 18px/1.8 var(--font-geist-sans),sans-serif; padding: 20px 0; }
+.bank-ledger, .bank-locked { font: 14px/1.6 var(--font-geist-sans),sans-serif; }
+.bank-totals { display: flex; flex-wrap: wrap; gap: 20px; margin: 24px 0 12px; }
+.bank-totals > div { flex: 1; padding: 20px; background: #dce5ce; border-bottom: 4px solid #8f7947; }
+.bank-totals small, .bank-totals strong { display: block; }
+.bank-totals strong { font-size: 38px; font-weight: 850; }
+.bank-methods { padding-bottom: 15px; border-bottom: 2px solid #abb99e; }
+.bank-event-list { display: grid; gap: 8px; margin-bottom: 22px; }
+.bank-event-list button { display: flex; gap: 16px; justify-content: space-between; text-align: left; padding: 14px; border: 1px solid #a4b196; background: #e7ebdd; color: #253729; cursor: pointer; font: inherit; }
+.bank-event-list button.is-selected { outline: 2px solid #546d43; background: #d5dfc4; }
+.bank-event-list span { min-width: 0; overflow-wrap: anywhere; }
+.bank-event-list small { display: block; color: #52664c; }
+.bank-event-list b, .bank-receipts b { white-space: nowrap; }
+.bank-filter { display: grid; gap: 7px; font-weight: 800; }
+.bank-filter select { max-width: 100%; width: 100%; min-height: 48px; padding: 10px; border: 2px solid #819775; background: #faf9ef; color: #26392b; border-radius: 0; font-size: 16px; }
+.bank-receipts { list-style: none; padding: 0; }
+.bank-receipts li { display: flex; justify-content: space-between; align-items: start; gap: 18px; padding: 14px 0; border-bottom: 1px solid #bbc5ae; }
+.bank-receipts li > div { display: grid; gap: 3px; min-width: 0; overflow-wrap: anywhere; }
+.bank-receipts small { color: #52664c; }
+.bank-pagination { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin: 20px 0; }
+.bank-shell button:focus-visible, .bank-shell a:focus-visible, .bank-shell select:focus-visible { outline: 3px solid #937534; outline-offset: 3px; }
+@media(max-width:760px) {
+  .bank-shell .interior-container { padding-top: 30px; }
+  .bank-room { margin-left: -8px; margin-right: -8px; box-shadow: 4px 4px 0 #98a88a; }
+  .bank-actions { flex-direction: column; }
+  .bank-dialog { padding: 20px; max-height: 90dvh; }
+  .bank-totals { gap: 10px; }
+  .bank-totals > div { flex-basis: 100%; padding: 14px; }
+  .bank-totals strong { font-size: 30px; }
+  .bank-event-list button { padding: 12px; gap: 8px; }
+}

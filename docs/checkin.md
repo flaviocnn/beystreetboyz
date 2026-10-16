@@ -39,6 +39,14 @@ Il torneo si avvia su Challonge. L'app non avvia il torneo, non iscrive giocator
 e non esegue addebiti o rimborsi. La quota della tappa non aggiorna il pagamento
 del tesseramento annuale, che resta indipendente nell'anagrafica.
 
+Ogni nuovo “Pagato e presente” registra anche l'introito della tappa: con quota
+predefinita di 3 € sono 300 centesimi, senza duplicati ai click ripetuti. I dati
+sono consultabili nella [Banca della Gilda](/banca), accessibile dall'edificio
+Intesa della mappa e dai collegamenti staff/check-in. La sala è pubblica, il
+registro degli importi è riservato allo staff. Usa i pagamenti già salvati come
+unica fonte, conserva le quote storiche e riflette le correzioni del check-in.
+Dettagli tecnici e criteri dei totali: [tesoreria](treasury.md).
+
 ## Comportamento dei dati
 
 - Un torneo Challonge può essere collegato una sola volta, tramite ID stabile.

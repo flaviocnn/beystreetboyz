@@ -6,6 +6,7 @@ import { drawPixelPlayer, type Direction } from "./lib/pixel-player";
 import { type PlayerMember, readResponse } from "./lib/client-api";
 import { useDialogFocus } from "./lib/dialog-focus";
 import { createIdleEncounter, updateIdleEncounter, VISITORS } from "./lib/idle-visitor";
+import { drawBankExterior } from "./lib/bank-art";
 
 type Place = {
   id: string;
@@ -32,11 +33,11 @@ const isChampionshipWednesday = (date: Date) => torinoWeekday.format(date) === "
 const places: Place[] = [
   {
     id: "intesa",
-    name: "Grattacielo Intesa Sanpaolo",
-    eyebrow: "CORSO INGHILTERRA · TORINO",
+    name: "Intesa · Banca della Gilda",
+    eyebrow: "LA GRINGOTTS DELLA GILDA",
     description:
-      "Una torre bioclimatica alta 167 metri, progettata da Renzo Piano come una lanterna trasparente sulla città.",
-    detail: "44 piani · Serra panoramica · Auditorium sospeso",
+      "Colonne di marmo, porte dorate e contabili dalle sembianze di ratto. La banca-fantasy della Gilda custodisce il registro degli introiti delle tappe.",
+    detail: "Visita la sala · Registro economico riservato allo staff · Nessun pagamento online",
     x: 440,
     y: 255,
   },
@@ -324,53 +325,7 @@ function drawHouse(
 }
 
 function drawIntesa(ctx: CanvasRenderingContext2D, x: number, y: number) {
-  ctx.save();
-  ctx.translate(x, y);
-  ctx.fillStyle = "#20232225"; ctx.fillRect(-54, -103, 136, 194);
-  // Slender glass tower, external structural ribs and the rooftop greenhouse.
-  ctx.fillStyle = PALETTE.pale;
-  ctx.fillRect(-60, -115, 120, 194);
-  ctx.fillStyle = PALETTE.ink;
-  ctx.fillRect(-68, -121, 136, 8);
-  ctx.fillRect(-69, 75, 138, 10);
-  ctx.fillRect(-66, -113, 7, 188);
-  ctx.fillRect(59, -113, 7, 188);
-  ctx.fillStyle = PALETTE.mid;
-  for (let row = -108; row < 71; row += 13) {
-    ctx.fillRect(-54, row, 108, 7);
-    ctx.fillStyle = PALETTE.ink;
-    ctx.fillRect(-50, row + 2, 31, 3);
-    ctx.fillRect(-14, row + 2, 28, 3);
-    ctx.fillRect(19, row + 2, 31, 3);
-    ctx.fillStyle = PALETTE.mid;
-  }
-  // Visible exoskeleton and asymmetric service core.
-  ctx.fillStyle = PALETTE.ink;
-  ctx.fillRect(-46, -113, 4, 188);
-  ctx.fillRect(42, -113, 4, 188);
-  ctx.fillRect(13, -113, 5, 188);
-  ctx.fillRect(-71, -70, 9, 83);
-  // Panoramic bioclimatic greenhouse and antenna.
-  ctx.fillRect(-7, -160, 14, 28);
-  ctx.fillRect(-45, -134, 90, 8);
-  ctx.strokeStyle = PALETTE.ink;
-  ctx.lineWidth = 5;
-  ctx.strokeRect(-43, -158, 86, 32);
-  ctx.fillStyle = PALETTE.paper;
-  ctx.fillRect(-36, -151, 72, 17);
-  ctx.fillStyle = PALETTE.mid;
-  for (let gx = -31; gx <= 29; gx += 15) ctx.fillRect(gx, -149, 5, 13);
-  // Glass highlights, a recessed entrance and greenery in the roof conservatory.
-  ctx.fillStyle = "#f8fff780";
-  ctx.fillRect(-37, -110, 9, 179); ctx.fillRect(23, -110, 5, 179);
-  ctx.fillStyle = "#6d8169";
-  for (const gx of [-28, -6, 22]) { ctx.fillRect(gx, -143, 8, 7); ctx.fillRect(gx + 2, -147, 4, 5); }
-  ctx.fillStyle = PALETTE.ink; ctx.fillRect(-21, 52, 42, 29);
-  ctx.fillStyle = "#9eb5ac"; ctx.fillRect(-16, 56, 13, 21); ctx.fillRect(3, 56, 13, 21);
-  ctx.fillStyle = PALETTE.paper; ctx.fillRect(-18, 49, 36, 4);
-  ctx.fillStyle = PALETTE.dark; ctx.fillRect(-38, 82, 76, 5);
-  pixelText(ctx, "INTESA", 0, 98, 12);
-  ctx.restore();
+  drawBankExterior(ctx, x, y);
 }
 
 function drawSkatepark(ctx: CanvasRenderingContext2D, x: number, y: number) {
@@ -916,6 +871,7 @@ export default function Home() {
             <p className="modal-detail">{selected.detail}</p>
             {selected.id === "guild" && <p className="guild-event-modal">{wednesday ? "La Gilda si è accesa: stasera è il momento delle tappe di campionato!" : "Il mercoledì sera la Gilda si accende per le tappe di campionato."}</p>}
             {selected.id === "wistery" && <a className="modal-enter" href={member && !member.mustChangePassword ? "/wistery" : "/gilda"} onClick={playClick}>{member && !member.mustChangePassword ? "Personalizza il tuo avatar" : "Accedi per entrare"} →</a>}
+            {selected.id === "intesa" && <a className="modal-enter" href="/banca" onClick={playClick}>Entra nella banca della Gilda →</a>}
             {(selected.id === "staff" || selected.id === "guild") && (
               <a className="modal-enter" href={selected.id === "staff" ? "/staff" : "/gilda"} onClick={playClick}>
                 {selected.id === "staff" ? "Accedi all’area staff" : "Entra nella Gilda"} <span>→</span>

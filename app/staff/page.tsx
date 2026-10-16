@@ -134,6 +134,7 @@ export default function StaffPage() {
           <div className="staff-layout">
             <div className="staff-main">
               <Link className="solid-button checkin-staff-link" href="/staff/checkin"><span>CHECK-IN TAPPE</span>Iscritti, presenze e pagamenti →</Link>
+              <Link className="outline-button checkin-staff-link" href="/banca">BANCA DELLA GILDA · REGISTRO INTROITI →</Link>
               <div className="staff-heading"><div><p className="section-kicker">ARCHIVIO MEMBRI</p><h2>{members.length} {members.length === 1 ? "membro" : "membri"} registrati</h2></div><button className="text-button" onClick={logout}>ESCI ↗</button></div>
               {issuedPassword && <div className="credential-card" role="status"><button className="credential-close" onClick={() => setIssuedPassword(null)} aria-label="Chiudi credenziali">×</button><strong>Password temporanea per {issuedPassword.name}</strong><p>Consegna identificativo e password al membro. Dovrà cambiarla al prossimo accesso. Copiala prima di chiudere questo riquadro.</p><div><span>{issuedPassword.email}</span><code>{issuedPassword.password}</code></div><button className="text-button" onClick={() => void navigator.clipboard.writeText(`${issuedPassword.email}\n${issuedPassword.password}`).catch(() => setError("Copia manualmente le credenziali dal riquadro."))}>COPIA CREDENZIALI ↗</button></div>}
               {error && <p className="form-error" role="alert">{error}</p>}
