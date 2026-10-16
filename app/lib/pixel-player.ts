@@ -14,152 +14,183 @@ export const AVATAR_COLORS = [
   { name: "Ghiaccio", hex: "#6fcbd2" }, { name: "Rosa", hex: "#e6a0cc" },
 ];
 
+const INK = "#252d35", SKIN = "#efd9b6", SKIN_SHADE = "#c6a17c", PAPER = "#f5f1dc";
+const STEEL = "#8599a6", STEEL_LIGHT = "#d7e4e6", GOLD = "#e4bd65";
+function tint(hex: string, target: number, amount: number) {
+  const channels = [1, 3, 5].map(i => Math.round(parseInt(hex.slice(i, i + 2), 16) * (1 - amount) + target * amount));
+  return `#${channels.map(value => value.toString(16).padStart(2, "0")).join("")}`;
+}
+// Precomputed palettes keep the map's per-frame drawing allocation-light.
+const PALETTES = AVATAR_COLORS.map(({ hex }) => ({ main: hex, shade: tint(hex, 28, .38), light: tint(hex, 255, .38) }));
+
+/** Shared 2px grid, constant foot anchor, rear-to-front layers and four real views.
+ * Style/color IDs and map collision dimensions deliberately remain unchanged. */
 export function drawPixelPlayer(ctx: CanvasRenderingContext2D, x: number, y: number, dir: Direction, walking: boolean, t: number, avatar?: Avatar | null) {
-  const selectedStyle = avatar?.avatarStyle ?? 0;
-  const feminine = selectedStyle >= BASE_STYLE_COUNT;
-  const style = selectedStyle % BASE_STYLE_COUNT;
-  const color = AVATAR_COLORS[avatar?.avatarColor ?? 0]?.hex || AVATAR_COLORS[0].hex;
-  const step = walking && Math.floor(t / 130) % 2 ? 2 : 0;
-  ctx.save();
-  ctx.translate(Math.round(x), Math.round(y));
-  ctx.fillStyle = "rgba(32,35,34,.18)";
-  ctx.fillRect(-11, 23, 22, 4); ctx.fillRect(-15, 24, 30, 2);
-  ctx.translate(0, walking ? -step / 2 : 0);
-  ctx.fillStyle = "#202322";
-  ctx.fillRect(-9, -15, 18, 5);
-  ctx.fillRect(-13, -10, 26, 16);
-  ctx.fillStyle = "#f2f3ea";
-  ctx.fillRect(-8, -7, 16, 10);
-  ctx.fillStyle = "#c5cbb9"; ctx.fillRect(-8, 0, 16, 3);
-  ctx.fillStyle = "#71806d"; ctx.fillRect(-8, -13, 8, 3);
-  ctx.fillStyle = "#202322";
-  if (dir === "up") ctx.fillRect(-8, -7, 16, 10);
-  else if (dir === "left") ctx.fillRect(-9, -4, 4, 4);
-  else if (dir === "right") ctx.fillRect(5, -4, 4, 4);
-  else {
-    ctx.fillRect(-7, -4, 4, 4);
-    ctx.fillRect(3, -4, 4, 4);
+  const requestedStyle = avatar?.avatarStyle ?? 0;
+  const selected = Number.isInteger(requestedStyle) && requestedStyle >= 0 && requestedStyle < AVATAR_STYLES.length ? requestedStyle : 0;
+  const style = selected % BASE_STYLE_COUNT, feminine = selected >= BASE_STYLE_COUNT;
+  const palette = PALETTES[avatar?.avatarColor ?? 0] || PALETTES[0];
+  const { main, shade, light } = palette;
+  const back = dir === "up", side = dir === "left" || dir === "right";
+  const stride = walking && Number.isFinite(t) ? [0, 1, 0, -1][Math.floor(Math.max(0, t) / 130) % 4] : 0;
+  const hair = style === 6 || style === 3 ? "#546775" : style === 4 || style === 7 ? shade : "#504238";
+  const box = (color: string, px: number, py: number, w: number, h: number) => { ctx.fillStyle = color; ctx.fillRect(px, py, w, h); };
+  ctx.save(); ctx.translate(Math.round(x), Math.round(y));
+  box("#25352b25", -12, 24, 24, 4); box("#25352b15", -16, 25, 32, 2);
+  ctx.translate(0, stride ? -2 : 0);
+  ctx.scale(dir === "left" ? -2 : 2, 2);
+
+  // Cloaks, wings and long hair belong behind the face and moving arms.
+  if ([2, 3, 8, 10].includes(style)) {
+    box(INK, -6, 2, 12, 10); box(shade, -5, 3, 10, 8);
+    box(main, -5, 3, 2, 7); box(INK, -1, 10, 2, 2);
   }
-  ctx.fillRect(-11, 6, 22, 13);
-  ctx.fillStyle = color;
-  ctx.fillRect(-6, 8, 12, 7);
-  ctx.fillStyle = "#202322";
-  ctx.fillRect(-15, 7 + step, 5, 10); ctx.fillRect(10, 9 - step, 5, 10);
-  ctx.fillStyle = "#e4e8da";
-  ctx.fillRect(-14, 14 + step, 3, 4); ctx.fillRect(11, 16 - step, 3, 4);
-  ctx.fillStyle = "#202322";
-  ctx.fillRect(-9, 18 + step, 7, 7);
-  ctx.fillRect(3, 20 - step, 7, 7);
-  ctx.fillStyle = "#7d897c"; ctx.fillRect(-9, 23 + step, 7, 2); ctx.fillRect(3, 25 - step, 7, 2);
-  // Each silhouette is drawn on the same pixel grid and follows the player direction.
-  if (style === 1) {
-    ctx.fillStyle = color; ctx.fillRect(-10, -17, 20, 7);
-    ctx.fillRect(dir === "left" ? -17 : 5, -12, 12, 4);
-    ctx.fillRect(-15, 7, 5, 10); ctx.fillRect(10, 7, 5, 10);
-    ctx.fillStyle = "#f2f3ea"; ctx.fillRect(-5, 10, 10, 3);
-  } else if (style === 2) {
-    ctx.fillStyle = "#202322"; ctx.fillRect(-16, -14, 32, 5); ctx.fillRect(-9, -23, 18, 10); ctx.fillRect(-4, -30, 8, 7);
-    ctx.fillStyle = color; ctx.fillRect(-6, -21, 12, 8); ctx.fillRect(-2, -27, 4, 6); ctx.fillRect(-10, 12, 20, 9);
-    ctx.fillStyle = "#edcf79"; ctx.fillRect(17, -1, 3, 27); ctx.fillRect(14, -5, 9, 7);
-  } else if (style === 3) {
-    ctx.fillStyle = "#87959b"; ctx.fillRect(-10, -17, 20, 10); ctx.fillRect(-14, -10, 5, 14); ctx.fillRect(9, -10, 5, 14);
-    ctx.fillStyle = color; ctx.fillRect(-3, -24, 6, 9); ctx.fillRect(-17, 7, 10, 17);
-    ctx.fillStyle = "#202322"; ctx.fillRect(-14, 10, 4, 9);
-    ctx.fillStyle = "#dee3da"; ctx.fillRect(14, 3, 3, 18);
-  } else if (style === 4) {
-    ctx.fillStyle = color; ctx.fillRect(-7, -23, 5, 11); ctx.fillRect(2, -27, 5, 15); ctx.fillRect(9, -20, 5, 11);
-    ctx.fillRect(-16, 6, 5, 13); ctx.fillRect(11, 6, 5, 13);
-    ctx.fillStyle = "#202322"; ctx.fillRect(-7, 7, 14, 12);
-    ctx.fillStyle = color; ctx.fillRect(-2, 8, 4, 9); ctx.fillRect(-5, 12, 10, 5);
-  } else if (style === 5) {
-    // Punk: tall mohawk, studded jacket and bright trouser stripe.
-    ctx.fillStyle = "#202322"; ctx.fillRect(-4, -32, 8, 20); ctx.fillRect(-13, 7, 26, 13);
-    ctx.fillStyle = color; ctx.fillRect(-3, -31, 6, 17); ctx.fillRect(-12, -26, 5, 13);
-    ctx.fillRect(-9, 10, 18, 4); ctx.fillRect(-14, 10, 4, 9); ctx.fillRect(10, 10, 4, 9);
-    ctx.fillStyle = "#f2f3ea"; ctx.fillRect(-7, 15, 3, 3); ctx.fillRect(4, 15, 3, 3);
-  } else if (style === 6) {
-    // Metallic: angular helmet, reflective visor and armored shoulders.
-    ctx.fillStyle = "#737f85"; ctx.fillRect(-12, -19, 24, 13); ctx.fillRect(-17, 6, 8, 12); ctx.fillRect(9, 6, 8, 12);
-    ctx.fillStyle = "#dfe6e8"; ctx.fillRect(-9, -17, 18, 5); ctx.fillRect(-8, 8, 16, 9);
-    ctx.fillStyle = color; ctx.fillRect(-9, -9, 18, 4); ctx.fillRect(-4, 11, 8, 4);
-    ctx.fillStyle = "#202322"; ctx.fillRect(-12, -6, 24, 3); ctx.fillRect(-3, -22, 6, 4);
-  } else if (style === 7) {
-    // Phoenix: feathered crest and two distinct flame wings.
-    ctx.fillStyle = color; ctx.fillRect(-6, -29, 6, 15); ctx.fillRect(2, -34, 5, 20);
-    ctx.fillRect(-18, 1, 7, 18); ctx.fillRect(11, 1, 7, 18);
-    ctx.fillStyle = "#edb94e"; ctx.fillRect(-22, -8, 6, 19); ctx.fillRect(16, -8, 6, 19);
-    ctx.fillRect(-15, 8, 7, 10); ctx.fillRect(8, 8, 7, 10);
-    ctx.fillStyle = color; ctx.fillRect(-8, 8, 16, 10);
-    ctx.fillStyle = "#f2f3ea"; ctx.fillRect(-3, 10, 6, 5);
-  } else if (style === 8) {
-    // Torero Nero: broad dark hat, colored band and flowing cape.
-    ctx.fillStyle = "#202322"; ctx.fillRect(-20, -19, 40, 6); ctx.fillRect(-13, -29, 26, 13);
-    ctx.fillRect(-18, 5, 8, 18); ctx.fillRect(10, 5, 8, 18);
-    ctx.fillStyle = color; ctx.fillRect(-12, -22, 24, 4); ctx.fillRect(-17, 10, 7, 9);
-    ctx.fillRect(10, 10, 7, 9); ctx.fillRect(-7, 8, 14, 9);
-    ctx.fillStyle = "#edb94e"; ctx.fillRect(-3, 8, 6, 12);
-  } else if (style === 9) {
-    // Bad Girl: side ponytail, asymmetrical fringe and studded jacket.
-    ctx.fillStyle = "#202322"; ctx.fillRect(-11, -21, 22, 10); ctx.fillRect(11, -20, 7, 19);
-    ctx.fillRect(-14, 8, 28, 11); ctx.fillRect(15, 4, 4, 6);
-    ctx.fillStyle = color; ctx.fillRect(-9, -18, 10, 5); ctx.fillRect(13, -18, 4, 13);
-    ctx.fillRect(-8, 10, 16, 6);
-    ctx.fillStyle = "#f2f3ea"; ctx.fillRect(-11, 14, 3, 3); ctx.fillRect(8, 14, 3, 3);
-  } else if (style === 10) {
-    // Bad Guy: hood, mask and dark coat.
-    ctx.fillStyle = "#202322"; ctx.fillRect(-15, -21, 30, 20); ctx.fillRect(-16, 7, 32, 15);
-    ctx.fillStyle = color; ctx.fillRect(-12, -18, 24, 5); ctx.fillRect(-12, 7, 5, 13);
-    ctx.fillRect(7, 7, 5, 13); ctx.fillRect(-5, 10, 10, 3);
-    ctx.fillStyle = "#f2f3ea"; ctx.fillRect(-8, -8, 16, 5);
-    ctx.fillStyle = "#202322"; ctx.fillRect(-7, -6, 14, 3);
-  } else if (style === 11) {
-    // Horns, bat wings, glowing eyes and a forked tail.
-    ctx.fillStyle = "#27202f";
-    ctx.fillRect(-20, 0, 9, 19); ctx.fillRect(11, 0, 9, 19);
-    ctx.fillRect(-23, -6, 5, 16); ctx.fillRect(18, -6, 5, 16);
-    ctx.fillStyle = color;
-    ctx.fillRect(-19, 3, 6, 11); ctx.fillRect(13, 3, 6, 11);
-    ctx.fillRect(-12, -24, 5, 13); ctx.fillRect(7, -24, 5, 13);
-    ctx.fillStyle = "#f1d8b1";
-    ctx.fillRect(-14, -28, 4, 8); ctx.fillRect(10, -28, 4, 8);
-    ctx.fillStyle = "#e86f52";
-    if (dir !== "up") { ctx.fillRect(-7, -4, 4, 3); ctx.fillRect(3, -4, 4, 3); }
-    ctx.fillRect(15, 17, 3, 10); ctx.fillRect(16, 24, 6, 3); ctx.fillRect(20, 18, 3, 7);
-    ctx.fillStyle = color; ctx.fillRect(-6, 8, 12, 9);
-    ctx.fillStyle = "#f1d8b1"; ctx.fillRect(-2, 9, 4, 5);
-  } else {
-    ctx.fillStyle = color; ctx.fillRect(-8, -15, 16, 4); ctx.fillRect(-15, 8, 5, 11);
-  }
-  if (feminine) {
-    // Outfit-specific hair and tailoring preserve each skin's silhouette.
-    const hair = style === 6 || style === 3 ? "#aab8bf" : style === 7 || style === 4 ? color : "#414039";
-    ctx.fillStyle = "#202322";
-    if (style === 5) { ctx.fillRect(10, -17, 7, 21); ctx.fillStyle = color; ctx.fillRect(12, -15, 3, 17); }
-    else if (style === 9 || style === 1) {
-      ctx.fillRect(-19, -12, 7, 17); ctx.fillRect(12, -12, 7, 17);
-      ctx.fillStyle = hair; ctx.fillRect(-18, -10, 4, 12); ctx.fillRect(14, -10, 4, 12);
-    } else {
-      ctx.fillRect(-14, -6, 5, 18); ctx.fillRect(9, -6, 5, 18);
-      ctx.fillStyle = hair; ctx.fillRect(-13, -4, 3, 13); ctx.fillRect(10, -4, 3, 13);
+  if (style === 7 || style === 11) {
+    const wing = style === 7 ? GOLD : shade;
+    for (const s of [-1, 1]) {
+      ctx.save(); ctx.scale(s, 1);
+      box(INK, 5, 0, 3, 9); box(INK, 8, -3, 2, 10); box(INK, 10, -5, 1, 9);
+      box(wing, 6, 1, 2, 6); box(wing, 8, -2, 1, 7); box(main, 5, 5, 1, 4);
+      if (style === 7) { box(PAPER, 9, -4, 1, 4); box(light, 6, 2, 1, 4); }
+      ctx.restore();
     }
-    ctx.fillStyle = color; ctx.fillRect(-13, 6, 3, 3); ctx.fillRect(10, 6, 3, 3);
-    ctx.fillStyle = "#202322"; ctx.fillRect(-9, 10, 3, 7); ctx.fillRect(6, 10, 3, 7);
-    ctx.fillStyle = "#ecdfb4"; ctx.fillRect(-5, 16, 10, 2);
   }
-  // Shared small highlights keep every outfit readable at map scale.
-  ctx.fillStyle = "#ffffff35"; ctx.fillRect(-6, 8, 3, 7);
-  ctx.fillStyle = "#101b2138"; ctx.fillRect(5, 9, 3, 9);
-  if (dir === "up") {
-    ctx.fillStyle = "#303a34"; ctx.fillRect(-7, -6, 14, 8);
-    ctx.fillStyle = "#647160"; ctx.fillRect(-6, -5, 4, 3);
-    ctx.fillStyle = color; ctx.fillRect(-5, 9, 10, 8);
-    ctx.fillStyle = "#ffffff55"; ctx.fillRect(-3, 10, 6, 2);
-    ctx.fillStyle = "#202322"; ctx.fillRect(-5, 15, 10, 2);
-  } else if (style !== 6 && style !== 10 && style !== 11) {
-    ctx.fillStyle = "#ffffff";
-    if (dir !== "right") ctx.fillRect(-6, -4, 1, 1);
-    if (dir !== "left") ctx.fillRect(4, -4, 1, 1);
-    ctx.fillStyle = "#75816c"; ctx.fillRect(dir === "left" ? -7 : dir === "right" ? 5 : -2, 1, 3, 1);
+  if (style === 11) {
+    box(INK, 6, 10, 4, 2); box(INK, 9, 7, 2, 4); box(main, 6, 10, 3, 1);
+    box(main, 9, 7, 1, 3); box(INK, 8, 5, 4, 2); box(light, 9, 5, 1, 1);
+  }
+  if (feminine || style === 9) {
+    if (style === 1 || style === 9 || style === 5) {
+      box(INK, -7, -5, 3, 9); box(hair, -6, -4, 2, 7); box(main, -7, -3, 2, 1);
+      if (feminine && style === 9) { box(INK, 4, -5, 3, 8); box(hair, 5, -4, 1, 6); }
+    } else {
+      box(INK, -6, -5, 12, 8); box(hair, -5, -4, 10, 6);
+      box(INK, -2, 2, 4, 2); box(light, -5, -2, 1, 3);
+    }
+  }
+
+  // Alternating feet and hands, rather than sliding the whole lower body.
+  for (const s of [-1, 1]) {
+    const legX = s < 0 ? -4 : 1, lift = s * stride;
+    box(INK, legX, 8, 3, 5 + lift); box("#4d5962", legX + 1, 9, 1, 2);
+    box(INK, legX - (side ? 0 : 1), 12 + lift, 4, 2);
+    box(style === 1 ? PAPER : STEEL, legX, 13 + lift, 3, 1);
+    if (style === 5) box(main, legX + 1, 9, 1, 3);
+  }
+  const torsoX = side ? -3 : -4, torsoW = side ? 7 : 8;
+  box(INK, torsoX - 1, 3, torsoW + 2, 6);
+  box(style === 5 || style === 9 || style === 10 ? shade : main, torsoX, 4, torsoW, 4);
+  box(light, torsoX, 4, 1, 3); box(shade, torsoX + torsoW - 2, 5, 2, 3);
+  box(INK, torsoX, 8, torsoW, 1);
+  box(SKIN_SHADE, -1, 1, 3, 3); box(SKIN, -1, 2, 2, 1);
+
+  if (style === 0) {
+    if (back) { box(INK, -3, 4, 6, 5); box(shade, -2, 4, 4, 4); box(light, -2, 5, 4, 1); }
+    else { box(PAPER, -3, 4, 1, 4); box(PAPER, 2, 4, 1, 4); box(GOLD, 0, 7, 1, 1); }
+  } else if (style === 1) {
+    box(PAPER, side ? 0 : -2, 5, side ? 2 : 4, 1); box(INK, -1, 7, 2, 1);
+  } else if (style === 2) {
+    box(INK, -5, 8, 10, 3); box(main, -4, 8, 8, 2); box(GOLD, 0, 5, 1, 4);
+    box(INK, 8, -2, 2, 16); box("#9e7752", 8, 0, 1, 13);
+    box(GOLD, 7, -3, 4, 4); box(light, 8, -2, 2, 2);
+  } else if (style === 3 || style === 6) {
+    box(STEEL, torsoX, 4, torsoW, 4); box(STEEL_LIGHT, torsoX, 4, torsoW - 1, 1);
+    box(main, -1, 5, 2, 2); box(INK, -1, 8, 2, 1);
+  } else if (style === 4 || style === 7 || style === 11) {
+    box(INK, -2, 4, 4, 4); box(style === 7 ? GOLD : light, -1, 4, 2, 3);
+    box(main, -2, 6, 4, 1);
+  } else if (style === 5 || style === 9 || style === 10) {
+    box(INK, -2, 4, 4, 4); box(main, -1, 4, 2, 3);
+    box(STEEL_LIGHT, -4, 4, 1, 1); box(STEEL_LIGHT, 3, 4, 1, 1);
+    if (back) { box(PAPER, -1, 5, 2, 2); box(INK, 0, 6, 1, 1); }
+  } else if (style === 8) {
+    box(INK, -3, 4, 6, 4); box(GOLD, -2, 4, 1, 4); box(GOLD, 1, 4, 1, 4);
+    box(PAPER, -1, 4, 2, 2); box(main, -2, 8, 4, 1);
+  }
+  // Arm silhouettes stay clear of chest symbols. Profile uses the near arm only.
+  for (const s of side ? [1] : [-1, 1]) {
+    const ax = s < 0 ? -6 : 4, swing = s * stride;
+    box(INK, ax, 4 + swing, 3, 5);
+    box(style === 3 || style === 6 ? STEEL : main, ax + 1, 4 + swing, 1, 3);
+    box(style === 3 || style === 6 ? STEEL_LIGHT : SKIN, ax + 1, 7 + swing, 1, 1);
+  }
+  if (style === 3) {
+    box(INK, -8, 5, 4, 5); box(main, -7, 5, 2, 4); box(GOLD, -7, 6, 2, 1);
+    box(INK, 7, 1, 1, 9); box(STEEL_LIGHT, 7, 1, 1, 6); box(GOLD, 6, 7, 3, 1);
+  }
+  if (style === 6) {
+    box(INK, -7, 3, 3, 3); box(STEEL_LIGHT, -6, 3, 2, 1);
+    box(INK, 4, 3, 3, 3); box(STEEL, 4, 3, 2, 2);
+  }
+
+  // Stepped head contour, warm face, small eyes and a genuinely different profile.
+  box(INK, -4, -9, 8, 1); box(INK, -5, -8, 10, 7); box(INK, -4, -1, 8, 2);
+  box(hair, -4, -8, 8, 6); box("#75604b", -3, -8, 4, 1);
+  if (!back) {
+    box(SKIN_SHADE, side ? 0 : -4, -5, side ? 5 : 8, 5);
+    box(SKIN, side ? 1 : -3, -5, side ? 4 : 6, 4);
+    box(SKIN, side ? 5 : -5, -3, 1, 2); if (!side) box(SKIN_SHADE, 4, -3, 1, 2);
+    box(hair, -4, -6, side ? 6 : 8, 2); box(hair, side ? -3 : -4, -4, 2, 2);
+    if (side) { box(INK, 3, -3, 1, 1); box(SKIN_SHADE, 4, -1, 1, 1); }
+    else { box(INK, -2, -3, 1, 1); box(INK, 2, -3, 1, 1); box(SKIN_SHADE, 0, -1, 2, 1); }
+    if (feminine) box(hair, side ? 2 : -3, -4, side ? 2 : 1, 1);
+  } else {
+    box(hair, -4, -6, 8, 6); box("#75604b", -3, -7, 2, 3);
+    if (feminine) { box(hair, -4, -1, 8, 4); box(main, -2, 1, 4, 1); }
+  }
+
+  // Headwear is directional too: no front visor or facial details on the back.
+  if (style === 0 || style === 1) {
+    box(INK, -5, -10, 9, 3); box(main, -4, -10, 7, 2); box(light, -3, -10, 3, 1);
+    const brimX = side ? (style === 1 ? -7 : 3) : -5;
+    box(INK, brimX, -8, side ? 5 : 10, 1); box(shade, brimX, -9, side ? 5 : 10, 1);
+    if (back) box(PAPER, -1, -8, 2, 1);
+  } else if (style === 2) {
+    box(INK, -7, -9, 14, 2); box(INK, -4, -12, 9, 3); box(INK, -2, -15, 5, 3); box(INK, 1, -15, 2, 1);
+    box(main, -4, -11, 8, 2); box(main, -2, -14, 4, 3); box(light, -1, -14, 1, 2);
+    box(GOLD, -4, -10, 8, 1); box(PAPER, 1, -12, 1, 1);
+  } else if (style === 3 || style === 6) {
+    box(INK, -5, -10, 10, 5); box(STEEL, -4, -10, 8, 4); box(STEEL_LIGHT, -3, -10, 5, 1);
+    box(STEEL, -5, -6, 2, 5); box(STEEL, 3, -6, 2, 5);
+    if (style === 3) {
+      box(INK, -1, -14, 3, 4); box(main, -1, -14, 2, 4); box(light, -1, -14, 1, 2);
+      if (!back) box(STEEL_LIGHT, side ? 3 : 0, -6, 1, 3);
+    } else {
+      box(INK, -4, -6, 8, 3); box(back ? STEEL : main, -3, -5, 6, 1);
+      if (!back) box(light, side ? 2 : -2, -5, 2, 1);
+      box(STEEL, -3, -2, 6, 2); box(STEEL_LIGHT, -2, -2, 2, 1);
+      if (feminine) { box(INK, -6, -8, 2, 3); box(main, -6, -7, 1, 2); }
+    }
+  } else if (style === 4 || style === 7) {
+    for (const [px, py, height] of [[-4, -12, 4], [0, -15, 7], [3, -11, 3]]) {
+      box(INK, px, py, 2, height); box(main, px, py + 1, 1, height - 1);
+      box(style === 7 ? GOLD : light, px, py + 2, 1, 2);
+    }
+    box(shade, -4, -8, 8, 1);
+  } else if (style === 5) {
+    box(INK, -2, -15, 4, 7); box(main, -1, -15, 2, 7); box(light, -1, -14, 1, 3);
+    if (side) { box(INK, -4, -12, 3, 4); box(main, -3, -11, 1, 3); }
+    if (!back) box(STEEL_LIGHT, side ? 0 : -4, -1, 1, 1);
+  } else if (style === 8) {
+    box(INK, -5, -10, 10, 3); box(INK, -7, -10, 3, 4); box(INK, 4, -10, 3, 4);
+    box("#43505a", -6, -9, 2, 1); box("#43505a", 4, -9, 2, 1);
+    box(main, -4, -8, 8, 1); box(GOLD, side ? 3 : -1, -8, 1, 1);
+  } else if (style === 9) {
+    box(main, -4, -8, 5, 2); box(shade, -4, -6, 2, 2); box(GOLD, side ? 0 : 4, -1, 1, 1);
+  } else if (style === 10) {
+    box(INK, -4, -10, 8, 2); box(INK, -6, -8, 2, 9); box(INK, 4, -8, 2, 9);
+    box(main, -4, -9, 8, 1); box(shade, -5, -7, 1, 7); box(shade, 4, -7, 1, 7);
+    if (back) { box(shade, -4, -8, 8, 8); box(main, -3, -8, 1, 5); box(INK, -1, -1, 2, 1); }
+    else { box(INK, side ? 1 : -3, -2, side ? 4 : 7, 3); box(main, side ? 2 : -2, -1, side ? 2 : 5, 1); }
+  } else if (style === 11) {
+    for (const s of [-1, 1]) {
+      ctx.save(); ctx.scale(s, 1);
+      box(INK, 3, -11, 3, 4); box(INK, 5, -14, 2, 4);
+      box(GOLD, 4, -11, 1, 3); box(PAPER, 5, -13, 1, 3);
+      ctx.restore();
+    }
+    if (!back) { box("#c54b58", side ? 3 : -2, -3, 1, 1); if (!side) box("#c54b58", 2, -3, 1, 1); }
+    box(main, -3, -8, 6, 1);
   }
   ctx.restore();
 }
