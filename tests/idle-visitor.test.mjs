@@ -46,3 +46,28 @@ test("finds a clear approach when a wall blocks the initial spawn direction", ()
   }
   assert.equal(state.visitor.phase, "talking");
 });
+
+test("arrival tolerance stops both visitors and opens dialogue despite fractional-frame rounding", () => {
+  const point = { x: 800.123456789, y: 500.987654321 };
+  for (const kind of [0, 1]) for (let i = 0; i < 128; i++) {
+    const angle = i * Math.PI / 64 + .013;
+    const state = createIdleEncounter(point); state.armed = false;
+    state.visitor = { x: point.x + Math.cos(angle) * 38.00000000000003, y: point.y + Math.sin(angle) * 38.00000000000003,
+      kind, dir: "down", phase: "walking", age: 0 };
+    updateIdleEncounter(state, point, 1000 / 60, false, openGround);
+    assert.equal(state.visitor.phase, "talking", `kind=${kind}, angle=${angle}`);
+    const stopped = { x: state.visitor.x, y: state.visitor.y };
+    updateIdleEncounter(state, point, 1000 / 60, false, openGround);
+    assert.deepEqual({ x: state.visitor.x, y: state.visitor.y }, stopped);
+    assert.ok(state.visitor.age > 0);
+  }
+});
+
+test("every spawn direction reaches dialogue with real 60fps-sized updates", () => {
+  for (let i = 0; i < 64; i++) {
+    const state = createIdleEncounter(player);
+    advance(state, 30000, { random: i / 64 });
+    for (let frame = 0; frame < 240 && state.visitor.phase === "walking"; frame++) updateIdleEncounter(state, player, 1000 / 60, false, openGround);
+    assert.equal(state.visitor.phase, "talking");
+  }
+});

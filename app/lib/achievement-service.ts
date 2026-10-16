@@ -1,8 +1,8 @@
 import "server-only";
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { getDb } from "../../db";
-import { achievementActivity, achievementAudit, achievementProfiles, guildMessages, memberAchievements, stageDecks, tournamentResults, tournamentStages } from "../../db/schema";
-import { achievementDefinition, achievementTitle, evaluateAchievements, type AchievementAlbum, type AchievementId } from "./achievements";
+import { achievementActivity, achievementAudit, achievementProfiles, beycoinLedger, guildMessages, memberAchievements, stageDecks, tournamentResults, tournamentStages } from "../../db/schema";
+import { BEYCOIN_REWARDS, achievementDefinition, achievementTitle, evaluateAchievements, type AchievementAlbum, type AchievementId } from "./achievements";
 
 type Tx = Parameters<Parameters<ReturnType<typeof getDb>["transaction"]>[0]>[0];
 export async function recordAchievementActivity(tx: Tx, memberId: string, kind: "login" | "avatar") {
@@ -21,6 +21,7 @@ async function reconcile(tx: Tx, memberId: string): Promise<AchievementAlbum> {
   const earned = await tx.select().from(memberAchievements).where(eq(memberAchievements.memberId, memberId));
   const newlyUnlocked: AchievementId[] = [], now = new Date();
   const achievements = [];
+  let coinDelta = 0;
   for (const entry of progress) {
     const existing = earned.find(a => a.achievementId === entry.id);
     if (entry.qualified && !existing?.active) {
@@ -35,7 +36,16 @@ async function reconcile(tx: Tx, memberId: string): Promise<AchievementAlbum> {
       await tx.insert(achievementAudit).values({ id: crypto.randomUUID(), memberId, achievementId: entry.id,
         action: entry.qualified ? existing ? "restore" : "unlock" : "revoke", evidence: entry.evidence });
     }
-    achievements.push({ ...entry, earnedAt: entry.qualified ? (existing?.earnedAt ?? now).toISOString() : null });
+    const coinReward = existing?.coinReward || BEYCOIN_REWARDS[entry.id];
+    if (entry.qualified !== (existing?.coinCredited ?? false)) {
+      const revision = (existing?.coinRevision ?? 0) + 1, amount = entry.qualified ? coinReward : -coinReward;
+      await tx.insert(beycoinLedger).values({ id: crypto.randomUUID(), memberId, achievementId: entry.id, revision, amount,
+        reason: entry.qualified ? (existing?.coinRevision ?? 0) > 0 ? "restore" : "award" : "revoke" });
+      await tx.update(memberAchievements).set({ coinReward, coinCredited: entry.qualified, coinRevision: revision })
+        .where(and(eq(memberAchievements.memberId, memberId), eq(memberAchievements.achievementId, entry.id)));
+      coinDelta += amount;
+    }
+    achievements.push({ ...entry, earnedAt: entry.qualified ? (existing?.earnedAt ?? now).toISOString() : null, coinReward });
   }
   const activeIds = new Set(achievements.filter(a => a.qualified).map(a => a.id));
   const [profile] = await tx.select().from(achievementProfiles).where(eq(achievementProfiles.memberId, memberId));
@@ -44,7 +54,11 @@ async function reconcile(tx: Tx, memberId: string): Promise<AchievementAlbum> {
   if (profile && (profile.titleId !== titleId || JSON.stringify(profile.showcase) !== JSON.stringify(showcase))) {
     await tx.update(achievementProfiles).set({ showcase, titleId }).where(eq(achievementProfiles.memberId, memberId));
   }
-  return { achievements, newlyUnlocked, showcase, titleId };
+  const [wallet] = await tx.select({ balance: sql<number>`coalesce(sum(${beycoinLedger.amount}), 0)::integer` }).from(beycoinLedger).where(eq(beycoinLedger.memberId, memberId));
+  const history = await tx.select({ id: beycoinLedger.id, achievementId: beycoinLedger.achievementId, amount: beycoinLedger.amount,
+    reason: beycoinLedger.reason, createdAt: beycoinLedger.createdAt }).from(beycoinLedger).where(eq(beycoinLedger.memberId, memberId))
+    .orderBy(desc(beycoinLedger.createdAt), desc(beycoinLedger.revision), beycoinLedger.id).limit(50);
+  return { achievements, newlyUnlocked, showcase, titleId, beycoins: { balance: wallet.balance, delta: coinDelta, history: history.map(row => ({ ...row, createdAt: row.createdAt.toISOString() })) } };
 }
 
 export async function syncAchievements(memberId: string, profile?: { showcase: string[]; titleId: string | null }) {

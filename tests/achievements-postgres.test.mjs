@@ -16,7 +16,16 @@ test('authenticated achievement lifecycle, idempotence, self-declared decks, cor
   try{
     await admin.unsafe(`CREATE DATABASE "${name}"`);url.pathname='/'+name;db=postgres(url.toString(),{max:1,prepare:false});
     const dir=new URL('../supabase/migrations/',import.meta.url);
-    for(const file of(await readdir(dir)).filter(f=>f.endsWith('.sql')).sort())await db.unsafe(await readFile(new URL(file,dir),'utf8'));
+    const legacy=randomUUID();
+    for(const file of(await readdir(dir)).filter(f=>f.endsWith('.sql')).sort()) {
+      if(file==='0014_beycoins.sql') {
+        await db`INSERT INTO members(id,first_name,password_salt,password_hash,created_at) VALUES(${legacy},'Legacy','salt','hash','2026-10-14')`;
+        await db`INSERT INTO member_achievements(member_id,achievement_id,active,evidence) VALUES(${legacy},'welcome',true,'{}'),(${legacy},'attack',false,'{}')`;
+      }
+      await db.unsafe(await readFile(new URL(file,dir),'utf8'));
+    }
+    const [backfill]=await db`SELECT sum(amount)::int balance,count(*)::int movements FROM beycoin_ledger WHERE member_id=${legacy}`;
+    assert.equal(backfill.balance,10);assert.equal(backfill.movements,1,'migration credits existing active achievements only');
     process.env.DATABASE_URL=url.toString();const {getDb}=await import('../db/index.ts');appDb=getDb();
     const endpoint=await import('../app/api/member/achievements/route.ts'),avatar=await import('../app/api/member/avatar/route.ts');
     const {sessionCookie}=await import('../app/lib/auth.ts');const {publicAchievementShowcases}=await import('../app/lib/achievement-service.ts');
@@ -28,6 +37,9 @@ test('authenticated achievement lifecycle, idempotence, self-declared decks, cor
     assert.equal((await endpoint.POST(request(null))).status,401);
     assert.equal((await endpoint.POST(request(ca,'POST',null,'https://hostile.invalid'))).status,403);
     let album=await sync(ca);assert.deepEqual(album.newlyUnlocked,['welcome']);assert.equal(JSON.stringify(album).includes('private@'),false);
+    assert.equal(album.beycoins.balance,10);assert.equal(album.beycoins.history.length,1);assert.equal(album.beycoins.delta,10);
+    const legacyAlbum=await sync(await cookie(legacy));assert.equal(legacyAlbum.beycoins.balance,10);assert.equal(legacyAlbum.beycoins.history.length,1,'backfill and subsequent sync cannot double-credit');
+    const forged=await endpoint.POST(request(ca,'POST',{memberId:b,amount:999999}));assert.equal((await forged.json()).beycoins.balance,10);
     assert.deepEqual((await sync(ca)).newlyUnlocked,[]);
     const noop=await avatar.PUT(request(ca,'PUT',{avatarStyle:0,avatarColor:0}));assert.equal(noop.status,200);assert.equal((await sync(ca)).achievements.find(x=>x.id==='identity').qualified,false);
     assert.equal((await avatar.PUT(request(ca,'PUT',{avatarStyle:1,avatarColor:2}))).status,200);assert.equal((await sync(ca)).achievements.find(x=>x.id==='identity').qualified,true);
@@ -37,6 +49,10 @@ test('authenticated achievement lifecycle, idempotence, self-declared decks, cor
     await db`INSERT INTO stage_decks(stage_slug,member_id,beys) VALUES('first',${a},${db.json(attack)})`;
     const concurrent=await Promise.all([sync(ca),sync(ca)]);assert.equal(concurrent.flatMap(x=>x.newlyUnlocked).filter(x=>x==='attack').length,1);
     album=await sync(ca);assert.equal(album.achievements.find(x=>x.id==='attack').qualified,true);
+    const fullBalance=album.beycoins.balance;
+    assert.equal(fullBalance,10+15+25+50+30+150+200);
+    assert.equal(album.beycoins.history.filter(m=>m.achievementId==='attack').length,1);
+    assert.equal(album.beycoins.delta,0,'resync never credits an already owned achievement');
     let r=await endpoint.PUT(request(ca,'PUT',{showcase:['welcome','attack'],titleId:'winner'}));assert.equal(r.status,200);
     let publicProfiles=await publicAchievementShowcases();assert.deepEqual(publicProfiles.get(a).badgeIds,['welcome','attack']);assert.equal(publicProfiles.get(a).title,'Vincitore di tappa');
     assert.equal((await endpoint.PUT(request(cb,'PUT',{showcase:['attack'],titleId:null}))).status,400);
@@ -46,10 +62,16 @@ test('authenticated achievement lifecycle, idempotence, self-declared decks, cor
     await db`UPDATE stage_decks SET beys=${db.json(mixed)},version=2 WHERE member_id=${a}`;
     publicProfiles=await publicAchievementShowcases();assert.deepEqual(publicProfiles.get(a).badgeIds,['welcome'],'public display revalidates even before owner opens the album');
     album=await sync(ca);assert.equal(album.achievements.find(x=>x.id==='attack').qualified,false);assert.deepEqual(album.showcase,['welcome']);
+    assert.equal(album.beycoins.balance,fullBalance-200);assert.equal(album.beycoins.delta,-200);
     const [audit]=await db`SELECT count(*)::integer n FROM member_achievement_audit WHERE member_id=${a} AND achievement_id='attack' AND action='revoke'`;assert.equal(audit.n,1);
     await sync(ca);const [same]=await db`SELECT count(*)::integer n FROM member_achievement_audit WHERE member_id=${a} AND achievement_id='attack' AND action='revoke'`;assert.equal(same.n,1);
-    await db`UPDATE stage_decks SET beys=${db.json(attack)},version=3 WHERE member_id=${a}`;assert.ok((await sync(ca)).newlyUnlocked.includes('attack'));
+    await db`UPDATE stage_decks SET beys=${db.json(attack)},version=3 WHERE member_id=${a}`;
+    const restored=await Promise.all([sync(ca),sync(ca)]);assert.equal(restored.flatMap(r=>r.newlyUnlocked).filter(id=>id==='attack').length,1);
+    assert.equal(restored[0].beycoins.balance,fullBalance);assert.equal(restored[1].beycoins.balance,fullBalance,'restore cannot farm coins');
+    assert.equal(restored[1].beycoins.history.filter(m=>m.achievementId==='attack').reduce((sum,m)=>sum+m.amount,0),200);
     await db`UPDATE tournament_results SET final_rank=2 WHERE member_id=${a}`;album=await sync(ca);assert.equal(album.achievements.find(x=>x.id==='winner').qualified,false);assert.equal(album.achievements.find(x=>x.id==='attack').qualified,false);assert.equal(album.titleId,null);
+    assert.equal(album.beycoins.balance,fullBalance-200-150);
+    const own=await sync(cb);assert.equal(own.beycoins.balance,10);assert.equal(own.beycoins.history.length,1,'wallet/history stay private per member');
     await db`UPDATE members SET must_change_password=true WHERE id=${b}`;assert.equal((await endpoint.POST(request(cb))).status,403);
   }finally{
     if(appDb)await appDb.$client.end();if(db)await db.end();process.env.DATABASE_URL=previous;

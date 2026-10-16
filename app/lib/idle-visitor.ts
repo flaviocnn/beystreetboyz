@@ -5,6 +5,8 @@ export const VISITORS = [
   { name: "Membro dei Phoenix Bladers", message: "La fenice brucia sempre!", avatarStyle: 7, avatarColor: 4 },
 ] as const;
 type Position = { x: number; y: number };
+const ARRIVAL_DISTANCE = 38;
+const ARRIVAL_TOLERANCE = .05;
 export type Visitor = Position & { kind: number; dir: Direction; phase: "walking" | "talking" | "leaving"; age: number };
 export type IdleEncounter = { idle: number; armed: boolean; previous: Position; visitor: Visitor | null };
 export function createIdleEncounter(player: Position): IdleEncounter {
@@ -42,10 +44,15 @@ export function updateIdleEncounter(state: IdleEncounter, player: Position, elap
   if (npc.phase === "walking") {
     const dx = player.x - npc.x, dy = player.y - npc.y, distance = Math.hypot(dx, dy);
     npc.dir = Math.abs(dx) > Math.abs(dy) ? dx < 0 ? "left" : "right" : dy < 0 ? "up" : "down";
-    if (distance <= 38) { npc.phase = "talking"; npc.age = 0; }
+    if (distance <= ARRIVAL_DISTANCE + ARRIVAL_TOLERANCE) { npc.phase = "talking"; npc.age = 0; }
     else {
-      const step = Math.min(distance - 38, elapsed * .075);
+      const step = Math.min(distance - ARRIVAL_DISTANCE, elapsed * .075);
       npc.x += dx / distance * step; npc.y += dy / distance * step;
+      // Floating point can leave distance = 38.00000000000001. Transition in
+      // this frame instead of repeatedly taking a sub-pixel step forever.
+      if (Math.hypot(player.x - npc.x, player.y - npc.y) <= ARRIVAL_DISTANCE + ARRIVAL_TOLERANCE) {
+        npc.phase = "talking"; npc.age = 0;
+      }
     }
   } else {
     npc.age += elapsed;

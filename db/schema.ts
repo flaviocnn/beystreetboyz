@@ -112,6 +112,8 @@ export const memberAchievements = pgTable("member_achievements", {
   achievementId: text("achievement_id").$type<AchievementId>().notNull(),
   earnedAt: timestamp("earned_at", { withTimezone: true }).notNull().defaultNow(), active: boolean("active").notNull().default(true),
   evidence: jsonb("evidence").$type<AchievementEvidence>().notNull(), ruleVersion: integer("rule_version").notNull().default(1),
+  coinReward: integer("coin_reward").notNull().default(0), coinCredited: boolean("coin_credited").notNull().default(false),
+  coinRevision: integer("coin_revision").notNull().default(0),
 }, t => [primaryKey({ columns: [t.memberId, t.achievementId] })]);
 export const achievementProfiles = pgTable("member_achievement_profiles", {
   memberId: text("member_id").primaryKey().references(() => members.id, { onDelete: "cascade" }),
@@ -122,3 +124,9 @@ export const achievementAudit = pgTable("member_achievement_audit", {
   achievementId: text("achievement_id").notNull(), action: text("action").notNull(),
   evidence: jsonb("evidence").$type<AchievementEvidence>().notNull(), createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
+export const beycoinLedger = pgTable("beycoin_ledger", {
+  id: text("id").primaryKey(), memberId: text("member_id").notNull().references(() => members.id, { onDelete: "cascade" }),
+  achievementId: text("achievement_id").$type<AchievementId>().notNull(), revision: integer("revision").notNull(),
+  amount: integer("amount").notNull(), reason: text("reason").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, t => [uniqueIndex("beycoin_achievement_revision_once").on(t.memberId, t.achievementId, t.revision)]);

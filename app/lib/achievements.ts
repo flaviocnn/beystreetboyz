@@ -13,12 +13,18 @@ export const ACHIEVEMENTS = [
   { id: "attack", name: "Nessuna difesa", icon: "✷", category: "Deck", target: 3, rule: "Vinci una tappa e registra il deck utilizzato con tre bit di tipo Attacco secondo il catalogo Excel. Deck autodichiarato, sblocco automatico.", reward: "Cornice “Scintille” e motto “Tre Bey. Una sola direzione.”", frame: "sparks" },
 ] as const;
 export type AchievementId = typeof ACHIEVEMENTS[number]["id"];
+export const BEYCOIN_REWARDS: Record<AchievementId, number> = {
+  welcome: 10, identity: 15, voice: 15, "first-stage": 25, regular: 40,
+  "top-eight": 50, deck: 30, podiums: 100, winner: 150, attack: 200,
+};
 export type AchievementStage = { slug: string; name: string; eventDate: string; finalRank: number | null; deck: unknown; version: number | null };
 export type AchievementFacts = { loggedIn: boolean; avatarChanged: boolean; hasMessage: boolean; stages: AchievementStage[] };
 export type AchievementEvidence = { stageSlug?: string; stageName?: string; eventDate?: string; season?: string; deckVersion?: number; bits?: string[] };
 export type AchievementProgress = { id: AchievementId; progress: number; target: number; qualified: boolean; evidence: AchievementEvidence };
-export type PersonalAchievement = AchievementProgress & { earnedAt: string | null };
-export type AchievementAlbum = { achievements: PersonalAchievement[]; newlyUnlocked: AchievementId[]; showcase: AchievementId[]; titleId: AchievementId | null };
+export type PersonalAchievement = AchievementProgress & { earnedAt: string | null; coinReward: number };
+export type BeycoinMovement = { id: string; achievementId: AchievementId; amount: number; reason: string; createdAt: string };
+export type AchievementAlbum = { achievements: PersonalAchievement[]; newlyUnlocked: AchievementId[]; showcase: AchievementId[]; titleId: AchievementId | null;
+  beycoins: { balance: number; delta: number; history: BeycoinMovement[] } };
 
 export function achievementDefinition(id: string) { return ACHIEVEMENTS.find(a => a.id === id); }
 export function achievementTitle(id: string | null) {
