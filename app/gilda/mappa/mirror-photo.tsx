@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { drawPixelPlayer, type Avatar } from "../../lib/pixel-player";
 import type { PlayerMember } from "../../lib/client-api";
 import type { PersonalStage } from "../../lib/decks";
-import { achievementCaption, topEightStages, type MirrorAchievement } from "../../lib/mirror-achievement";
+import { achievementCaption, topEightStages, wrapPortraitText, type MirrorAchievement } from "../../lib/mirror-achievement";
+import { MIRROR_MOTTOS, mirrorMotto } from "../../lib/mirror-mottos";
 
 const BACKGROUNDS = [
   { name: "Fenici", ink: "#351d2c", paper: "#fff0d4", mid: "#a54146", light: "#f4a457", accent: "#ffd66d" },
@@ -14,12 +15,16 @@ const BACKGROUNDS = [
   { name: "Inferno", ink: "#240f1b", paper: "#fff0d1", mid: "#6e202c", light: "#ef6838", accent: "#ffce62" },
 ];
 const POSES = ["Frontale", "Trionfante", "Sdraiato", "Guanto di sfida"];
-export function drawPortrait(canvas: HTMLCanvasElement, avatar: Avatar, name: string, background: number, pose: number, achievement: MirrorAchievement | null = null) {
+export function drawPortrait(canvas: HTMLCanvasElement, avatar: Avatar, name: string, background: number, pose: number, achievement: MirrorAchievement | null = null, mottoId = "guild-seal") {
   canvas.width = 1080; canvas.height = 1350;
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
   const caption = achievementCaption(achievement, (value, size) => { ctx.font = `bold ${size}px monospace`; return ctx.measureText(value).width; });
-  const height = caption ? 435 + caption.height + 38 : 450;
+  ctx.font = "bold 10px monospace";
+  const motto = mirrorMotto(mottoId);
+  const mottoLines = motto ? wrapPortraitText(motto, value => ctx.measureText(value).width, 295) : [];
+  const mottoExtra = Math.max(0, mottoLines.length - 1) * 14;
+  const height = (caption ? 435 + caption.height + 38 : 450) + mottoExtra;
   canvas.height = height * 3;
   ctx.imageSmoothingEnabled = false; ctx.scale(3, 3);
   const theme = BACKGROUNDS[background] || BACKGROUNDS[0];
@@ -94,12 +99,12 @@ export function drawPortrait(canvas: HTMLCanvasElement, avatar: Avatar, name: st
   ctx.font = `bold ${fontSize}px monospace`;
   while (ctx.measureText(displayName).width > 295 && fontSize > 11) { fontSize--; ctx.font = `bold ${fontSize}px monospace`; }
   text(displayName, 375, fontSize, theme.paper, 295);
-  text("IL MIO SIGILLO. LA MIA GILDA.", 398, 10, theme.light);
-  text("MEMBER PORTRAIT  /  BEYSTREETBOYZ", 414, 8, theme.accent);
+  mottoLines.forEach((line, index) => text(line, 398 + index * 14, 10, theme.light));
+  text("MEMBER PORTRAIT  /  BEYSTREETBOYZ", 414 + mottoExtra, 8, theme.accent);
   if (caption) {
-    box(theme.accent, 25, 430, 310, 3);
-    box(theme.mid, 25, 435, 310, caption.height);
-    for (const line of caption.lines) text(line.text, 435 + line.y, line.size, line.accent ? theme.accent : theme.paper);
+    box(theme.accent, 25, 430 + mottoExtra, 310, 3);
+    box(theme.mid, 25, 435 + mottoExtra, 310, caption.height);
+    for (const line of caption.lines) text(line.text, 435 + mottoExtra + line.y, line.size, line.accent ? theme.accent : theme.paper);
   }
 }
 
@@ -107,6 +112,7 @@ export default function MirrorPhoto({ member, onClick }: { member: PlayerMember;
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [name, setName] = useState(memberDisplayName(member));
   const [background, setBackground] = useState(0), [pose, setPose] = useState(0);
+  const [mottoId, setMottoId] = useState("guild-seal");
   const [photo, setPhoto] = useState<{ url: string; blob: Blob; width: number; height: number } | null>(null);
   const [message, setMessage] = useState("");
   const [stages, setStages] = useState<PersonalStage[]>([]), [stageSlug, setStageSlug] = useState("");
@@ -128,14 +134,14 @@ export default function MirrorPhoto({ member, onClick }: { member: PlayerMember;
     if (!canvas) return;
     let live = true, url = "";
     setPhoto(null); setMessage("");
-    drawPortrait(canvas, member, name, background, pose, achievement);
+    drawPortrait(canvas, member, name, background, pose, achievement, mottoId);
     const width = canvas.width, height = canvas.height;
     canvas.toBlob((blob) => {
       if (!blob || !live) return;
       url = URL.createObjectURL(blob); setPhoto({ url, blob, width, height });
     }, "image/png");
     return () => { live = false; if (url) URL.revokeObjectURL(url); };
-  }, [member, name, background, pose, achievement]);
+  }, [member, name, background, pose, achievement, mottoId]);
   async function shareInstagram() {
     if (!photo) return;
     onClick();
@@ -156,6 +162,10 @@ export default function MirrorPhoto({ member, onClick }: { member: PlayerMember;
     <div className="mirror-photo-preview"><canvas ref={canvasRef} hidden />{photo && <img src={photo.url} width={photo.width} height={photo.height} alt={`Ritratto pixel art di ${name || "un membro"}, con il brand Ranked BeyStreetBoyz${achievement ? `, ${achievement.name}, ${achievement.finalRank}° posto${achievement.deck ? ", con deck registrato" : ""}` : ""}`} />}</div>
     <div className="mirror-photo-options"><p>Uno specchio, il tuo avatar, il tuo sigillo. Crea una cartolina da portare con te.</p>
       <label className="mirror-name">NOME SULLA FOTO<input value={name} maxLength={80} onChange={(e) => setName(e.target.value)} placeholder="Il tuo nome o nickname" /></label>
+      <label className="mirror-name">FRASE SULLA FOTO<select value={mottoId} onChange={event => { setMottoId(event.target.value); onClick(); }}>
+        <option value="">Nessuna · nascondi la scritta</option>
+        {MIRROR_MOTTOS.map(motto => <option key={motto.id} value={motto.id}>{motto.text}</option>)}
+      </select></label>
       <fieldset><legend>BACKGROUND</legend><div className="mirror-choices">{BACKGROUNDS.map((theme, index) => <button key={theme.name} aria-pressed={background === index} onClick={() => { setBackground(index); onClick(); }}>{theme.name}</button>)}</div></fieldset>
       <fieldset><legend>POSA</legend><div className="mirror-choices">{POSES.map((label, index) => <button key={label} aria-pressed={pose === index} onClick={() => { setPose(index); onClick(); }}>{label}</button>)}</div></fieldset>
       <fieldset className="mirror-achievement"><legend>PIAZZAMENTO DI TAPPA</legend>
