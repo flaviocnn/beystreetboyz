@@ -153,20 +153,35 @@ function librarySprite(ctx: CanvasRenderingContext2D) {
 }
 export function drawGuildWorld(ctx: CanvasRenderingContext2D) {
   rect(ctx, "#dbe0d3", 0, 0, WORLD.width, WORLD.height);
-  for (let y = 190; y < WORLD.height; y += 48) for (let x = 0; x < WORLD.width; x += 48) {
-    rect(ctx, (x / 48 + Math.floor(y / 48)) % 2 ? "#e5e8dc" : "#d7dfd0", x, y, 47, 47);
+  for (let y = 190; y < WORLD.height; y += 64) for (let x = 0; x < WORLD.width; x += 64) {
+    rect(ctx, (x / 64 + Math.floor(y / 64)) % 2 ? "#e5e8dc" : "#dce2d4", x, y, 63, 63);
   }
   // Broad, unobstructed promenades. No decorative furniture on the main axis.
   rect(ctx, "#b6c3a8", 710, 190, 180, WORLD.height - 190);
   rect(ctx, "#698267", 718, 190, 164, WORLD.height - 190);
+  for (const x of [724, 872]) rect(ctx, "#cabb85", x, 190, 4, WORLD.height - 190);
   for (const y of [570, 955]) { rect(ctx, "#b6c3a8", 110, y, 1380, 78); rect(ctx, "#7c9273", 110, y + 6, 1380, 66); }
   for (let y = 615; y < WORLD.height; y += 70) for (const x of [730, 859]) rect(ctx, "#9db38b", x, y, 10, 10);
   rect(ctx, "#273b2e", 0, 0, WORLD.width, 165);
   rect(ctx, "#879d7b", 0, 165, WORLD.width, 16);
   label(ctx, "RANKED BEYSTREETBOYZ", 800, 92, "#e0e7ca", 28);
   label(ctx, "LA GILDA DEL GRIFONE", 800, 128, "#b9cbaa", 12);
+  // Two woven banners frame the hall without adding obstacles to the floor.
+  for (const x of [400, 1170]) {
+    rect(ctx, "#172b23", x + 7, 39, 60, 111);
+    rect(ctx, "#cbbb83", x - 5, 29, 70, 6);
+    rect(ctx, "#526f58", x, 35, 60, 99);
+    rect(ctx, "#7e9970", x + 5, 39, 4, 91);
+    rect(ctx, "#d9c78e", x + 25, 54, 10, 44);
+    rect(ctx, "#d9c78e", x + 15, 64, 30, 10);
+    rect(ctx, "#d9c78e", x + 20, 103, 20, 5);
+    rect(ctx, "#526f58", x + 8, 134, 44, 8);
+    rect(ctx, "#526f58", x + 16, 142, 28, 6);
+  }
   // The primary focus is a shared dais, with equal space for ranked and throne.
   floorArea(ctx, 475, 210, 655, 355, "#cbd4ba");
+  rect(ctx, "#d8c68d", 488, 218, 629, 4);
+  rect(ctx, "#e4dab8", 488, 548, 629, 4);
   rect(ctx, "#bdc7ad", 490, 565, 625, 9); rect(ctx, "#d5dcc5", 505, 574, 595, 8);
   rankingSprite(ctx);
   drawChampionThrone(ctx, THRONE.x, THRONE.y, null, 0, THRONE.scale);

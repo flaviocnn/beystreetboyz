@@ -8,6 +8,7 @@ export function useDialogFocus(open: boolean) {
     const previous = document.activeElement as HTMLElement | null;
     const dialog = document.querySelector<HTMLElement>('[role="dialog"]');
     if (!dialog) return;
+    const worldCanvas = dialog.closest(".world-shell")?.querySelector<HTMLCanvasElement>("canvas.map-canvas, canvas.guild-canvas");
     const selector = 'button:not(:disabled), a[href], input:not(:disabled), textarea:not(:disabled), select:not(:disabled), summary, [tabindex="0"]';
     (dialog.querySelector<HTMLElement>('.modal-enter') || dialog.querySelector<HTMLElement>(selector))?.focus();
     const trap = (event: KeyboardEvent) => {
@@ -30,6 +31,10 @@ export function useDialogFocus(open: boolean) {
       if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
     };
     document.addEventListener("keydown", trap);
-    return () => { document.removeEventListener("keydown", trap); previous?.focus(); };
+    return () => {
+      document.removeEventListener("keydown", trap);
+      // Closing an in-world popup returns the arrow keys to walking immediately.
+      (worldCanvas || previous)?.focus();
+    };
   }, [open]);
 }

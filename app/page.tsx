@@ -13,7 +13,7 @@ import { useWorldWeather, WorldWeatherBadge } from "./components/world-weather";
 import { createAtmospherePaint, drawWorldAtmosphere } from "./lib/world-atmosphere";
 import { memberDisplayName } from "./lib/member-name";
 import { WorldDpad, WorldGuide, WorldHud, WorldInteraction } from "./components/world-controls";
-import { worldCamera, WALK_SPEED, KEY_DIRECTIONS, isWorldInputTarget, drawWorldOverview, drawInteractionSpot } from "./lib/world-game";
+import { worldCamera, WALK_SPEED, KEY_DIRECTIONS, isWorldInputTarget, drawDestinationCompass, drawInteractionSpot } from "./lib/world-game";
 import { CITY_WORLD as WORLD, CITY_START as START, CITY_ENTRANCES, canWalkCity, nearbyCityPlace } from "./lib/city-navigation";
 
 type Place = {
@@ -115,11 +115,11 @@ function drawGround(ctx: CanvasRenderingContext2D) {
   ctx.fillStyle = PALETTE.paper;
   ctx.fillRect(0, 0, WORLD.width, WORLD.height);
 
-  ctx.fillStyle = PALETTE.pale;
-  for (let y = 18; y < WORLD.height; y += 30) {
-    for (let x = 16 + ((y / 30) % 2) * 8; x < WORLD.width; x += 34) {
-      ctx.fillRect(x, y, 3, 8);
-      ctx.fillRect(x + 6, y + 4, 2, 4);
+  ctx.fillStyle = "#dce3d4";
+  for (let y = 18; y < WORLD.height; y += 48) {
+    for (let x = 16 + ((y / 48) % 2) * 12; x < WORLD.width; x += 52) {
+      ctx.fillRect(x, y, 2, 5);
+      ctx.fillRect(x + 5, y + 3, 2, 3);
     }
   }
 
@@ -131,13 +131,13 @@ function drawGround(ctx: CanvasRenderingContext2D) {
   ctx.fillRect(810, 1010, 540, 54);
   ctx.fillRect(1290, 980, 60, 50);
   for (const [x, y, h] of [[245, 400, 100], [410, 335, 115], [1180, 330, 120], [390, 735, 110], [1130, 735, 110]]) ctx.fillRect(x, y, 60, h);
-  ctx.strokeStyle = PALETTE.mid;
+  ctx.strokeStyle = "#bcc7b3";
   ctx.lineWidth = 2;
   ctx.setLineDash([10, 8]);
   ctx.strokeRect(40, 458, WORLD.width - 80, 94);
   ctx.strokeRect(758, 40, 84, WORLD.height - 80);
   ctx.setLineDash([]);
-  ctx.fillStyle = PALETTE.mid;
+  ctx.fillStyle = "#cbd3c3";
   for (let y = 470; y < 545; y += 18) {
     for (let x = 48; x < WORLD.width - 40; x += 28) {
       ctx.fillRect(x + ((y / 18) % 2) * 8, y, 13, 3);
@@ -176,20 +176,15 @@ function drawGround(ctx: CanvasRenderingContext2D) {
 }
 
 function drawTree(ctx: CanvasRenderingContext2D, x: number, y: number) {
-  ctx.fillStyle = PALETTE.ink;
-  ctx.fillRect(x - 3, y + 13, 6, 13);
-  ctx.fillStyle = PALETTE.dark;
-  ctx.fillRect(x - 14, y - 4, 28, 19);
-  ctx.fillRect(x - 9, y - 11, 18, 29);
-  ctx.fillStyle = PALETTE.pale;
-  ctx.fillRect(x - 7, y - 6, 5, 5);
-  ctx.fillRect(x + 4, y + 4, 5, 5);
-  ctx.strokeStyle = PALETTE.ink;
-  ctx.lineWidth = 3;
-  ctx.strokeRect(x - 14, y - 4, 28, 19);
-  ctx.fillStyle = "#829477"; ctx.fillRect(x - 12, y - 7, 9, 9);
-  ctx.fillStyle = "#becbb0"; ctx.fillRect(x - 8, y - 9, 5, 4);
-  ctx.fillStyle = "#38493b"; ctx.fillRect(x + 7, y + 6, 7, 6);
+  ctx.fillStyle = "#25352b20"; ctx.fillRect(x - 15, y + 21, 36, 7);
+  ctx.fillStyle = "#4a4937"; ctx.fillRect(x - 4, y + 9, 8, 18);
+  ctx.fillStyle = "#9b9363"; ctx.fillRect(x - 2, y + 12, 3, 13);
+  ctx.fillStyle = "#344b38";
+  ctx.fillRect(x - 18, y - 6, 36, 22); ctx.fillRect(x - 12, y - 15, 24, 37);
+  ctx.fillRect(x - 6, y - 19, 12, 6);
+  ctx.fillStyle = "#6d8c60"; ctx.fillRect(x - 14, y - 5, 27, 16); ctx.fillRect(x - 9, y - 12, 18, 29);
+  ctx.fillStyle = "#a2b985"; ctx.fillRect(x - 9, y - 10, 10, 7); ctx.fillRect(x - 13, y - 2, 7, 5);
+  ctx.fillStyle = "#4f7048"; ctx.fillRect(x + 4, y + 4, 9, 7); ctx.fillRect(x - 3, y + 11, 12, 5);
 }
 
 function drawBeybladeGarden(ctx: CanvasRenderingContext2D, now: number) {
@@ -583,7 +578,7 @@ function drawGuild(ctx: CanvasRenderingContext2D, x: number, y: number, wednesda
 }
 
 function drawMarker(ctx: CanvasRenderingContext2D, place: Place, active: boolean, t: number) {
-  const y = place.y - 164 + Math.sin(t / 260) * 5;
+  const y = place.y - 164 + (active ? Math.sin(t / 360) * 3 : 0);
   ctx.save();
   ctx.translate(place.x, y);
   ctx.fillStyle = active ? PALETTE.ink : PALETTE.paper;
@@ -591,7 +586,7 @@ function drawMarker(ctx: CanvasRenderingContext2D, place: Place, active: boolean
   ctx.lineWidth = 4;
   ctx.fillRect(-16, -16, 32, 32);
   ctx.strokeRect(-16, -16, 32, 32);
-  pixelText(ctx, active ? "!" : "?", 0, 0, 17, "center", active ? PALETTE.paper : PALETTE.ink);
+  pixelText(ctx, active ? "!" : String(places.findIndex(item => item.id === place.id) + 1), 0, 0, 17, "center", active ? PALETTE.paper : PALETTE.ink);
   ctx.beginPath();
   ctx.moveTo(-7, 17);
   ctx.lineTo(7, 17);
@@ -628,7 +623,7 @@ function GameMap({
   const canWalkRef = useRef<(x: number, y: number) => boolean>(() => false);
   const encounterRef = useRef(createIdleEncounter(START));
   const [visitorSpeech, setVisitorSpeech] = useState<number | null>(null);
-  const guideRef = useRef(false);
+  const destinationRef = useRef<{ x: number; y: number } | null>(null);
   const speechRef = useRef<number | null>(null);
   usePopupSound(visitorSpeech !== null && !modalOpen);
   useEffect(() => { memberRef.current = member; }, [member]);
@@ -728,7 +723,7 @@ function GameMap({
       ctx.drawImage(scenery, 0, 0);
       drawBeybladeGarden(ctx, now);
       drawGuild(ctx, places[4].x, places[4].y, wednesday, now);
-      for (const place of places) drawMarker(ctx, place, closest?.id === place.id, now);
+      for (const place of places) drawMarker(ctx, place, closest?.id === place.id, weatherRef.current.reducedMotion ? 0 : now);
       if (closest) { const entrance = CITY_ENTRANCES[closest.id]; drawInteractionSpot(ctx, entrance.x, entrance.y); }
       if (visitor) {
         ctx.save();
@@ -740,7 +735,7 @@ function GameMap({
       drawPixelPlayer(ctx, player.x, player.y, player.dir, walking, now, memberRef.current?.mustChangePassword ? null : memberRef.current);
       ctx.restore();
       drawWorldAtmosphere(ctx, canvas.width, canvas.height, now, weatherRef.current, atmosphere);
-      if (guideRef.current) drawWorldOverview(ctx, WORLD, player, places.map((place, index) => ({ ...CITY_ENTRANCES[place.id], symbol: String(index + 1) })));
+      if (!modalRef.current) drawDestinationCompass(ctx, player, destinationRef.current, camera);
       frame = requestAnimationFrame(render);
     };
     frame = requestAnimationFrame(render);
@@ -798,7 +793,7 @@ function GameMap({
     <>
       <canvas ref={canvasRef} className="map-canvas" tabIndex={0} onPointerDown={event => event.currentTarget.focus()} aria-label="Mappa interattiva di Torino in stile videogame 8-bit. Frecce o WASD per muoverti, Invio vicino a un luogo per esplorarlo." />
       <WorldWeatherBadge />
-      <WorldGuide places={places} onChange={open => { guideRef.current = open; }} paused={modalOpen} />
+      <WorldGuide places={places} map={{ world: WORLD, player: playerRef, points: places.map((place, index) => ({ ...CITY_ENTRANCES[place.id], symbol: String(index + 1) })) }} onDestination={id => { destinationRef.current = id ? CITY_ENTRANCES[id] : null; }} paused={modalOpen} />
       {visitorSpeech !== null && !modalOpen && <aside className={`visitor-dialogue visitor-${visitorSpeech}`} role="status" aria-live="polite" data-sound="manual">
         <span className="visitor-dialogue-label">UN INCONTRO IN CITTÀ</span>
         <strong>{VISITORS[visitorSpeech].name}</strong>

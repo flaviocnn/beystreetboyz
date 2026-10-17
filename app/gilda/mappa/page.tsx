@@ -18,7 +18,7 @@ import type { AchievementId } from "../../lib/achievements";
 import { useWorldWeather, WorldWeatherBadge } from "../../components/world-weather";
 import { createAtmospherePaint, drawWorldAtmosphere } from "../../lib/world-atmosphere";
 import { WorldDpad, WorldGuide, WorldHud, WorldInteraction } from "../../components/world-controls";
-import { KEY_DIRECTIONS, WALK_SPEED, isWorldInputTarget, drawWorldOverview } from "../../lib/world-game";
+import { KEY_DIRECTIONS, WALK_SPEED, isWorldInputTarget, drawDestinationCompass } from "../../lib/world-game";
 import { getGameData, getGameSession } from "../../lib/game-data";
 import { loadGuildEntry } from "../../lib/guild-entry";
 
@@ -51,7 +51,7 @@ function GuildRoom({ onOpen, onNear, onStep, paused, member, champion, leaders }
   useEffect(() => { weatherRef.current = weather; }, [weather]);
   const playerRef = useRef({ ...START, dir: "up" as Direction });
   const keysRef = useRef(new Set<Direction>());
-  const guideRef = useRef(false), leadersRef = useRef(leaders);
+  const destinationRef = useRef<{ x: number; y: number } | null>(null), leadersRef = useRef(leaders);
   useEffect(() => { leadersRef.current = leaders; }, [leaders]);
   const championRef = useRef(champion);
   useEffect(() => { championRef.current = champion; }, [champion]);
@@ -87,7 +87,7 @@ function GuildRoom({ onOpen, onNear, onStep, paused, member, champion, leaders }
       ctx.save(); ctx.scale(camera.scale, camera.scale); ctx.translate(-Math.round(camera.x), -Math.round(camera.y)); ctx.drawImage(background, 0, 0);
       drawRoomDetails(ctx, near, now, member, championRef.current, leadersRef.current); drawPixelPlayer(ctx, player.x, player.y, player.dir, walking, now, member); ctx.restore();
       drawWorldAtmosphere(ctx, canvas.width, canvas.height, now, weatherRef.current, atmosphere, true);
-      if (guideRef.current) drawWorldOverview(ctx, WORLD, player, PLACES);
+      if (!pausedRef.current) drawDestinationCompass(ctx, player, destinationRef.current, camera);
       frame = requestAnimationFrame(render);
     };
     frame = requestAnimationFrame(render);
@@ -107,7 +107,7 @@ function GuildRoom({ onOpen, onNear, onStep, paused, member, champion, leaders }
   return <>
     <canvas ref={canvasRef} className="guild-canvas" tabIndex={0} onPointerDown={event => event.currentTarget.focus()} aria-label="Mappa della Gilda: classifica e trono sulla pedana centrale a nord, specchio nell'ala ovest e archivio tappe nell'ala est. Nella galleria a sud: bacheca a sinistra, statua annuale al centro, libreria a destra. Muoviti con le frecce o i pulsanti touch e interagisci vicino agli oggetti." />
     <WorldWeatherBadge indoor />
-    <WorldGuide places={PLACES} onChange={value => { guideRef.current = value; }} paused={paused} />
+    <WorldGuide places={PLACES} map={{ world: WORLD, player: playerRef, points: PLACES }} onDestination={id => { destinationRef.current = PLACES.find(place => place.id === id) ?? null; }} paused={paused} />
     <WorldDpad paused={paused} onDirection={(direction, active) => { if (active && !pausedRef.current) { if (beginWalk(keysRef.current, playerRef.current, direction)) onStep(); } else keysRef.current.delete(direction); }} />
   </>;
 }

@@ -16,13 +16,24 @@ export function worldCamera(width: number, height: number, player: { x: number; 
   const scale = Math.min(1, Math.max(.5, Math.min(width, height) / 600));
   const axis = (size: number, viewport: number, position: number, anchor: number) => viewport > size
     ? (size - viewport) / 2 : Math.max(0, Math.min(size - viewport, position - viewport * anchor));
-  return { scale, x: axis(world.width, width / scale, player.x, .5), y: axis(world.height, height / scale, player.y, .78) };
+  const verticalAnchor = height <= 500 ? .78 : height > width ? .52 : .64;
+  return { scale, x: axis(world.width, width / scale, player.x, .5), y: axis(world.height, height / scale, player.y, verticalAnchor) };
+}
+export function drawDestinationCompass(ctx: CanvasRenderingContext2D, player: { x: number; y: number }, destination: { x: number; y: number } | null, camera: ReturnType<typeof worldCamera>) {
+  if (!destination || Math.hypot(destination.x - player.x, destination.y - player.y) < INTERACTION_RADIUS) return;
+  // Screen-space compass stays readable at every zoom. It indicates direction, not a route through walls.
+  const angle = Math.atan2(destination.y - player.y, destination.x - player.x);
+  const x = (player.x - Math.round(camera.x)) * camera.scale;
+  const y = (player.y - Math.round(camera.y)) * camera.scale;
+  ctx.save(); ctx.translate(x + Math.cos(angle) * 46, y + Math.sin(angle) * 46); ctx.rotate(angle);
+  ctx.fillStyle = "#25352b"; ctx.strokeStyle = "#f2e1a4"; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(12, 0); ctx.lineTo(-7, -9); ctx.lineTo(-3, 0); ctx.lineTo(-7, 9); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore();
 }
 export function isWorldInputTarget(target: EventTarget | null) {
   return target instanceof Element && !!target.closest('input, textarea, select, button, a, summary, [contenteditable="true"], [role="dialog"], [data-world-weather], [data-world-menu]');
 }
 export function drawWorldOverview(ctx: CanvasRenderingContext2D, world: { width: number; height: number }, player: { x: number; y: number }, places: { x: number; y: number; symbol?: string }[]) {
-  const size = 136, x = ctx.canvas.width - size - 16, y = ctx.canvas.width <= 600 ? 174 : 132;
+  const size = 136, x = 0, y = 0;
   const scale = (size - 24) / Math.max(world.width, world.height);
   ctx.save(); ctx.fillStyle = "#f2f3ea"; ctx.fillRect(x, y, size, size); ctx.strokeStyle = "#25352b"; ctx.lineWidth = 2; ctx.strokeRect(x, y, size, size);
   ctx.font = "bold 12px monospace"; ctx.textAlign = "center";

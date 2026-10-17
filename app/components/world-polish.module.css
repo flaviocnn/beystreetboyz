@@ -1,0 +1,31 @@
+:global(.world-shell):has(.guide)::after { opacity: .025; }
+.guide:has(section) { z-index: 26; }
+.guide.guide.guide section {
+  top: 56px;
+  width: min(340px, calc(100dvw - 24px));
+  max-height: calc(100dvh - 210px);
+  padding: 18px;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+.guide h2 { margin: 0 0 8px; font-size: 20px; }
+.guide section > p { margin: 0 0 14px; font-size: 13px; line-height: 1.6; }
+.guideIntro { display: flex; align-items: center; gap: 12px; margin: 12px 0; }
+.guideIntro p { font-size: 12px; line-height: 1.5; }
+.overview { width: 112px; height: 112px; flex: 0 0 112px; image-rendering: pixelated; }
+.destinations { display: grid; gap: 6px; }
+.destinations button { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 48px; padding: 10px; border: 1px solid #b6c0aa; color: #25352b; background: #e5eadb; text-align: left; font-size: 14px; cursor: pointer; }
+.destinations button b { display: grid; place-items: center; width: 30px; height: 30px; flex-shrink: 0; color: #f2f3ea; background: #344d3c; }
+.destinations button span:last-child { margin-left: auto; }
+.destinations button:hover, .destinations button[aria-pressed="true"] { background: #e7d69e; border-color: #796836; }
+.guide.guide > .destination { width: min(260px, calc(100dvw - 24px)); margin-top: 8px; min-height: 44px; padding: 8px 12px; color: #25352b; background: #f2e4b6; border-color: #25352b; text-align: left; }
+.destination span:first-child { font-size: 12px; line-height: 1.5; }
+.destination span:last-child { margin-left: auto; font-size: 20px; }
+@media (max-width: 600px) {
+  .guide.guide.guide section { position: fixed; top: 174px; right: 12px; left: auto; max-height: calc(100dvh - 200px); }
+  .guide.guide > .destination { max-width: 210px; }
+  .guide.guide > .destination span { display: inline; }
+}
+@media (max-height: 500px) {
+  .guide.guide.guide section { position: fixed; top: 76px; right: 12px; left: auto; max-height: calc(100dvh - 94px); }
+}

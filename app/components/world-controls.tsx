@@ -1,10 +1,11 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import type { Direction } from "../lib/pixel-player";
 import { useGameAudio, usePopupSound } from "../lib/game-audio";
 import { createJoystick, joystickKnob } from "../lib/joystick";
-import { KEY_DIRECTIONS } from "../lib/world-game";
+import { KEY_DIRECTIONS, drawWorldOverview } from "../lib/world-game";
+import styles from "./world-polish.module.css";
 
 const NAMES = { up: "su", down: "giù", left: "a sinistra", right: "a destra" };
 export function WorldDpad({ paused, onDirection }: { paused: boolean; onDirection: (direction: Direction, active: boolean) => void }) {
@@ -74,11 +75,41 @@ export function WorldHud({ title, area, paused = false, children }: { title: str
     </div>
   </div>;
 }
-export function WorldGuide({ places, onChange, paused }: { places: { id: string; name: string; symbol?: string }[]; onChange: (open: boolean) => void; paused: boolean }) {
+type GuideMap = { world: { width: number; height: number }; player: RefObject<{ x: number; y: number }>; points: { x: number; y: number; symbol?: string }[] };
+function GuideOverview({ map }: { map: GuideMap }) {
+  const canvas = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const ctx = canvas.current?.getContext("2d");
+    if (!ctx) return;
+    const draw = () => { if (!document.hidden) drawWorldOverview(ctx, map.world, map.player.current, map.points); };
+    draw(); const timer = setInterval(draw, 200);
+    return () => clearInterval(timer);
+  }, [map]);
+  return <canvas ref={canvas} width={136} height={136} className={styles.overview} aria-label="Mappa dei luoghi. Il quadratino rosso indica la tua posizione." />;
+}
+export function WorldGuide({ places, map, onDestination, paused }: { places: { id: string; name: string; symbol?: string }[]; map: GuideMap; onDestination: (id: string | null) => void; paused: boolean }) {
   const [open, setOpen] = useState(false);
+  const [destination, setDestination] = useState<string | null>(null);
+  const container = useRef<HTMLDivElement>(null);
+  const resume = () => container.current?.closest(".world-shell")?.querySelector<HTMLCanvasElement>("canvas.map-canvas, canvas.guild-canvas")?.focus();
+  useEffect(() => {
+    if (!open) return;
+    const outside = (event: PointerEvent) => { if (event.target instanceof Node && !container.current?.contains(event.target)) setOpen(false); };
+    document.addEventListener("pointerdown", outside);
+    return () => document.removeEventListener("pointerdown", outside);
+  }, [open]);
   usePopupSound(open && !paused);
-  return <div className="world-guide" inert={paused}><button aria-expanded={open} aria-controls="world-map-guide" onClick={() => { setOpen(value => !value); onChange(!open); }} aria-label={open ? "Nascondi mappa e legenda" : "Mostra mappa e legenda"}>⌖<span>Mappa</span></button>
-    {open && <section id="world-map-guide" aria-label="Legenda mappa"><p>Il quadratino rosso sei tu.</p>{places.map((place, i) => <p key={place.id}><b>{place.symbol || String(i + 1)}</b> {place.name}</p>)}</section>}
+  return <div ref={container} className={`world-guide ${styles.guide}`} inert={paused} onKeyDown={event => {
+    if (event.key === "Escape") { event.preventDefault(); setOpen(false); resume(); }
+    if (open && (event.key === "ArrowDown" || event.key === "ArrowUp")) {
+      event.preventDefault();
+      const buttons = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>("section button"));
+      const index = buttons.indexOf(document.activeElement as HTMLButtonElement);
+      buttons[(index + (event.key === "ArrowDown" ? 1 : -1) + buttons.length) % buttons.length]?.focus();
+    }
+  }}><button aria-expanded={open} aria-controls="world-map-guide" onClick={() => { setOpen(value => !value); if (open) resume(); }} aria-label={open ? "Chiudi i luoghi da esplorare" : "Scegli un luogo da esplorare"}>⌖<span>Esplora</span></button>
+    {open && <section id="world-map-guide" aria-label="Luoghi da esplorare"><h2>Dove andiamo?</h2><div className={styles.guideIntro}><GuideOverview map={map} /><p>Il quadratino rosso sei tu.<br /><br />Scegli un luogo e segui la freccia.</p></div><div className={styles.destinations}>{places.map((place, i) => <button key={place.id} aria-pressed={destination === place.id} onClick={() => { setDestination(place.id); onDestination(place.id); setOpen(false); resume(); }}><b>{place.symbol || String(i + 1).padStart(2, "0")}</b><span>{place.name}</span><span aria-hidden="true">↗</span></button>)}</div></section>}
+    {destination && !open && <button className={styles.destination} onClick={() => { setDestination(null); onDestination(null); resume(); }} aria-label="Annulla la destinazione"><span>⌖ {places.find(place => place.id === destination)?.name}</span><span aria-hidden="true">×</span></button>}
   </div>;
 }
 export function WorldInteraction({ name, hint, onOpen }: { name?: string; hint?: string; onOpen: () => void }) {

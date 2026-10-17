@@ -3,7 +3,7 @@
 .world-shell .guild-stage { position:absolute; inset:0; width:100%; height:100%; margin:0; border:0; box-shadow:none; }
 .world-shell .guild-canvas,.world-shell .map-canvas { display:block; width:100%; height:100%; image-rendering:pixelated; touch-action:none; }
 .world-hud { position:absolute; inset:max(16px,env(safe-area-inset-top)) 20px auto; z-index:14; display:flex; align-items:flex-start; justify-content:space-between; gap:16px; pointer-events:none; }
-.world-title { display:flex; align-items:center; gap:12px; max-width:min(620px,calc(100% - 220px)); padding:12px 16px; background:#f2f3eaf5; border:2px solid #25352b; box-shadow:4px 4px 0 #25352b55; pointer-events:auto; }
+.world-title { display:flex; align-items:center; gap:12px; max-width:min(620px,calc(100% - 220px)); padding:12px 16px; background:#f2f3ea; border:2px solid #25352b; border-bottom:4px solid #b5a673; box-shadow:4px 4px 0 #25352b35; pointer-events:auto; }
 .world-title>div { min-width:0; }.world-title p { margin:0 0 4px; font-size:12px; line-height:1.4; letter-spacing:.05em; }.world-title h1 { margin:0; font-size:clamp(16px,1.8vw,22px); line-height:1.3; letter-spacing:-.03em; overflow-wrap:anywhere; }
 .world-brand { display:grid; place-items:center; flex:0 0 36px; height:40px; color:#f2f3ea; background:#25352b; font-size:24px; font-weight:bold; }
 .world-tools { display:flex; gap:8px; pointer-events:auto; }.world-audio,.world-menu summary,.world-guide>button { display:flex; align-items:center; justify-content:center; gap:8px; min-height:46px; padding:8px 12px; color:#f2f3ea; background:#25352b; border:2px solid #f2f3ea; box-shadow:3px 3px 0 #25352b55; cursor:pointer; font-size:14px; line-height:1.4; }
@@ -18,6 +18,12 @@
 .world-shell .place-modal,.world-shell .ranking-card { color:#25352b; background:#f2f3ea; border:3px solid #25352b; box-shadow:7px 7px 0 #86967b; max-height:calc(100dvh - 40px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); overflow:auto; overscroll-behavior:contain; padding:28px 24px 22px; }
 .world-shell .place-modal h2,.world-shell .ranking-card h2 { font-size:clamp(25px,4vw,38px); line-height:1.15; padding-right:30px; }.world-shell .close-button { width:44px; height:44px; top:10px; right:10px; }.world-shell .section-kicker,.world-shell .modal-count { padding-right:40px; font-size:12px; }.world-shell input,.world-shell textarea,.world-shell select { font-size:16px; }.world-shell .ranking-row { min-height:60px; }.world-shell .ranking-row strong { font-size:15px; }.world-shell .ranking-row b { font-size:14px; }.ranking-refresh { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; margin:12px 0; font-size:13px; }.ranking-refresh button { min-height:44px; }
 .world-shell button:focus-visible,.world-shell summary:focus-visible,.world-shell a:focus-visible { outline:3px solid #427a99; outline-offset:3px; }
+.world-menu a:hover { background:#e2e8d7; padding-left:8px; }
+.world-audio:hover,.world-menu summary:hover { background:#3d5743; }
+.world-shell .world-interaction button { border-color:#344a38; box-shadow:4px 4px 0 #25352b45; }
+.world-shell .world-interaction small { letter-spacing:.04em; line-height:1.5; }
+.world-shell .world-interaction button:hover { background:#f4e7bd; }
+.world-shell .world-interaction kbd { color:#f2f3ea; background:#344a38; border-color:#344a38; padding:8px 10px; }
 @media(pointer:coarse),(max-width:760px),(max-height:500px) {
   .world-touch-controls { position:absolute; right:max(16px,env(safe-area-inset-right)); bottom:max(20px,env(safe-area-inset-bottom)); z-index:15; display:grid; justify-items:center; gap:8px; width:152px; }
   .world-touch-controls .world-dpad { position:static; }
