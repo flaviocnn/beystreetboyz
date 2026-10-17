@@ -75,7 +75,7 @@ test('color is preserved in every outfit; idle is stable, walking alternates and
   for (const style of [-1, 999, NaN, 1.5]) assert.equal(signature(render(style, 99).pixels), signature(render().pixels));
 });
 test('four real portrait poses preserve all 24 skins and eight colors, fitting inside the mirror frame', () => {
-  assert.deepEqual(MIRROR_POSES.map(p => p.label), ['Frontale', 'Trionfante', 'Sdraiato', 'Guanto di sfida']);
+  assert.deepEqual(MIRROR_POSES.map(p => p.label), ['Frontale', 'Trionfante', 'Sdraiato', 'Ti sfido!']);
   for (let style = 0; style < 24; style++) for (let color = 0; color < 8; color++) {
     const signatures = [];
     for (let index = 0; index < 4; index++) {
@@ -93,4 +93,13 @@ test('reclining keeps the face upright, and normal walking is independent of mir
   const source = readFileSync(new URL('../app/gilda/mappa/mirror-photo.tsx', import.meta.url), 'utf8');
   assert.doesNotMatch(source, /ctx\.rotate\(/);
   assert.match(source, /<PosePreview avatar=\{member\} index=\{index\}/);
+});
+test('challenge points a bare index at the viewer instead of a colored boxing glove in every skin', () => {
+  for (let style = 0; style < 24; style++) for (let color = 0; color < 8; color++) {
+    const { pixels } = render(style, color, 'down', false, 0, 'challenge');
+    assert.equal(pixels.get('22,-8'), '#efd9b6', 'Exposed fingertip');
+    assert.equal(pixels.get('20,-6'), '#f5f1dc', 'Visible fingernail');
+    assert.equal(pixels.get('18,4'), '#efd9b6', 'Bare palm');
+    for (const x of [16, 20, 24]) assert.equal(pixels.get(`${x},6`), '#c6a17c', 'Curled finger folds');
+  }
 });

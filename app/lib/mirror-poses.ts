@@ -4,7 +4,7 @@ export const MIRROR_POSES: { label: string; pose: PlayerPose }[] = [
   { label: "Frontale", pose: "portrait" },
   { label: "Trionfante", pose: "triumphant" },
   { label: "Sdraiato", pose: "reclining" },
-  { label: "Guanto di sfida", pose: "challenge" },
+  { label: "Ti sfido!", pose: "challenge" },
 ];
 
 export function drawMirrorPose(ctx: CanvasRenderingContext2D, x: number, y: number, avatar: Avatar, poseIndex: number, scale = 1) {

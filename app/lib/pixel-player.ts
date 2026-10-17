@@ -135,12 +135,17 @@ export function drawPixelPlayer(ctx: CanvasRenderingContext2D, x: number, y: num
       ctx.restore();
     }
   } else if (pose === "challenge") {
-    // A bent rear arm and a foreshortened, rounded glove aimed at the viewer.
+    // Bare pointing hand: foreshortened index/nail above three curled fingers.
     box(INK, -7, 3, 3, 5); box(main, -6, 4, 1, 3); box(INK, -8, 5, 4, 3); box(hand, -7, 6, 2, 1);
-    box(INK, 4, 4, 6, 4); box(main, 5, 5, 4, 2); box(INK, 7, 1, 3, 5);
-    box(INK, 8, -1, 5, 6); box(INK, 9, -2, 3, 1); box(INK, 13, 1, 1, 3);
-    box(main, 9, -1, 3, 4); box(light, 9, 0, 2, 1); box(shade, 12, 1, 1, 3);
-    box(PAPER, 8, 4, 4, 1); box(INK, 10, 2, 2, 1);
+    box(INK, 4, 4, 6, 4); box(main, 5, 5, 4, 2); box(INK, 7, 2, 3, 4);
+    box(INK, 6, 1, 9, 5); box(INK, 7, 5, 7, 2);
+    box(SKIN_SHADE, 7, 2, 7, 4); box(SKIN, 7, 2, 6, 3);
+    box(INK, 6, 0, 3, 4); box(SKIN, 7, 1, 2, 2);
+    for (const px of [8, 10, 12]) box(SKIN_SHADE, px, 3, 1, 2);
+    box(INK, 9, -1, 5, 3); box(SKIN, 10, 0, 3, 2);
+    box(INK, 10, -5, 3, 1); box(INK, 9, -4, 5, 4); box(INK, 8, -3, 7, 2);
+    box(SKIN_SHADE, 9, -3, 5, 3); box(SKIN, 10, -4, 3, 4);
+    box(PAPER, 10, -3, 2, 1); box(SKIN_SHADE, 10, -1, 3, 1);
   } else if (pose === "portrait") {
     box(INK, -6, 4, 3, 5); box(main, -5, 4, 1, 3); box(hand, -5, 7, 1, 1);
     box(INK, 4, 3, 3, 3); box(main, 5, 4, 1, 1); box(INK, 5, 5, 3, 3);
