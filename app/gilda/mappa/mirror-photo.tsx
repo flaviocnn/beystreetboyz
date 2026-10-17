@@ -1,7 +1,8 @@
 "use client";
 import { memberDisplayName } from "../../lib/member-name";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { drawPixelPlayer, type Avatar } from "../../lib/pixel-player";
+import { type Avatar } from "../../lib/pixel-player";
+import { drawMirrorPose, MIRROR_POSES } from "../../lib/mirror-poses";
 import type { PlayerMember } from "../../lib/client-api";
 import type { PersonalStage } from "../../lib/decks";
 import { achievementCaption, topEightStages, wrapPortraitText, type MirrorAchievement } from "../../lib/mirror-achievement";
@@ -11,6 +12,7 @@ import { drawChampionThrone } from "../../lib/throne-art";
 import type { ChampionState } from "../../lib/use-reigning-champion";
 import { canExportThrone } from "../../lib/reigning-champion";
 import { getAchievementAlbum, getGameData } from "../../lib/game-data";
+import poseStyles from "./mirror-poses.module.css";
 
 const BACKGROUNDS = [
   { name: "Fenici", ink: "#351d2c", paper: "#fff0d4", mid: "#a54146", light: "#f4a457", accent: "#ffd66d" },
@@ -19,7 +21,6 @@ const BACKGROUNDS = [
   { name: "Nessuno", ink: "#17203d", paper: "#eceddf", mid: "#536fa1", light: "#a7bdd6", accent: "#dfc77b" },
   { name: "Inferno", ink: "#240f1b", paper: "#fff0d1", mid: "#6e202c", light: "#ef6838", accent: "#ffce62" },
 ];
-const POSES = ["Frontale", "Trionfante", "Sdraiato", "Guanto di sfida"];
 type PortraitRewards = { frame: string; labels: string[] };
 export function drawPortrait(canvas: HTMLCanvasElement, avatar: Avatar, name: string, background: number, pose: number, achievement: MirrorAchievement | null = null, mottoId = "guild-seal", throne = false, rewards: PortraitRewards = { frame: "", labels: [] }) {
   canvas.width = 1080; canvas.height = 1350;
@@ -93,22 +94,7 @@ export function drawPortrait(canvas: HTMLCanvasElement, avatar: Avatar, name: st
   for (let y = 305; y < 334; y += 10) for (let x = 70; x < 290; x += 20) if ((x / 20 + y / 10) % 2 < 1) box(theme.mid, x, y, 19, 9);
   if (background === 4) for (let x = 73; x < 285; x += 21) { box(theme.light, x, 312 + x % 9, 17, 3); box(theme.accent, x + 4, 315 + x % 9, 8, 2); }
   if (throne) drawChampionThrone(ctx, 180, 245, avatar, 0, .94);
-  else {
-    ctx.save();
-    ctx.translate(pose === 2 ? 171 : 180, pose === 2 ? 256 : 230);
-    if (pose === 2) ctx.rotate(-Math.PI / 2);
-    ctx.scale(3, 3);
-    drawPixelPlayer(ctx, 0, 0, "down", false, 0, avatar);
-    if (pose === 1) {
-      box(theme.ink, -19, -11, 8, 16); box(theme.ink, 11, -11, 8, 16);
-      box(theme.accent, -17, -9, 4, 6); box(theme.accent, 13, -9, 4, 6);
-    } else if (pose === 3) {
-      box(theme.ink, 11, 5, 14, 10); box(theme.accent, 20, 0, 17, 17);
-      box(theme.paper, 23, 3, 5, 6); box(theme.ink, 25, 15, 9, 3);
-    }
-    ctx.restore();
-  }
-  if (!throne && pose === 1) { box(theme.accent, 113, 167, 7, 7); box(theme.accent, 243, 160, 7, 7); }
+  else drawMirrorPose(ctx, 180, pose === 2 ? 260 : 230, avatar, pose, 3);
   for (const [x, y] of [[112, 169], [248, 189], [268, 275]]) { box(theme.paper, x - 5, y, 15, 5); box(theme.paper, x, y - 5, 5, 15); }
   for (const [x, y] of [[49, 116], [294, 116], [49, 333], [294, 333]]) box(theme.accent, x, y, 17, 17);
   const displayName = name.trim() || "UN MEMBRO DELLA GILDA";
@@ -139,6 +125,18 @@ export function drawPortrait(canvas: HTMLCanvasElement, avatar: Avatar, name: st
     box(theme.accent, 34, baseHeight - 12, 292, 2);
     rewardLines.forEach((line, index) => text(line, baseHeight + 6 + index * 13, 10, theme.light));
   }
+}
+
+function PosePreview({ avatar, index }: { avatar: Avatar; index: number }) {
+  const ref = useRef<HTMLCanvasElement>(null);
+  const { avatarStyle, avatarColor } = avatar;
+  useEffect(() => {
+    const canvas = ref.current, ctx = canvas?.getContext("2d");
+    if (!canvas || !ctx) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.imageSmoothingEnabled = false;
+    drawMirrorPose(ctx, 96, index === 2 ? 112 : 98, { avatarStyle, avatarColor }, index, 2);
+  }, [avatarStyle, avatarColor, index]);
+  return <canvas ref={ref} width={192} height={176} aria-hidden="true" />;
 }
 
 export default function MirrorPhoto({ member, onClick, championState }: { member: PlayerMember; onClick: () => void; championState: ChampionState }) {
@@ -235,7 +233,7 @@ export default function MirrorPhoto({ member, onClick, championState }: { member
     setMessage("Foto scaricata. Apri Instagram e caricala dal tuo dispositivo.");
   }
   return <div className="mirror-workshop">
-    <div className="mirror-photo-preview"><canvas ref={canvasRef} hidden />{photo && <img src={photo.url} width={photo.width} height={photo.height} alt={`Ritratto pixel art di ${portraitName || "un membro"}${throne ? ", campione in carica incoronato sul trono" : ""}, con il brand Ranked BeyStreetBoyz${achievement ? `, ${achievement.name}, ${achievement.finalRank}° posto${achievement.deck ? ", con deck registrato" : ""}` : ""}`} />}</div>
+    <div className={`mirror-photo-preview ${poseStyles.preview}`}><canvas ref={canvasRef} hidden />{photo && <img src={photo.url} width={photo.width} height={photo.height} alt={`Ritratto pixel art di ${portraitName || "un membro"}${throne ? ", campione in carica incoronato sul trono" : `, posa ${MIRROR_POSES[pose]?.label || MIRROR_POSES[0].label}`}, con il brand Ranked BeyStreetBoyz${achievement ? `, ${achievement.name}, ${achievement.finalRank}° posto${achievement.deck ? ", con deck registrato" : ""}` : ""}`} />}</div>
     <div className="mirror-photo-options"><p>Uno specchio, il tuo avatar, il tuo sigillo. Crea una cartolina da portare con te.</p>
       {championState.canUseThrone && championState.champion?.memberId === member.id && <label className="mirror-throne-choice"><input type="checkbox" checked={throne} onChange={event => { setThroneSelected(event.target.checked); setThroneNotice(""); onClick(); }} /> Sul trono · Campione di {championState.champion.stage.name}</label>}
       {throneNotice && <p role="status">{throneNotice}</p>}
@@ -250,7 +248,7 @@ export default function MirrorPhoto({ member, onClick, championState }: { member
         <a href="/imprese">Gestisci le imprese e la vetrina →</a>
       </fieldset>
       <fieldset><legend>BACKGROUND</legend><div className="mirror-choices">{BACKGROUNDS.map((theme, index) => <button key={theme.name} aria-pressed={background === index} onClick={() => { setBackground(index); onClick(); }}>{theme.name}</button>)}</div></fieldset>
-      <fieldset disabled={throne}><legend>POSA{throne ? " · SUL TRONO" : ""}</legend><div className="mirror-choices">{POSES.map((label, index) => <button key={label} aria-pressed={!throne && pose === index} onClick={() => { setPose(index); onClick(); }}>{label}</button>)}</div></fieldset>
+      <fieldset disabled={throne}><legend>POSA{throne ? " · SUL TRONO" : ""}</legend><div className={`mirror-choices mirror-pose-choices ${poseStyles.choices}`}>{MIRROR_POSES.map(({ label }, index) => <button key={label} type="button" aria-pressed={!throne && pose === index} onClick={() => { setPose(index); onClick(); }}><PosePreview avatar={member} index={index} /><span>{label}</span></button>)}</div></fieldset>
       <fieldset className="mirror-achievement" disabled={throne}><legend>PIAZZAMENTO DI TAPPA{throne ? " · TAPPA VINTA INCLUSA" : ""}</legend>
         {throne && achievement ? <p>{achievement.name} · 1° posto{achievement.deck ? " · Il deck registrato sarà incluso automaticamente." : " · Nessun deck registrato per questa tappa."}</p> : stagesStatus === "loading" ? <p role="status">Cerco le tue tappe in top 8…</p> : stagesStatus === "error" ? <div><p role="alert">Non riesco a caricare le tappe. Puoi comunque creare il ritratto semplice.</p><button className="text-button" onClick={() => { onClick(); setStagesStatus("loading"); setReloadStages(value => value + 1); }}>RIPROVA</button></div> : stages.length ? <>
           <label className="mirror-name">TAPPA DA MOSTRARE<select value={stageSlug} onChange={event => { setStageSlug(event.target.value); onClick(); }}><option value="">Nessuna · solo ritratto</option>{stages.map(stage => <option key={stage.slug} value={stage.slug}>{stage.name} · {stage.finalRank}° posto · {stage.eventDate}</option>)}</select></label>

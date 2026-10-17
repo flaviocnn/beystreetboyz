@@ -1,0 +1,22 @@
+.choices.choices {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.choices button {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 10px;
+}
+.choices canvas {
+  display: block;
+  width: min(100%, 96px);
+  height: auto;
+  image-rendering: pixelated;
+  background: #e7e9db;
+  border-radius: 2px;
+}
+.choices span { font-size: 12px; line-height: 1.4; }
+@media (min-width: 651px) {
+  .preview { position: sticky; top: 12px; }
+}

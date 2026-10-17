@@ -19,3 +19,16 @@ For visual review, run `node scripts/preview-player-sprites.mjs`. This requires
 the developer-only `@napi-rs/canvas` package, optionally supplied through an
 absolute `CANVAS_MODULE` path. The contact sheet is generated under `.local-data`
 and never shipped publicly. It does not query or modify any database.
+
+## Mirror poses
+
+`drawPixelPlayer` accepts an optional final `PlayerPose` argument. Its default
+`standing` keeps map movement and the throne unchanged. The mirror uses
+`portrait`, `triumphant`, `reclining` and `challenge`: limbs are drawn in pose,
+not pasted over the walking sprite. Reclining turns only the torso, keeps the
+head upright and folds wings; equipment is repositioned to avoid the face.
+
+`mirror-poses.ts` is shared by PNG export and the four static selector thumbnails.
+`node scripts/preview-mirror-poses.mjs` produces a contact sheet using the same
+optional native canvas dependency. Tests cover all 768 skin/color/pose combinations
+inside the original mirror bounds, distinct poses and unchanged movement.

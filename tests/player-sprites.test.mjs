@@ -1,29 +1,41 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { registerHooks } from 'node:module';
+import { existsSync, readFileSync } from 'node:fs';
 import { AVATAR_STYLES, AVATAR_COLORS, BASE_STYLE_COUNT, drawPixelPlayer } from '../app/lib/pixel-player.ts';
+registerHooks({ resolve(s, c, next) { try { return next(s, c); } catch (error) { if (s.startsWith('.')) { const u = new URL(s + '.ts', c.parentURL); if (existsSync(u)) return { url: u.href, shortCircuit: true }; } throw error; } } });
+const { drawMirrorPose, MIRROR_POSES } = await import('../app/lib/mirror-poses.ts');
 
 // A tiny integer rasterizer tests the actual painter without a native dependency.
-function render(style = 0, color = 0, direction = 'down', walking = false, time = 0) {
+function render(style = 0, color = 0, direction = 'down', walking = false, time = 0, pose = 'standing', portraitFrame = false) {
   const pixels = new Map(), stack = [], rects = [];
-  let transform = [1, 1, 0, 0];
+  let transform = [1, 0, 0, 1, 0, 0];
   const ctx = {
     fillStyle: '',
     save() { stack.push([...transform]); },
     restore() { assert.ok(stack.length); transform = stack.pop(); },
-    translate(x, y) { transform[2] += x * transform[0]; transform[3] += y * transform[1]; },
-    scale(x, y) { transform[0] *= x; transform[1] *= y; },
+    translate(x, y) { const [a, b, c, d] = transform; transform[4] += a * x + c * y; transform[5] += b * x + d * y; },
+    scale(x, y) { transform[0] *= x; transform[1] *= x; transform[2] *= y; transform[3] *= y; },
+    rotate(angle) {
+      const [a, b, c, d, x, y] = transform, cos = Math.round(Math.cos(angle)), sin = Math.round(Math.sin(angle));
+      assert.ok(Math.abs(cos - Math.cos(angle)) < 1e-9 && Math.abs(sin - Math.sin(angle)) < 1e-9, 'Only pixel-perfect quarter turns');
+      transform = [a * cos + c * sin, b * cos + d * sin, c * cos - a * sin, d * cos - b * sin, x, y];
+    },
     fillRect(x, y, width, height) {
       assert.ok([x, y, width, height].every(Number.isInteger));
       assert.ok(width > 0 && height > 0);
-      const [sx, sy, tx, ty] = transform;
-      const left = Math.min(x * sx + tx, (x + width) * sx + tx), top = y * sy + ty;
-      const right = Math.max(x * sx + tx, (x + width) * sx + tx), bottom = (y + height) * sy + ty;
+      const [a, b, c, d, tx, ty] = transform;
+      const points = [[x, y], [x + width, y], [x, y + height], [x + width, y + height]].map(([px, py]) => [a * px + c * py + tx, b * px + d * py + ty]);
+      const left = Math.min(...points.map(p => p[0])), right = Math.max(...points.map(p => p[0]));
+      const top = Math.min(...points.map(p => p[1])), bottom = Math.max(...points.map(p => p[1]));
       rects.push({ left, top, right, bottom, color: this.fillStyle });
       for (let px = left; px < right; px++) for (let py = top; py < bottom; py++) pixels.set(`${px},${py}`, this.fillStyle);
     },
   };
-  drawPixelPlayer(ctx, 0, 0, direction, walking, time, { avatarStyle: style, avatarColor: color });
-  assert.deepEqual(transform, [1, 1, 0, 0]); assert.equal(stack.length, 0);
+  const avatar = { avatarStyle: style, avatarColor: color };
+  if (portraitFrame) drawMirrorPose(ctx, 180, pose === 2 ? 260 : 230, avatar, pose, 3);
+  else drawPixelPlayer(ctx, 0, 0, direction, walking, time, avatar, pose);
+  assert.deepEqual(transform, [1, 0, 0, 1, 0, 0]); assert.equal(stack.length, 0);
   return { pixels, rects };
 }
 const signature = pixels => JSON.stringify([...pixels].sort(([a], [b]) => a.localeCompare(b)));
@@ -61,4 +73,24 @@ test('color is preserved in every outfit; idle is stable, walking alternates and
     assert.equal(new Set(steps).size, 3);
   }
   for (const style of [-1, 999, NaN, 1.5]) assert.equal(signature(render(style, 99).pixels), signature(render().pixels));
+});
+test('four real portrait poses preserve all 24 skins and eight colors, fitting inside the mirror frame', () => {
+  assert.deepEqual(MIRROR_POSES.map(p => p.label), ['Frontale', 'Trionfante', 'Sdraiato', 'Guanto di sfida']);
+  for (let style = 0; style < 24; style++) for (let color = 0; color < 8; color++) {
+    const signatures = [];
+    for (let index = 0; index < 4; index++) {
+      const { rects } = render(style, color, 'down', false, 0, index, true);
+      for (const r of rects) assert.ok(r.left >= 68 && r.right <= 292 && r.top >= 135 && r.bottom <= 334, `${style}/${index}: ${JSON.stringify(r)}`);
+      signatures.push(signature(render(style, color, 'down', false, 0, MIRROR_POSES[index].pose).pixels));
+    }
+    assert.equal(new Set(signatures).size, 4);
+  }
+});
+test('reclining keeps the face upright, and normal walking is independent of mirror selection', () => {
+  const relaxed = render(0, 0, 'down', false, 0, 'reclining').pixels;
+  assert.equal(relaxed.get('-20,-10'), '#252d35'); assert.equal(relaxed.get('-12,-10'), '#252d35');
+  for (const dir of ['up', 'left', 'right']) assert.equal(signature(render(0, 0, dir, true, 130, 'triumphant').pixels), signature(render(0, 0, dir, true, 130).pixels));
+  const source = readFileSync(new URL('../app/gilda/mappa/mirror-photo.tsx', import.meta.url), 'utf8');
+  assert.doesNotMatch(source, /ctx\.rotate\(/);
+  assert.match(source, /<PosePreview avatar=\{member\} index=\{index\}/);
 });
