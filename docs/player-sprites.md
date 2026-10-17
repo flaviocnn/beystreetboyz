@@ -5,6 +5,19 @@ visiting and garden NPCs), guild, bank, Wistery previews, mirror and champion's
 throne. Avatar IDs, colors, unlocks, collision bounds and saved selections are
 unchanged. Each outfit has front/back views and mirrored left/right profiles.
 
+The October fantasy redraw uses original hand-drawn pixel clusters, taking visual
+reference from the official Eastward media gallery (https://eastwardgame.com/media/)
+and Wargroove press-kit screenshots (https://wargroove.com/presskit/): stepped
+silhouettes, upper-left lighting, coherent color groups and distinct materials.
+No artwork from either game is shipped. Heads, coats and equipment keep the
+existing costume identities, foot anchors and customization indices.
+
+Browsers with OffscreenCanvas rasterize each sprite at native resolution before
+nearest-neighbor scaling. A lazy LRU holds at most 128 96×96 surfaces (~4.5 MiB).
+Keys include costume, color, direction, walking phase and portrait pose; position
+and continuous animation time do not grow the cache. The direct painter remains
+available automatically in environments without OffscreenCanvas.
+
 Draw on the 2-world-pixel grid. Keep opaque artwork within x ±24, y -33…29,
 including walking bob, so all existing 96×124 Wistery thumbnails remain unclipped.
 Draw wings, cloaks and long hair behind the body; headwear goes last. Avoid

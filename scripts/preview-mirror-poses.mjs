@@ -16,7 +16,10 @@ for (const [row, style] of [0, 2, 7, 11, 17, 22].entries()) {
   for (let pose = 0; pose < 4; pose++) {
     const x = 16 + pose * 276, y = 88 + row * 200;
     ctx.fillStyle = '#faf8eb'; ctx.fillRect(x, y, 264, 188);
-    drawMirrorPose(ctx, x + 130, y + (pose === 2 ? 123 : 110), { avatarStyle: style, avatarColor: row + 1 }, pose, 2.5);
+    const sprite = createCanvas(96, 96);
+    drawMirrorPose(sprite.getContext('2d'), 48, 48, { avatarStyle: style, avatarColor: row + 1 }, pose);
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(sprite, x + 10, y + (pose === 2 ? 3 : -10), 240, 240);
     ctx.fillStyle = '#25352b'; ctx.font = '12px monospace'; ctx.fillText(AVATAR_STYLES[style], x + 12, y + 178);
   }
 }

@@ -103,3 +103,24 @@ test('challenge points a bare index at the viewer instead of a colored boxing gl
     for (const x of [16, 20, 24]) assert.equal(pixels.get(`${x},6`), '#c6a17c', 'Curled finger folds');
   }
 });
+test('native sprite surfaces are reused across positions and scales, separate poses and walking frames, and remain bounded', () => {
+  const original = globalThis.OffscreenCanvas;
+  let surfaces = 0;
+  globalThis.OffscreenCanvas = class {
+    constructor(width, height) { assert.equal(width, 96); assert.equal(height, 96); this.id = ++surfaces; }
+    getContext() { return { save(){}, restore(){}, translate(){}, rotate(){}, scale(){}, fillRect(){}, fillStyle:'' }; }
+  };
+  const drawn = [], ctx = { save(){}, restore(){}, drawImage(surface, x, y){drawn.push({surface, x, y});} };
+  try {
+    drawPixelPlayer(ctx, 10, 20, 'down', false, 0, {avatarStyle:0,avatarColor:0});
+    drawPixelPlayer(ctx, 80, 90, 'down', false, 5000, {avatarStyle:0,avatarColor:0});
+    assert.equal(drawn[0].surface, drawn[1].surface, 'Position and idle clock cannot generate new art');
+    assert.deepEqual([drawn[1].x,drawn[1].y],[32,42], 'Foot anchor survives the native texture offset');
+    drawPixelPlayer(ctx, 0, 0, 'down', true, 130, {avatarStyle:0,avatarColor:0});
+    drawPixelPlayer(ctx, 0, 0, 'down', false, 0, {avatarStyle:0,avatarColor:0}, 'challenge');
+    assert.notEqual(drawn[2].surface, drawn[0].surface); assert.notEqual(drawn[3].surface, drawn[0].surface);
+    for (let i=1;i<=140;i++) drawPixelPlayer(ctx, 0, 0, 'up', false, 0, {avatarStyle:Math.floor(i/8),avatarColor:i%8});
+    drawPixelPlayer(ctx, 0, 0, 'down', false, 0, {avatarStyle:0,avatarColor:0});
+    assert.notEqual(drawn.at(-1).surface,drawn[0].surface,'Least recently used textures are evicted');
+  } finally { if(original === undefined) delete globalThis.OffscreenCanvas; else globalThis.OffscreenCanvas=original; }
+});

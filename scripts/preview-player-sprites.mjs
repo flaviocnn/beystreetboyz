@@ -16,7 +16,9 @@ for (let i = 0; i < AVATAR_STYLES.length; i++) {
   for (const [column, direction] of ['down', 'right', 'up', 'left'].entries()) {
     ctx.save(); ctx.translate(x + 40 + column * 74, y + 99); ctx.scale(1.4, 1.4);
     ctx.imageSmoothingEnabled = false;
-    drawPixelPlayer(ctx, 0, 0, direction, false, 0, { avatarStyle: i, avatarColor: i % AVATAR_COLORS.length });
+    const sprite = createCanvas(96, 96);
+    drawPixelPlayer(sprite.getContext('2d'), 48, 48, direction, false, 0, { avatarStyle: i, avatarColor: i % AVATAR_COLORS.length });
+    ctx.drawImage(sprite, -48, -48);
     ctx.restore();
   }
   ctx.font = '11px monospace'; ctx.fillStyle = '#5d6f61'; ctx.fillText(AVATAR_COLORS[i % AVATAR_COLORS.length].name, x + 12, y + 154);
